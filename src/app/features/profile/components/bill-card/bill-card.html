@@ -1,0 +1,39 @@
+<ui-card [hover]="true" padding="lg">
+  <header class="bill__header">
+    <div class="bill__badges">
+      @if (bill().kind; as kind) {
+        <ui-tag [label]="kind.label" [severity]="kind.severity" />
+      }
+      <ui-tag [label]="bill().status.label" [severity]="bill().status.severity" />
+    </div>
+    <ui-icon-button icon="more_vert" ariaLabel="Bill options" [iconSize]="20" />
+  </header>
+
+  <h4 class="bill__title">{{ bill().title }}</h4>
+
+  @if (bill().summary) {
+    <p class="bill__summary">{{ bill().summary }}</p>
+  }
+
+  @if (bill().progress != null) {
+    <div class="bill__progress">
+      <div class="bill__progress-row">
+        <span>{{ bill().progressLabel }}</span>
+        <span>{{ bill().progress }}%</span>
+      </div>
+      <ui-progress [value]="bill().progress ?? 0" [color]="bill().progressColor ?? 'secondary'" />
+    </div>
+  }
+
+  <footer class="bill__footer">
+    <span class="bill__meta">
+      @if (bill().metaIcon; as icon) {
+        <ui-icon [name]="icon" [size]="16" />
+      }
+      {{ bill().metaLabel }}
+    </span>
+    @if (bill().linkLabel; as link) {
+      <a class="bill__link" href="#">{{ link }}</a>
+    }
+  </footer>
+</ui-card>

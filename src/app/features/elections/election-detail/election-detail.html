@@ -1,0 +1,51 @@
+@if (election(); as e) {
+  <div class="election-detail">
+    <a class="election-detail__back" routerLink="/elections">
+      <ui-icon name="arrow_back" [size]="18" />
+      {{ 'button.back-to-elections' | translate: 'Back to Elections' }}
+    </a>
+
+    <app-page-header [title]="e.title" [subtitle]="e.scope + ' · ' + e.date" icon="ballot" />
+
+    <ui-card padding="lg" class="election-detail__summary">
+      <div class="election-detail__tags">
+        <ui-tag [label]="e.scope" [severity]="scopeSeverity(e.scope)" [uppercase]="true" />
+        <ui-tag [label]="statusLabel()" [severity]="isUpcoming() ? 'success' : 'neutral'" />
+        <span class="election-detail__date">
+          <ui-icon name="calendar_month" [size]="16" />
+          {{ e.date }}
+        </span>
+      </div>
+      <p class="election-detail__desc">{{ e.description }}</p>
+    </ui-card>
+
+    <section class="election-detail__candidates">
+      <h2 class="election-detail__section-title">{{ 'label.candidates' | translate: 'Candidates' }}</h2>
+
+      @if (candidates().length) {
+        <div class="election-detail__grid">
+          @for (candidate of candidates(); track candidate.id) {
+            <a class="candidate-card" [routerLink]="['/profile', candidate.id]">
+              <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="44" [ring]="true" />
+              <div class="candidate-card__body">
+                <span class="candidate-card__name">{{ candidate.name }}</span>
+                <span class="candidate-card__office">{{ candidate.office }}</span>
+              </div>
+              <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+            </a>
+          }
+        </div>
+      } @else {
+        <ui-empty icon="groups" [title]="'empty.no-candidates.title' | translate: 'No candidates'" [description]="'empty.no-candidates-for-election' | translate: 'No candidates have been linked to this election yet.'" />
+      }
+    </section>
+  </div>
+} @else {
+  <div class="election-detail">
+    <a class="election-detail__back" routerLink="/elections">
+      <ui-icon name="arrow_back" [size]="18" />
+      {{ 'button.back-to-elections' | translate: 'Back to Elections' }}
+    </a>
+    <ui-empty icon="ballot" [title]="'empty.election-not-found.title' | translate: 'Election not found'" [description]="'empty.election-not-found.desc' | translate: 'This election may have been removed or the link is incorrect.'" />
+  </div>
+}

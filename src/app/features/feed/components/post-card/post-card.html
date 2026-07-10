@@ -1,0 +1,133 @@
+<ui-card [hover]="true" padding="lg">
+  <header class="post__header">
+    <a class="post__author" [routerLink]="['/profile', post().author.id]">
+      <ui-avatar [src]="post().author.avatarUrl" [alt]="post().author.name" [size]="48" [ring]="true" />
+      <div>
+        <div class="post__name-row">
+          <h3 class="post__name">{{ post().author.name }}</h3>
+          @if (post().author.verified) {
+            <ui-icon name="verified" [fill]="true" [size]="16" class="post__verified" />
+          }
+        </div>
+        <p class="post__meta">{{ post().createdAt }} • {{ post().context }}</p>
+      </div>
+    </a>
+    <ui-icon-button icon="more_horiz" ariaLabel="Post options" [iconSize]="22" />
+  </header>
+
+  @if (post().content) {
+    <p class="post__content">{{ post().content }}</p>
+  }
+
+  @if (post().tags.length) {
+    <div class="post__tags">
+      @for (tag of post().tags; track tag.label) {
+        <ui-tag [label]="tag.label" [severity]="tag.severity" [icon]="tag.icon" [uppercase]="!!tag.uppercase" />
+      }
+    </div>
+  }
+
+  @if (post().kind === 'agenda' && post().agenda; as agenda) {
+    <div class="post__agenda">
+      <div class="post__agenda-icon">
+        <ui-icon name="event" [size]="20" />
+      </div>
+      <div class="post__agenda-body">
+        <div class="post__agenda-title">{{ agenda.title }}</div>
+        <div class="post__agenda-meta">{{ agenda.date }} · {{ agenda.location }}</div>
+      </div>
+    </div>
+  } @else if (post().kind === 'live' && post().live; as live) {
+    <div class="post__video">
+      <ui-youtube
+        [live]="live.isLiveNow"
+        [videoId]="live.videoId"
+        [channelId]="live.channelId"
+        [title]="post().author.name + ' — Live'"
+      />
+    </div>
+  } @else if (post().videoId; as vid) {
+    <div class="post__video">
+      <ui-youtube [videoId]="vid" [title]="post().author.name + ' — ' + post().context" />
+    </div>
+  } @else if (post().imageUrl; as img) {
+    <div class="post__media">
+      <img [src]="img" alt="" loading="lazy" referrerpolicy="no-referrer" />
+    </div>
+  }
+
+  <footer class="post__actions">
+    <button
+      type="button"
+      class="post__action"
+      [class.post__action--active]="post().metrics.liked"
+      [disabled]="!canReact()"
+      (click)="like.emit(post().id)"
+    >
+      <ui-icon name="thumb_up" [fill]="post().metrics.liked" [size]="20" />
+      <span>{{ post().metrics.likes | compactNumber }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="post__action"
+      [class.post__action--active]="showComments()"
+      (click)="toggleComments()"
+    >
+      <ui-icon name="chat_bubble" [fill]="showComments()" [size]="20" />
+      <span>{{ post().metrics.comments | compactNumber }}</span>
+    </button>
+
+    <button type="button" class="post__action">
+      <ui-icon name="share" [size]="20" />
+      <span>Share</span>
+    </button>
+  </footer>
+
+  @if (showComments()) {
+    <section class="comments">
+      @if (canReact()) {
+        <form class="comments__composer" (submit)="$event.preventDefault(); submitComment()">
+          @if (currentUserAvatar()) {
+            <ui-avatar [src]="currentUserAvatar()" alt="You" [size]="32" />
+          }
+          <input
+            class="comments__input"
+            type="text"
+            placeholder="Add a comment…"
+            name="comment"
+            aria-label="Add a comment"
+            autocomplete="off"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+          />
+          <button type="submit" class="comments__send" [disabled]="!draft().trim()" aria-label="Send comment">
+            <ui-icon name="send" [size]="18" [fill]="true" />
+          </button>
+        </form>
+      } @else {
+        <p class="comments__signin">Sign in as a citizen to comment.</p>
+      }
+
+      @for (comment of post().comments; track comment.id) {
+        <div class="comment">
+          <ui-avatar [src]="comment.author.avatarUrl" [alt]="comment.author.name" [size]="32" [ring]="true" />
+          <div class="comment__bubble">
+            <div class="comment__head">
+              <span class="comment__name">
+                {{ comment.author.name }}
+                @if (comment.author.verified) {
+                  <ui-icon name="verified" [size]="12" [fill]="true" />
+                }
+              </span>
+              <span class="comment__time">{{ comment.timeLabel }}</span>
+            </div>
+            <p class="comment__text">{{ comment.text }}</p>
+          </div>
+        </div>
+      } @empty {
+        <p class="comments__empty">Be the first to comment.</p>
+      }
+    </section>
+  }
+</ui-card>

@@ -1,0 +1,263 @@
+<div class="platform">
+  <app-page-header
+    [title]="'page.platform.title' | translate: 'Platform Administration'"
+    [subtitle]="'page.platform.subtitle' | translate: 'Party registry, politician assignment and platform-wide parameters'"
+    icon="admin_panel_settings"
+  />
+
+  <div class="platform__notice">
+    <ui-icon name="gavel" [size]="18" />
+    <p>
+      {{ 'hint.platform-admin' | translate: 'Only platform administrators register or edit parties, assign politicians to them, and manage shared platform parameters. Politicians and citizens manage their own profiles elsewhere.' }}
+    </p>
+  </div>
+
+  <ui-tabs [tabs]="tabs" [active]="activeTab()" (activeChange)="setActiveTab($event)" />
+
+  @switch (activeTab()) {
+    @case ('directory') {
+      @if (showForm()) {
+        <form class="platform__form" (submit)="createParty(); $event.preventDefault()">
+          <h3>{{ 'section.register-party' | translate: 'Register a party' }}</h3>
+          <div class="platform__row">
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'field.name' | translate: 'Name' }}</span>
+              <input type="text" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Green Future" />
+            </label>
+            <label class="platform__field">
+              <span>{{ 'field.acronym' | translate: 'Acronym' }}</span>
+              <input type="text" [value]="acronym()" (input)="acronym.set($any($event.target).value)" placeholder="GF" />
+            </label>
+            <label class="platform__field">
+              <span>{{ 'field.number' | translate: 'Number' }}</span>
+              <input type="number" min="10" max="99" [value]="number() ?? ''" (input)="number.set(+$any($event.target).value)" placeholder="30" />
+            </label>
+          </div>
+          <div class="platform__row">
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'label.president' | translate: 'President' }}</span>
+              <input type="text" [value]="president()" (input)="president.set($any($event.target).value)" placeholder="Full name" />
+            </label>
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'label.ideology' | translate: 'Ideology' }}</span>
+              <input type="text" [value]="ideology()" (input)="ideology.set($any($event.target).value)" placeholder="e.g. Green politics" />
+            </label>
+          </div>
+          <ui-button [label]="'button.create-party' | translate: 'Create party'" icon="check" variant="filled" type="submit" />
+        </form>
+      }
+
+      <ui-section [title]="'section.registered-parties' | translate: 'Registered parties'" icon="flag">
+        <ui-button
+          slot="action"
+          [label]="(showForm() ? 'button.cancel' : 'button.register-party') | translate: (showForm() ? 'Cancel' : 'Register party')"
+          [icon]="showForm() ? 'close' : 'add'"
+          variant="filled"
+          (click)="toggleForm()"
+        />
+        <div class="platform__parties">
+          @for (party of parties(); track party.id) {
+            <article class="platform__party">
+              <header class="platform__party-head">
+                <span class="platform__party-badge">{{ party.number }}</span>
+                <div class="platform__party-id">
+                  <span class="platform__party-name">{{ party.name }} <em>({{ party.acronym }})</em></span>
+                  <span class="platform__party-meta">{{ party.ideology }}</span>
+                </div>
+                <ui-tag [label]="party.memberCount + ' ' + ('label.members-lower' | translate: 'members')" severity="info" />
+              </header>
+              <div class="platform__party-body">
+                <span class="platform__party-president">
+                  <ui-icon name="person" [size]="16" /> {{ 'label.president' | translate: 'President' }}: {{ party.president }}
+                </span>
+              </div>
+            </article>
+          }
+        </div>
+      </ui-section>
+
+      <ui-section [title]="'section.politician-assignment' | translate: 'Politician assignment'" icon="how_to_reg">
+        <p class="platform__hint">{{ 'hint.politician-assignment' | translate: 'Assign each politician to a party, or leave them independent.' }}</p>
+        <ul class="platform__politicians">
+          @for (pol of politicians(); track pol.id) {
+            <li class="platform__politician">
+              <ui-avatar [src]="avatarPlaceholder" [alt]="pol.name" [size]="36" [ring]="true" />
+              <div class="platform__politician-id">
+                <span class="platform__politician-name">{{ pol.name }}</span>
+                <span class="platform__politician-office">{{ pol.office }} · {{ partyName(pol.partyId) }}</span>
+              </div>
+              <select
+                class="platform__select"
+                [value]="pol.partyId ?? ''"
+                (change)="assign(pol.id, $any($event.target).value)"
+              >
+                <option value="">{{ 'label.independent' | translate: 'Independent' }}</option>
+                @for (party of parties(); track party.id) {
+                  <option [value]="party.id">{{ party.name }}</option>
+                }
+              </select>
+            </li>
+          }
+        </ul>
+      </ui-section>
+    }
+
+    @case ('regions') {
+      <ui-section [title]="'section.countries' | translate: 'Countries'" icon="public">
+        <span slot="action" class="platform__count">{{ countries().length }} {{ 'label.registered' | translate: 'registered' }}</span>
+        <form class="platform__inline-form" (submit)="addCountry(); $event.preventDefault()">
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'field.name' | translate: 'Name' }}</span>
+            <input type="text" [value]="countryName()" (input)="countryName.set($any($event.target).value)" placeholder="e.g. Argentina" />
+          </label>
+          <label class="platform__field">
+            <span>{{ 'field.code' | translate: 'Code' }}</span>
+            <input type="text" maxlength="3" [value]="countryCode()" (input)="countryCode.set($any($event.target).value)" placeholder="AR" />
+          </label>
+          <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" />
+        </form>
+
+        @if (countries().length) {
+          <ul class="platform__params">
+            @for (country of countries(); track country.id) {
+              <li class="platform__param">
+                <ui-tag [label]="country.code" severity="secondary" [uppercase]="true" />
+                <span class="platform__param-name">{{ country.name }}</span>
+                <ui-button [label]="'button.remove' | translate: 'Remove'" icon="delete" variant="outlined" (click)="removeCountry(country.id)" />
+              </li>
+            }
+          </ul>
+        } @else {
+          <ui-empty icon="public" [title]="'empty.no-countries.title' | translate: 'No countries'" [description]="'empty.no-countries.desc' | translate: 'Add a country to start registering its states.'" />
+        }
+      </ui-section>
+
+      <ui-section [title]="'section.states-provinces' | translate: 'States & provinces'" icon="location_city">
+        <span slot="action" class="platform__count">{{ states().length }} {{ 'label.registered' | translate: 'registered' }}</span>
+        <form class="platform__inline-form" (submit)="addState(); $event.preventDefault()">
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'field.name' | translate: 'Name' }}</span>
+            <input type="text" [value]="stateName()" (input)="stateName.set($any($event.target).value)" placeholder="e.g. Bahia" />
+          </label>
+          <label class="platform__field">
+            <span>{{ 'field.code' | translate: 'Code' }}</span>
+            <input type="text" maxlength="3" [value]="stateCode()" (input)="stateCode.set($any($event.target).value)" placeholder="BA" />
+          </label>
+          <label class="platform__field">
+            <span>{{ 'label.country' | translate: 'Country' }}</span>
+            <select class="platform__select" [value]="stateCountryId()" (change)="stateCountryId.set($any($event.target).value)">
+              @for (country of countries(); track country.id) {
+                <option [value]="country.id">{{ country.name }}</option>
+              }
+            </select>
+          </label>
+          <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="!countries().length" />
+        </form>
+
+        @if (states().length) {
+          <ul class="platform__params">
+            @for (state of states(); track state.id) {
+              <li class="platform__param">
+                <ui-tag [label]="state.code" severity="secondary" [uppercase]="true" />
+                <span class="platform__param-name">{{ state.name }}</span>
+                <span class="platform__param-meta">{{ countryNameOf(state.countryId) }}</span>
+                <ui-button [label]="'button.remove' | translate: 'Remove'" icon="delete" variant="outlined" (click)="removeState(state.id)" />
+              </li>
+            }
+          </ul>
+        } @else {
+          <ui-empty icon="location_city" [title]="'empty.no-states.title' | translate: 'No states'" [description]="'empty.no-states.desc' | translate: 'States you add will appear here.'" />
+        }
+      </ui-section>
+    }
+
+    @case ('languages') {
+      <ui-section [title]="'section.internationalization' | translate: 'Internationalization'" icon="translate">
+        <span slot="action" class="platform__count">{{ languages().length }} {{ 'tab.languages' | translate: 'languages' }}</span>
+        <p class="platform__hint">{{ 'hint.languages' | translate: 'Manage the languages available on the platform. Exactly one is the default.' }}</p>
+        <form class="platform__inline-form" (submit)="addLanguage(); $event.preventDefault()">
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'field.name' | translate: 'Name' }}</span>
+            <input type="text" [value]="languageName()" (input)="languageName.set($any($event.target).value)" placeholder="e.g. Español" />
+          </label>
+          <label class="platform__field">
+            <span>{{ 'field.code' | translate: 'Code' }}</span>
+            <input type="text" [value]="languageCode()" (input)="languageCode.set($any($event.target).value)" placeholder="es-ES" />
+          </label>
+          <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" />
+        </form>
+
+        <ul class="platform__params">
+          @for (lang of languages(); track lang.id) {
+            <li class="platform__param">
+              <ui-tag [label]="lang.code" severity="secondary" />
+              <span class="platform__param-name">{{ lang.name }}</span>
+              @if (lang.isDefault) {
+                <ui-tag [label]="'label.default' | translate: 'Default'" severity="success" [uppercase]="true" />
+              } @else {
+                <ui-button [label]="'button.set-default' | translate: 'Set default'" icon="star" variant="text" (click)="setDefaultLanguage(lang.id)" />
+              }
+              <ui-button [label]="'button.remove' | translate: 'Remove'" icon="delete" variant="outlined" (click)="removeLanguage(lang.id)" />
+            </li>
+          }
+        </ul>
+      </ui-section>
+
+      <ui-section [title]="'section.translation-tags' | translate: 'Translation tags'" icon="key">
+        <span slot="action" class="platform__count">{{ translations().length }} {{ 'label.keys' | translate: 'keys' }}</span>
+        <p class="platform__hint">
+          {{ 'hint.translation-tags' | translate: 'Manage the translation string for each key in every registered language.' }}
+        </p>
+        <form class="platform__inline-form" (submit)="addTranslation(); $event.preventDefault()">
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'label.key' | translate: 'Key' }}</span>
+            <input
+              type="text"
+              [value]="newTranslationKey()"
+              (input)="newTranslationKey.set($any($event.target).value)"
+              placeholder="e.g. nav.wallet"
+            />
+          </label>
+          <ui-button [label]="'button.add-key' | translate: 'Add key'" icon="add" variant="tonal" type="submit" />
+        </form>
+
+        @if (translations().length) {
+          <div class="platform__table-wrap">
+            <table class="platform__table">
+              <thead>
+                <tr>
+                  <th>{{ 'label.key' | translate: 'Key' }}</th>
+                  @for (lang of languages(); track lang.id) {
+                    <th>{{ lang.code }}</th>
+                  }
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of translations(); track entry.id) {
+                  <tr>
+                    <td class="platform__table-key">{{ entry.key }}</td>
+                    @for (lang of languages(); track lang.id) {
+                      <td>
+                        <input
+                          type="text"
+                          [value]="entry.values[lang.id]"
+                          (input)="updateTranslationValue(entry.id, lang.id, $any($event.target).value)"
+                        />
+                      </td>
+                    }
+                    <td>
+                      <ui-button [label]="'button.remove' | translate: 'Remove'" icon="delete" variant="outlined" (click)="removeTranslation(entry.id)" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <ui-empty icon="key" [title]="'empty.no-translation-keys.title' | translate: 'No translation keys'" [description]="'empty.no-translation-keys.desc' | translate: 'Add a key to start translating the platform.'" />
+        }
+      </ui-section>
+    }
+  }
+</div>

@@ -1,0 +1,117 @@
+<div class="dir">
+  <app-page-header
+    [title]="'page.politicians.title' | translate: 'Politicians'"
+    [subtitle]="'page.politicians.subtitle' | translate: 'Explore every politician on the platform'"
+    icon="diversity_3"
+  />
+
+  <div class="dir__filters">
+    <p-iconfield class="dir__search">
+      <p-inputicon class="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        [placeholder]="'placeholder.search-politicians' | translate: 'Search by name, handle or party…'"
+        [ngModel]="search()"
+        (ngModelChange)="setSearch($event)"
+      />
+    </p-iconfield>
+
+    <div class="dir__selects">
+      <p-select
+        [options]="levelSelect"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="level()"
+        (ngModelChange)="level.set($event)"
+        appendTo="body"
+      />
+      <p-select
+        [options]="partySelect"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        [ngModel]="party()"
+        (ngModelChange)="party.set($event)"
+        appendTo="body"
+      />
+      <p-select
+        [options]="stateSelect()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        [ngModel]="state()"
+        (ngModelChange)="state.set($event)"
+        appendTo="body"
+      />
+      <p-select
+        [options]="sortSelect"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="sort()"
+        (ngModelChange)="sort.set($event)"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <div class="dir__meta">
+    <span>{{ resultCount() }} {{ (resultCount() === 1 ? 'label.politician' : 'label.politicians') | translate: (resultCount() === 1 ? 'politician' : 'politicians') }}</span>
+    <button type="button" class="dir__reset" (click)="clearFilters()">
+      <ui-icon name="filter_alt_off" [size]="16" /> {{ 'button.clear-filters' | translate: 'Clear filters' }}
+    </button>
+  </div>
+
+  @if (resultCount() === 0) {
+    <div class="dir__empty">
+      <ui-icon name="search_off" [size]="40" />
+      <p>{{ 'empty.no-politicians-match' | translate: 'No politicians match your filters.' }}</p>
+    </div>
+  } @else {
+    <div class="dir__grid">
+      @for (p of visible(); track p.id) {
+        <article class="pcard">
+          <a class="pcard__main" [routerLink]="['/profile', p.id]">
+            <ui-avatar [src]="p.avatarUrl" [alt]="p.name" [size]="56" [ring]="true" />
+            <div class="pcard__id">
+              <span class="pcard__name">
+                {{ p.name }}
+                @if (p.verified) {
+                  <ui-icon name="verified" [size]="15" [fill]="true" class="pcard__verified" />
+                }
+              </span>
+              <span class="pcard__handle">{{ p.handle }}</span>
+              <span class="pcard__office">{{ p.office }} · {{ p.state }}</span>
+            </div>
+          </a>
+
+          <div class="pcard__tags">
+            <ui-tag [label]="p.partyAcronym" severity="info" />
+            <ui-tag [label]="(p.followers | compactNumber) + ' ' + ('label.followers' | translate: 'followers')" severity="neutral" />
+          </div>
+
+          @if (canFollow()) {
+            <button
+              type="button"
+              class="pcard__follow"
+              [class.pcard__follow--on]="isFollowing(p.id)"
+              (click)="toggleFollow(p.id)"
+            >
+              <ui-icon [name]="isFollowing(p.id) ? 'check' : 'person_add'" [size]="16" />
+              {{ (isFollowing(p.id) ? 'button.following' : 'button.follow') | translate: (isFollowing(p.id) ? 'Following' : 'Follow') }}
+            </button>
+          }
+        </article>
+      }
+    </div>
+
+    @if (!allLoaded()) {
+      <div class="dir__sentinel" appInfiniteScroll [disabled]="allLoaded()" (loadMore)="loadMore()">
+        <ui-icon name="progress_activity" [size]="22" class="dir__spinner" />
+        <span>{{ 'label.loading-more' | translate: 'Loading more…' }}</span>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,207 @@
+<div class="admin">
+  <app-page-header
+    [title]="party().name + ' — ' + ('page.admin.suffix' | translate: 'Admin')"
+    [subtitle]="'page.admin.subtitle' | translate: 'Member management, approvals and engagement'"
+    icon="admin_panel_settings"
+  />
+
+  <div class="stats">
+    <ui-stat icon="groups" [label]="'label.members' | translate: 'Members'" [value]="party().memberCount.toLocaleString('pt-BR')" [caption]="'label.total-affiliated' | translate: 'Total affiliated'" />
+    <ui-stat icon="pending_actions" [label]="'label.pending' | translate: 'Pending'" [value]="pendingCount().toString()" [caption]="'label.affiliation-requests' | translate: 'Affiliation requests'" />
+    <ui-stat icon="trending_up" [label]="'label.engagement' | translate: 'Engagement'" value="72%" [caption]="'label.active-this-month' | translate: 'Active this month'" />
+    <ui-stat icon="payments" [label]="'label.contributions' | translate: 'Contributions'" value="R$ 84.2k" [caption]="'label.collected-this-month' | translate: 'Collected this month'" />
+  </div>
+
+  <div class="grid">
+    <div class="grid__main">
+      <ui-tabs [tabs]="tabs" [active]="activeTab()" (activeChange)="setActiveTab($event)" />
+
+      @switch (activeTab()) {
+        @case ('requests') {
+          <ui-section [title]="'section.affiliation-requests' | translate: 'Affiliation requests'" icon="how_to_reg">
+            <span slot="action" class="counter">{{ pendingCount() }} {{ 'label.pending-lower' | translate: 'pending' }}</span>
+            @if (requests().length) {
+              <ul class="requests">
+                @for (req of requests(); track req.id) {
+                  <li class="request">
+                    <ui-avatar [src]="req.avatarUrl" [alt]="req.name" [size]="44" [ring]="true" />
+                    <div class="request__body">
+                      <div class="request__name">{{ req.name }}</div>
+                      <div class="request__meta">{{ req.city }} · {{ req.requestedAt }}</div>
+                    </div>
+                    @if (req.status === 'pending') {
+                      <div class="request__actions">
+                        <ui-button [label]="'button.approve' | translate: 'Approve'" icon="check" variant="filled" (click)="onApprove(req.id)" />
+                        <ui-button [label]="'button.reject' | translate: 'Reject'" icon="close" variant="outlined" (click)="onReject(req.id)" />
+                      </div>
+                    } @else {
+                      <ui-tag [label]="requestStatusLabel(req.status)" [severity]="requestSeverity(req.status)" [uppercase]="true" />
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <ui-empty icon="how_to_reg" [title]="'empty.requests.title' | translate: 'No requests'" [description]="'empty.requests.desc' | translate: 'New affiliation requests will appear here.'" />
+            }
+          </ui-section>
+        }
+
+        @case ('members') {
+          <ui-section [title]="'tab.members' | translate: 'Members'" icon="groups">
+            <span slot="action" class="counter">{{ members().length }} {{ 'label.affiliated-lower' | translate: 'affiliated' }}</span>
+
+            <p-iconfield class="member-search">
+              <p-inputicon class="pi pi-search" />
+              <input
+                pInputText
+                type="text"
+                [placeholder]="'placeholder.search-name-city' | translate: 'Search by name or city…'"
+                [ngModel]="memberSearch()"
+                (ngModelChange)="setMemberSearch($event)"
+              />
+            </p-iconfield>
+
+            @if (filteredMembers().length) {
+              <ul class="requests">
+                @for (member of filteredMembers(); track member.id) {
+                  <li class="request">
+                    <ui-avatar [src]="member.avatarUrl" [alt]="member.name" [size]="44" [ring]="true" />
+                    <div class="request__body">
+                      <div class="request__name">{{ member.name }}</div>
+                      <div class="request__meta">{{ member.city }} · {{ 'label.joined' | translate: 'Joined' }} {{ member.joinedAt }}</div>
+                    </div>
+                    <ui-tag
+                      [label]="requestStatusLabel(member.status)"
+                      [severity]="member.status === 'active' ? 'success' : 'danger'"
+                      [uppercase]="true"
+                    />
+                    <ui-button
+                      [label]="(member.status === 'active' ? 'button.suspend' : 'button.reinstate') | translate: (member.status === 'active' ? 'Suspend' : 'Reinstate')"
+                      [icon]="member.status === 'active' ? 'block' : 'check_circle'"
+                      variant="outlined"
+                      (click)="onToggleMember(member.id)"
+                    />
+                  </li>
+                }
+              </ul>
+            } @else {
+              <ui-empty icon="groups" [title]="'empty.members.title' | translate: 'No members found'" [description]="'empty.try-different-search' | translate: 'Try a different search term.'" />
+            }
+          </ui-section>
+        }
+
+        @case ('politicians') {
+          <ui-section [title]="'section.linked-politicians' | translate: 'Linked politicians'" icon="badge">
+            <span slot="action" class="counter">{{ party().representatives.length }} {{ 'label.linked' | translate: 'linked' }}</span>
+            @if (party().representatives.length) {
+              <ul class="requests">
+                @for (rep of party().representatives; track rep.id) {
+                  <li class="request">
+                    <ui-avatar [src]="rep.avatarUrl" [alt]="rep.name" [size]="44" [ring]="true" />
+                    <div class="request__body">
+                      <div class="request__name">{{ rep.name }}</div>
+                      <div class="request__meta">{{ rep.role }}</div>
+                    </div>
+                    <ui-button [label]="'button.unlink' | translate: 'Unlink'" icon="link_off" variant="outlined" (click)="onRemoveRepresentative(rep.id)" />
+                  </li>
+                }
+              </ul>
+            } @else {
+              <ui-empty icon="badge" [title]="'empty.no-politicians-linked.title' | translate: 'No politicians linked'" [description]="'empty.no-politicians-linked.desc' | translate: 'Link politicians from the directory below.'" />
+            }
+          </ui-section>
+
+          <ui-section [title]="'section.link-politician' | translate: 'Link a politician'" icon="person_add">
+            @if (candidateRepresentatives().length) {
+              <ul class="requests">
+                @for (candidate of candidateRepresentatives(); track candidate.id) {
+                  <li class="request">
+                    <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="44" [ring]="true" />
+                    <div class="request__body">
+                      <div class="request__name">{{ candidate.name }}</div>
+                      <div class="request__meta">{{ candidate.office }}</div>
+                    </div>
+                    <ui-button [label]="'button.link' | translate: 'Link'" icon="link" variant="filled" (click)="onAddRepresentative(candidate)" />
+                  </li>
+                }
+              </ul>
+            } @else {
+              <ui-empty icon="person_add" [title]="'empty.no-candidates.title' | translate: 'No candidates'" [description]="'empty.no-candidates.desc' | translate: 'Every politician from this party is already linked.'" />
+            }
+          </ui-section>
+
+          <ui-section [title]="'section.register-politician' | translate: 'Register a new politician'" icon="person_add_alt">
+            <p class="register-hint">
+              {{ 'hint.register-politician' | translate: 'Only parties can register a politician. Registering here links them to your party immediately.' }}
+            </p>
+            <form class="register-form" (submit)="submitNewPolitician(); $event.preventDefault()">
+              <div class="register-row">
+                <label class="register-field register-field--grow">
+                  <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
+                  <input type="text" [value]="registerName()" (input)="registerName.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
+                </label>
+                <label class="register-field">
+                  <span>{{ 'field.handle' | translate: 'Handle' }}</span>
+                  <input type="text" [value]="registerHandle()" (input)="registerHandle.set($any($event.target).value)" placeholder="@jane.doe" />
+                </label>
+              </div>
+              <div class="register-row">
+                <label class="register-field">
+                  <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
+                  <input type="text" inputmode="numeric" [value]="registerCpf()" (input)="registerCpf.set($any($event.target).value)" placeholder="000.000.000-00" />
+                </label>
+                <label class="register-field">
+                  <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>
+                  <input type="text" inputmode="numeric" [value]="registerCnpj()" (input)="registerCnpj.set($any($event.target).value)" placeholder="00.000.000/0000-00" />
+                </label>
+              </div>
+              <div class="register-row">
+                <label class="register-field register-field--grow">
+                  <span>{{ 'field.position' | translate: 'Position' }}</span>
+                  <input type="text" [value]="registerPosition()" (input)="registerPosition.set($any($event.target).value)" placeholder="e.g. Federal Deputy" />
+                </label>
+                <label class="register-field">
+                  <span>{{ 'field.level' | translate: 'Level' }}</span>
+                  <select class="register-select" [value]="registerLevel()" (change)="registerLevel.set($any($event.target).value)">
+                    @for (option of levelOptions; track option.value) {
+                      <option [value]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="register-field">
+                  <span>{{ 'field.state' | translate: 'State' }}</span>
+                  <input type="text" maxlength="2" [value]="registerState()" (input)="registerState.set($any($event.target).value)" placeholder="e.g. SP" />
+                </label>
+              </div>
+
+              @if (registerError()) {
+                <p class="register-error"><ui-icon name="error" [size]="16" /> {{ registerError() }}</p>
+              }
+
+              <ui-button [label]="'button.register-link' | translate: 'Register & link'" icon="person_add_alt" variant="filled" type="submit" />
+            </form>
+          </ui-section>
+        }
+      }
+    </div>
+
+    <div class="grid__side">
+      <ui-section [title]="'section.quick-actions' | translate: 'Quick actions'" icon="bolt">
+        <ul class="actions">
+          @for (action of quickActions; track action.label) {
+            <li>
+              <button type="button" class="action">
+                <span class="action__icon"><ui-icon [name]="action.icon" [size]="22" /></span>
+                <span class="action__text">
+                  <span class="action__label">{{ action.labelKey | translate: action.label }}</span>
+                  <span class="action__desc">{{ action.descKey | translate: action.description }}</span>
+                </span>
+                <ui-icon name="chevron_right" [size]="20" />
+              </button>
+            </li>
+          }
+        </ul>
+      </ui-section>
+    </div>
+  </div>
+</div>

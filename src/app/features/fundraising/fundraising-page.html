@@ -1,0 +1,114 @@
+<div class="fund">
+  <app-page-header
+    [title]="'page.fundraising.title' | translate: 'Fundraising'"
+    [subtitle]="'page.fundraising.subtitle' | translate: 'Social causes and party initiatives'"
+    icon="volunteer_activism"
+  >
+    <div slot="action" *appCan="'create-fundraiser'">
+      <ui-button
+        [label]="(showForm() ? 'button.cancel' : 'button.create-action') | translate: (showForm() ? 'Cancel' : 'Create action')"
+        [icon]="showForm() ? 'close' : 'add'"
+        variant="filled"
+        (click)="toggleForm()"
+      />
+    </div>
+  </app-page-header>
+
+  <div class="fund__notice">
+    <ui-icon name="gavel" [size]="18" />
+    <p>
+      {{ 'hint.fundraising-disclaimer-strong' | translate: 'For social causes and party initiatives only' }}.
+      {{ 'hint.fundraising-disclaimer-rest' | translate: 'This is not electoral campaign fundraising, which is regulated separately and must use official systems. All actions show a public progress ledger.' }}
+    </p>
+  </div>
+
+  <div class="fund__stats">
+    <ui-stat icon="savings" [label]="'label.total-raised' | translate: 'Total raised'" [value]="money(totalRaised())" [caption]="'label.across-active-actions' | translate: 'Across active actions'" />
+    <ui-stat icon="campaign" [label]="'label.active-actions' | translate: 'Active actions'" [value]="fundraisers().length + ''" [caption]="'label.open-for-contributions' | translate: 'Open for contributions'" />
+    <ui-stat icon="groups" [label]="'label.supporters' | translate: 'Supporters'" [value]="totalSupporters() + ''" [caption]="'label.people-who-contributed' | translate: 'People who contributed'" />
+  </div>
+
+  @if (showForm()) {
+    <form class="fund__form" (submit)="submit(); $event.preventDefault()">
+      <h3>{{ 'section.new-fundraising-action' | translate: 'New fundraising action' }}</h3>
+      <label class="fund__field">
+        <span>{{ 'field.title' | translate: 'Title' }}</span>
+        <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" placeholder="e.g. Community food drive" />
+      </label>
+      <label class="fund__field">
+        <span>{{ 'field.description' | translate: 'Description' }}</span>
+        <textarea rows="3" [value]="description()" (input)="description.set($any($event.target).value)" placeholder="What is this for?"></textarea>
+      </label>
+      <div class="fund__row">
+        <label class="fund__field">
+          <span>{{ 'field.category' | translate: 'Category' }}</span>
+          <select [value]="category()" (change)="category.set($any($event.target).value)">
+            @for (cat of categories; track cat.category) {
+              <option [value]="cat.category">{{ ('category.' + cat.category) | translate: cat.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="fund__field">
+          <span>{{ 'field.goal-usd' | translate: 'Goal (USD)' }}</span>
+          <input type="number" min="1" [value]="goal() ?? ''" (input)="goal.set(+$any($event.target).value)" placeholder="5000" />
+        </label>
+        <label class="fund__field">
+          <span>{{ 'field.deadline' | translate: 'Deadline' }}</span>
+          <input type="text" [value]="deadline()" (input)="deadline.set($any($event.target).value)" placeholder="Aug 30, 2026" />
+        </label>
+      </div>
+      <ui-button [label]="'button.publish-action' | translate: 'Publish action'" icon="check" variant="filled" type="submit" />
+    </form>
+  }
+
+  <div class="fund__grid">
+    @for (f of fundraisers(); track f.id) {
+      <article class="fund__card">
+        <header class="fund__card-head">
+          <span class="fund__card-icon"><ui-icon [name]="categoryMeta(f.category).icon" [size]="20" [fill]="true" /></span>
+          <div>
+            <h3>{{ f.title }}</h3>
+            <span class="fund__organizer">{{ f.organizer }}</span>
+          </div>
+        </header>
+
+        <p class="fund__desc">{{ f.description }}</p>
+
+        <div class="fund__tags">
+          <ui-tag [label]="('category.' + f.category) | translate: categoryMeta(f.category).label" severity="info" />
+          @if (f.ledgerPublic) {
+            <ui-tag [label]="'label.public-ledger' | translate: 'Public ledger'" severity="success" icon="receipt_long" />
+          } @else {
+            <ui-tag [label]="'label.ledger-pending' | translate: 'Ledger pending'" severity="warning" />
+          }
+        </div>
+
+        <div class="fund__progress">
+          <ui-progress [value]="progress(f)" color="tertiary" />
+          <div class="fund__amounts">
+            <strong>{{ money(f.raised) }}</strong>
+            <span>{{ 'label.of' | translate: 'of' }} {{ money(f.goal) }}</span>
+          </div>
+        </div>
+
+        <div class="fund__meta">
+          <span><ui-icon name="groups" [size]="16" /> {{ f.supporters }} {{ 'label.supporters-lower' | translate: 'supporters' }}</span>
+          <span><ui-icon name="event" [size]="16" /> {{ 'label.until' | translate: 'until' }} {{ f.deadline }}</span>
+        </div>
+
+        @if (isAuthenticated()) {
+          <div class="fund__contribute">
+            <span class="fund__contribute-label">{{ 'button.contribute' | translate: 'Contribute' }}</span>
+            @for (amount of presets; track amount) {
+              <button type="button" class="fund__amount-btn" (click)="contribute(f.id, amount)">
+                {{ money(amount) }}
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="fund__signin-hint">{{ 'hint.sign-in-to-contribute' | translate: 'Sign in to contribute.' }}</p>
+        }
+      </article>
+    }
+  </div>
+</div>

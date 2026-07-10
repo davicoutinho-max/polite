@@ -1,0 +1,85 @@
+:host { display: block; }
+
+.hero { position: relative; }
+.hero__cover {
+  height: 200px; background-size: cover; background-position: center; opacity: 0.85;
+  background-color: var(--cp-surface-variant);
+}
+.hero__scrim { position: absolute; inset: 0; height: 200px; background: linear-gradient(to top, var(--cp-surface), transparent); }
+.hero__body {
+  position: relative; margin: -64px 0 0;
+  padding: 0 var(--cp-margin-mobile);
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--cp-space-lg);
+}
+.hero__logo {
+  width: 112px; height: 112px; border-radius: var(--cp-radius-lg);
+  border: 4px solid var(--cp-surface); overflow: hidden; background: #fff;
+  box-shadow: var(--cp-shadow-card); flex-shrink: 0;
+}
+.hero__logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero__info { flex: 1; }
+.hero__title-row { display: flex; flex-direction: column; gap: var(--cp-space-sm); }
+.hero__name { margin: 0; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.01em; color: var(--cp-on-surface); }
+.hero__badge {
+  width: max-content; padding: var(--cp-space-xs) var(--cp-space-md); border-radius: var(--cp-radius-full);
+  background: var(--cp-primary-container); color: var(--cp-on-primary);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
+}
+.hero__ideology { margin: var(--cp-space-sm) 0 0; font-size: 16px; color: var(--cp-on-surface-variant); }
+.hero__actions { display: flex; gap: var(--cp-space-md); }
+
+@media (min-width: 768px) {
+  .hero__cover, .hero__scrim { height: 260px; }
+  .hero__body { flex-direction: row; align-items: flex-end; padding: 0 var(--cp-margin-desktop); }
+  .hero__logo { width: 140px; height: 140px; }
+  .hero__title-row { flex-direction: row; align-items: center; gap: var(--cp-space-md); }
+  .hero__name { font-size: 40px; line-height: 48px; }
+  .hero__actions { padding-bottom: var(--cp-space-sm); }
+}
+
+.party__content {
+  margin: var(--cp-space-xl) 0 0;
+  padding: 0 var(--cp-margin-mobile) var(--cp-space-xl);
+  display: flex; flex-direction: column; gap: var(--cp-space-lg);
+}
+@media (min-width: 768px) { .party__content { padding: 0 var(--cp-space-xl) var(--cp-space-xl); } }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--cp-space-md); }
+
+.grid { display: grid; grid-template-columns: 1fr; gap: var(--cp-space-lg); }
+@media (min-width: 1024px) { .grid { grid-template-columns: 2fr 1fr; align-items: start; } }
+.grid__main, .grid__side { display: flex; flex-direction: column; gap: var(--cp-space-lg); min-width: 0; }
+
+.party__activity { display: flex; flex-direction: column; gap: var(--cp-space-lg); }
+
+.prose { margin: 0; font-size: 16px; line-height: 24px; color: var(--cp-on-surface-variant); }
+
+.directories, .events, .reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--cp-space-md); }
+.directory { display: flex; align-items: center; gap: var(--cp-space-md); flex-wrap: wrap; }
+.directory__body { flex: 1; min-width: 0; }
+.directory__location { font-weight: 600; color: var(--cp-on-surface); }
+.directory__leader { font-size: 12px; color: var(--cp-on-surface-variant); }
+.directory__members { font-size: 12px; color: var(--cp-on-surface-variant); white-space: nowrap; }
+
+.event { display: flex; align-items: center; gap: var(--cp-space-md); }
+.event__date {
+  width: 40px; height: 40px; border-radius: var(--cp-radius); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cp-surface-container-high); color: var(--cp-secondary);
+}
+.event__body { flex: 1; }
+.event__title { font-weight: 600; color: var(--cp-on-surface); }
+.event__meta { font-size: 12px; color: var(--cp-on-surface-variant); }
+
+.statute { margin-top: var(--cp-space-lg); }
+
+.rep {
+  display: flex; align-items: center; gap: var(--cp-space-md);
+  padding: var(--cp-space-sm); margin: calc(var(--cp-space-sm) * -1);
+  border-radius: var(--cp-radius); cursor: pointer; color: var(--cp-on-surface-variant);
+  transition: background 0.15s ease;
+}
+.rep:hover { background: var(--cp-surface-container-low); }
+.rep > div { flex: 1; }
+.rep__name { font-weight: 600; color: var(--cp-on-surface); }
+.rep__role { font-size: 14px; color: var(--cp-on-surface-variant); }

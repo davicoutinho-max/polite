@@ -1,0 +1,101 @@
+:host {
+  display: inline-flex;
+}
+
+.lang {
+  position: relative;
+  display: inline-flex;
+}
+
+.lang__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 var(--cp-space-sm);
+  border: none;
+  background: transparent;
+  color: var(--cp-secondary);
+  border-radius: var(--cp-radius-full);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover,
+  &--active {
+    background: var(--cp-surface-container-low);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--cp-secondary);
+    outline-offset: 2px;
+  }
+}
+
+.lang__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.lang__panel {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(260px, calc(100vw - 24px));
+  max-height: min(400px, calc(100dvh - 96px));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--cp-space-xs);
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-shadow-hover);
+  animation: lang-in 0.14s ease-out;
+}
+
+@keyframes lang-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lang__option {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  width: 100%;
+  padding: var(--cp-space-sm) var(--cp-space-md);
+  border: none;
+  background: transparent;
+  border-radius: var(--cp-radius);
+  font: inherit;
+  text-align: left;
+  color: var(--cp-on-surface);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover { background: var(--cp-surface-container-low); }
+  &--active { color: var(--cp-secondary); }
+}
+
+.lang__option-code {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: var(--cp-radius);
+  background: var(--cp-surface-container-highest);
+  color: var(--cp-on-surface-variant);
+}
+
+.lang__option-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}

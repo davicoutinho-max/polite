@@ -1,0 +1,175 @@
+// ============================================================================
+// CivicPulse — Design System tokens
+// Material 3 style palette mapped to CSS custom properties so every component
+// (and the PrimeNG theme) reads from a single source of truth.
+// ============================================================================
+
+:root {
+  // ---- Primary ----
+  --cp-primary: #002045;
+  --cp-on-primary: #ffffff;
+  --cp-primary-container: #1a365d;
+  --cp-on-primary-container: #86a0cd;
+  --cp-primary-fixed: #d6e3ff;
+  --cp-primary-fixed-dim: #adc7f7;
+  --cp-on-primary-fixed: #001b3c;
+  --cp-on-primary-fixed-variant: #2d476f;
+  --cp-brand-text: #002045;
+
+  // ---- Secondary ----
+  --cp-secondary: #1960a3;
+  --cp-on-secondary: #ffffff;
+  --cp-secondary-container: #7db6ff;
+  --cp-on-secondary-container: #00477f;
+  --cp-secondary-fixed: #d3e4ff;
+  --cp-secondary-fixed-dim: #a2c9ff;
+  --cp-on-secondary-fixed: #001c38;
+  --cp-on-secondary-fixed-variant: #004881;
+
+  // ---- Tertiary ----
+  --cp-tertiary: #002617;
+  --cp-on-tertiary: #ffffff;
+  --cp-tertiary-container: #003e28;
+  --cp-on-tertiary-container: #00b47d;
+  --cp-tertiary-fixed: #6ffbbe;
+  --cp-tertiary-fixed-dim: #4edea3;
+  --cp-on-tertiary-fixed: #002113;
+  --cp-on-tertiary-fixed-variant: #005236;
+
+  // ---- Error ----
+  --cp-error: #ba1a1a;
+  --cp-on-error: #ffffff;
+  --cp-error-container: #ffdad6;
+  --cp-on-error-container: #93000a;
+
+  // ---- Surfaces / background ----
+  --cp-background: #f8f9ff;
+  --cp-on-background: #0b1c30;
+  --cp-surface: #f8f9ff;
+  --cp-on-surface: #0b1c30;
+  --cp-surface-variant: #d3e4fe;
+  --cp-on-surface-variant: #43474e;
+  --cp-surface-bright: #f8f9ff;
+  --cp-surface-dim: #cbdbf5;
+  --cp-surface-container-lowest: #ffffff;
+  --cp-surface-container-low: #eff4ff;
+  --cp-surface-container: #e5eeff;
+  --cp-surface-container-high: #dce9ff;
+  --cp-surface-container-highest: #d3e4fe;
+
+  // ---- Outline / misc ----
+  --cp-outline: #74777f;
+  --cp-outline-variant: #c4c6cf;
+  --cp-inverse-surface: #213145;
+  --cp-inverse-on-surface: #eaf1ff;
+  --cp-inverse-primary: #adc7f7;
+
+  // ---- Success / status helpers (from the mock chips) ----
+  --cp-success-container: #e6f4ea;
+  --cp-on-success-container: #137333;
+  --cp-danger-container: #fce8e6;
+  --cp-on-danger-container: #c5221f;
+
+  // ---- Spacing scale ----
+  --cp-space-xs: 4px;
+  --cp-space-sm: 8px;
+  --cp-space-md: 16px;
+  --cp-space-lg: 24px;
+  --cp-space-xl: 32px;
+  --cp-space-gutter: 20px;
+  --cp-margin-mobile: 16px;
+  --cp-margin-desktop: 48px;
+  --cp-max-width: 1280px;
+
+  // ---- Radius ----
+  --cp-radius: 4px;
+  --cp-radius-lg: 8px;
+  --cp-radius-xl: 12px;
+  --cp-radius-full: 9999px;
+
+  // ---- Elevation ----
+  --cp-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --cp-shadow-hover: 0 4px 8px rgba(26, 54, 93, 0.08), 0 2px 4px rgba(26, 54, 93, 0.06);
+
+  // ---- Typography ----
+  --cp-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+// ============================================================================
+// Dark scheme — a Material 3 style dark derivation of the same blue palette.
+// Applied when the <html> element carries the .cp-dark class (toggled by the
+// ThemeService). Only color tokens change; spacing / radius / type are shared.
+// ============================================================================
+:root.cp-dark {
+  // ---- Primary ----
+  // Kept dark with white text so every `primary-container` surface (filled
+  // buttons, primary tags, the membership card) preserves contrast. Brand *text*
+  // uses the dedicated --cp-brand-text token, which flips light on dark.
+  --cp-primary: #16345f;
+  --cp-on-primary: #ffffff;
+  --cp-primary-container: #274d84;
+  --cp-on-primary-container: #d6e3ff;
+  --cp-primary-fixed: #d6e3ff;
+  --cp-primary-fixed-dim: #adc7f7;
+  --cp-on-primary-fixed: #001b3c;
+  --cp-on-primary-fixed-variant: #2d476f;
+  --cp-brand-text: #adc7f7;
+
+  // ---- Secondary (interactive blue) ----
+  --cp-secondary: #a2c9ff;
+  --cp-on-secondary: #00335c;
+  --cp-secondary-container: #234b73;
+  --cp-on-secondary-container: #cfe4ff;
+  --cp-secondary-fixed: #d3e4ff;
+  --cp-secondary-fixed-dim: #a2c9ff;
+  --cp-on-secondary-fixed: #001c38;
+  --cp-on-secondary-fixed-variant: #004881;
+
+  // ---- Tertiary (green accents) ----
+  --cp-tertiary: #4edea3;
+  --cp-on-tertiary: #003823;
+  --cp-tertiary-container: #005236;
+  --cp-on-tertiary-container: #6ffbbe;
+  --cp-tertiary-fixed: #6ffbbe;
+  --cp-tertiary-fixed-dim: #4edea3;
+  --cp-on-tertiary-fixed: #002113;
+  --cp-on-tertiary-fixed-variant: #00b47d;
+
+  // ---- Error ----
+  --cp-error: #ffb4ab;
+  --cp-on-error: #690005;
+  --cp-error-container: #93000a;
+  --cp-on-error-container: #ffdad6;
+
+  // ---- Surfaces / background ----
+  --cp-background: #0b1220;
+  --cp-on-background: #dfe6f2;
+  --cp-surface: #0b1220;
+  --cp-on-surface: #e2e8f5;
+  --cp-surface-variant: #3a4560;
+  --cp-on-surface-variant: #c1c9d9;
+  --cp-surface-bright: #333f5a;
+  --cp-surface-dim: #0b1220;
+  --cp-surface-container-lowest: #0a101c;
+  --cp-surface-container-low: #131c2c;
+  --cp-surface-container: #17212f;
+  --cp-surface-container-high: #212c3f;
+  --cp-surface-container-highest: #2b374d;
+
+  // ---- Outline / misc ----
+  --cp-outline: #8b93a3;
+  --cp-outline-variant: #3a4356;
+  --cp-inverse-surface: #e2e8f5;
+  --cp-inverse-on-surface: #0b1220;
+  --cp-inverse-primary: #1960a3;
+
+  // ---- Status helpers ----
+  --cp-success-container: #123d24;
+  --cp-on-success-container: #7fe0a0;
+  --cp-danger-container: #4a1512;
+  --cp-on-danger-container: #ffb4ab;
+
+  // ---- Elevation (softer, darker shadows on dark) ----
+  --cp-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --cp-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.4);
+}

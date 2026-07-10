@@ -1,0 +1,63 @@
+<div class="picker__backdrop" (click)="onClose()"></div>
+<div class="picker" role="dialog" [attr.aria-label]="'a11y.new-conversation' | translate: 'Start a new conversation'">
+  <header class="picker__head">
+    <h3>{{ 'section.new-conversation' | translate: 'New conversation' }}</h3>
+    <button type="button" class="picker__close" [attr.aria-label]="'button.close' | translate: 'Close'" (click)="onClose()">
+      <ui-icon name="close" [size]="20" />
+    </button>
+  </header>
+
+  <p class="picker__hint">{{ 'hint.picker-politicians-parties-only' | translate: 'Only politicians and parties can be added — not regular citizens.' }}</p>
+
+  <p-iconfield class="picker__search">
+    <p-inputicon class="pi pi-search" />
+    <input
+      pInputText
+      type="text"
+      [placeholder]="'placeholder.search-politicians-parties' | translate: 'Search politicians or parties…'"
+      [ngModel]="search()"
+      (ngModelChange)="setSearch($event)"
+    />
+  </p-iconfield>
+
+  <ul class="picker__list">
+    @for (candidate of filtered(); track candidate.id) {
+      <li>
+        <button
+          type="button"
+          class="picker__row"
+          [class.picker__row--selected]="isSelected(candidate.id)"
+          (click)="toggle(candidate.id)"
+        >
+          <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="40" [ring]="true" />
+          <div class="picker__row-body">
+            <div class="picker__row-name">{{ candidate.name }}</div>
+            <div class="picker__row-role">{{ candidate.role }}</div>
+          </div>
+          @if (isSelected(candidate.id)) {
+            <ui-icon name="check_circle" [size]="20" [fill]="true" />
+          }
+        </button>
+      </li>
+    } @empty {
+      <li class="picker__empty">{{ 'empty.no-matches' | translate: 'No matches found.' }}</li>
+    }
+  </ul>
+
+  @if (selectedCount() > 1) {
+    <label class="picker__group-name">
+      <span>{{ 'field.group-name' | translate: 'Group name' }}</span>
+      <input type="text" [ngModel]="groupName()" (ngModelChange)="groupName.set($event)" placeholder="e.g. Progressive Caucus" />
+    </label>
+  }
+
+  <footer class="picker__footer">
+    <ui-button
+      [label]="selectedCount() > 1 ? ('button.start-group' | translate: 'Start group') + ' (' + selectedCount() + ')' : ('button.start-conversation' | translate: 'Start conversation')"
+      icon="send"
+      variant="filled"
+      [disabled]="selectedCount() === 0"
+      (click)="onCreate()"
+    />
+  </footer>
+</div>

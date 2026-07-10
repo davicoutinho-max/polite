@@ -1,0 +1,40 @@
+<ui-section [title]="'section.affiliation-status' | translate: 'Affiliation status'" icon="how_to_reg">
+  <div slot="action" class="filiation__actions">
+    @if (status() === 'not-started') {
+      <ui-button [label]="'button.request-affiliation' | translate: 'Request affiliation'" icon="send" variant="filled" (click)="request.emit()" />
+    } @else if (status() !== 'affiliated') {
+      <ui-button [label]="'button.simulate-next-step' | translate: 'Simulate next step'" icon="fast_forward" variant="tonal" (click)="advance.emit()" />
+    } @else {
+      <ui-button [label]="'button.reset-demo' | translate: 'Reset demo'" icon="restart_alt" variant="text" (click)="reset.emit()" />
+    }
+  </div>
+
+  @if (status() === 'not-started') {
+    <p class="filiation__intro">
+      {{ 'hint.affiliation-intro' | translate: "Start your affiliation request below. You'll pre-register, upload documents and pay the contribution — but the official confirmation depends on the party and the Electoral Justice." }}
+    </p>
+  }
+
+  <ol class="steps">
+    @for (step of steps(); track step.status; let i = $index) {
+      <li class="step" [attr.data-state]="stepState(i)">
+        <div class="step__marker">
+          @if (stepState(i) === 'done') {
+            <ui-icon name="check" [size]="20" />
+          } @else {
+            <ui-icon [name]="step.icon" [size]="20" [fill]="stepState(i) === 'active'" />
+          }
+        </div>
+        <div class="step__body">
+          <div class="step__label">
+            {{ ('step.' + step.status + '.label') | translate: step.label }}
+            @if (stepState(i) === 'active') {
+              <span class="step__badge">{{ 'label.current' | translate: 'Current' }}</span>
+            }
+          </div>
+          <div class="step__desc">{{ ('step.' + step.status + '.desc') | translate: step.description }}</div>
+        </div>
+      </li>
+    }
+  </ol>
+</ui-section>

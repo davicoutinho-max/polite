@@ -1,0 +1,159 @@
+:host {
+  display: block;
+  padding: var(--cp-space-lg) var(--cp-margin-mobile) var(--cp-space-xl);
+}
+@media (min-width: 768px) {
+  :host { padding: var(--cp-space-xl) var(--cp-margin-desktop); }
+}
+
+.fund { max-width: 1100px; margin: 0 auto; }
+
+.fund__notice {
+  display: flex;
+  gap: var(--cp-space-sm);
+  align-items: flex-start;
+  padding: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+  background: var(--cp-tertiary-fixed-dim);
+  color: var(--cp-on-tertiary-fixed-variant);
+  border-radius: var(--cp-radius-lg);
+  p { margin: 0; font-size: 13px; line-height: 18px; }
+}
+
+.fund__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+}
+
+.fund__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+  padding: var(--cp-space-lg);
+  margin-bottom: var(--cp-space-lg);
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-shadow-card);
+
+  h3 { margin: 0; font-size: 18px; color: var(--cp-on-surface); }
+}
+.fund__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--cp-space-md);
+}
+@media (max-width: 640px) {
+  .fund__row { grid-template-columns: 1fr; }
+}
+.fund__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+
+  input, textarea, select {
+    font: inherit;
+    font-weight: 400;
+    padding: var(--cp-space-sm) var(--cp-space-md);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius);
+    background: var(--cp-surface-container-low);
+    color: var(--cp-on-surface);
+    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  }
+}
+
+.fund__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--cp-space-md);
+}
+
+.fund__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+  padding: var(--cp-space-lg);
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-shadow-card);
+}
+.fund__card-head {
+  display: flex;
+  gap: var(--cp-space-sm);
+  align-items: flex-start;
+  h3 { margin: 0; font-size: 16px; color: var(--cp-on-surface); }
+}
+.fund__card-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cp-radius-full);
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+}
+.fund__organizer { font-size: 12px; color: var(--cp-on-surface-variant); }
+.fund__desc { margin: 0; font-size: 14px; line-height: 20px; color: var(--cp-on-surface-variant); }
+
+.fund__tags { display: flex; flex-wrap: wrap; gap: var(--cp-space-xs); }
+
+.fund__progress { display: flex; flex-direction: column; gap: var(--cp-space-xs); }
+.fund__amounts {
+  display: flex;
+  align-items: baseline;
+  gap: var(--cp-space-xs);
+  strong { font-size: 16px; color: var(--cp-on-surface); }
+  span { font-size: 13px; color: var(--cp-on-surface-variant); }
+}
+
+.fund__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-md);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+  span { display: inline-flex; align-items: center; gap: 4px; }
+}
+
+.fund__contribute {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  padding-top: var(--cp-space-sm);
+  border-top: 1px solid var(--cp-outline-variant);
+}
+.fund__contribute-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+  margin-right: var(--cp-space-xs);
+}
+.fund__amount-btn {
+  padding: var(--cp-space-xs) var(--cp-space-md);
+  border: 1px solid var(--cp-secondary);
+  background: transparent;
+  color: var(--cp-secondary);
+  border-radius: var(--cp-radius-full);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  &:hover { background: var(--cp-surface-container-low); }
+}
+.fund__signin-hint {
+  margin: 0;
+  padding-top: var(--cp-space-sm);
+  border-top: 1px solid var(--cp-outline-variant);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+}

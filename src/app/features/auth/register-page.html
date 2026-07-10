@@ -1,0 +1,40 @@
+<div class="auth">
+  <div class="auth__card">
+    <div class="auth__brand">
+      <div class="auth__brand-icon"><ui-icon name="account_balance" [size]="26" [fill]="true" /></div>
+      <span>CivicPulse</span>
+    </div>
+
+    <h1 class="auth__title">{{ 'page.register.title' | translate: 'Create your account' }}</h1>
+    <p class="auth__subtitle">{{ 'page.register.subtitle' | translate: 'Join as a citizen to follow politicians, parties and take part in civic life.' }}</p>
+
+    <form class="auth__form" (submit)="submit(); $event.preventDefault()">
+      <label class="auth__field">
+        <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
+        <input type="text" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
+      </label>
+      <label class="auth__field">
+        <span>{{ 'field.email' | translate: 'Email' }}</span>
+        <input type="email" autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+      </label>
+      <label class="auth__field">
+        <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
+        <input type="text" inputmode="numeric" autocomplete="off" [value]="cpf()" (input)="cpf.set($any($event.target).value)" placeholder="000.000.000-00" />
+      </label>
+      <label class="auth__field">
+        <span>{{ 'field.password' | translate: 'Password' }}</span>
+        <input type="password" autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+      </label>
+
+      @if (error()) {
+        <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+      }
+
+      <ui-button [label]="'button.create-account' | translate: 'Create account'" icon="person_add" variant="filled" type="submit" [block]="true" />
+    </form>
+
+    <p class="auth__switch">
+      {{ 'hint.already-have-account' | translate: 'Already have an account?' }} <a routerLink="/login">{{ 'button.sign-in' | translate: 'Sign in' }}</a>
+    </p>
+  </div>
+</div>

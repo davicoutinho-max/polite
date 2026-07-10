@@ -1,0 +1,67 @@
+<div class="wallet">
+  <app-page-header
+    [title]="'page.wallet.title' | translate: 'Digital Wallet'"
+    [subtitle]="'page.wallet.subtitle' | translate: 'Your membership card, affiliation and monthly contribution'"
+    icon="wallet"
+  />
+
+  <div class="wallet__grid">
+    <div class="wallet__main">
+      <app-membership-card [card]="card()" [active]="isAffiliated()" />
+
+      <app-filiation-status
+        [steps]="steps"
+        [status]="status()"
+        [currentIndex]="currentStepIndex()"
+        (request)="onRequest()"
+        (advance)="onAdvance()"
+        (reset)="onReset()"
+      />
+    </div>
+
+    <div class="wallet__side">
+      <ui-section [title]="'section.monthly-contribution' | translate: 'Monthly contribution'" icon="payments">
+        @if (pendingFee(); as fee) {
+          <div class="due">
+            <div class="due__top">
+              <span class="due__label">{{ 'label.due' | translate: 'Due' }} — {{ fee.reference }}</span>
+              <ui-tag [label]="feeStatusLabel(fee.status)" [severity]="feeSeverity(fee.status)" [uppercase]="true" />
+            </div>
+            <div class="due__amount">R$ {{ fee.amount.toFixed(2) }}</div>
+            <div class="due__date">{{ 'label.due-date' | translate: 'Due date' }} {{ fee.dueDate }}</div>
+            <ui-button [label]="'button.pay-contribution' | translate: 'Pay contribution'" icon="payments" variant="filled" [block]="true" (click)="onPay(fee.id)" />
+          </div>
+        } @else {
+          <div class="due due--clear">
+            <ui-icon name="task_alt" [size]="32" [fill]="true" />
+            <span>{{ 'hint.no-pending-contributions' | translate: "You're all settled. No pending contributions." }}</span>
+          </div>
+        }
+
+        <p class="disclaimer">
+          <ui-icon name="info" [size]="16" />
+          {{ 'hint.contribution-disclaimer' | translate: 'The contribution is destined to the party. CivicPulse acts only as the payment platform.' }}
+        </p>
+      </ui-section>
+
+      <ui-section [title]="'section.payment-history' | translate: 'Payment history'" icon="history">
+        <ul class="fees">
+          @for (fee of fees(); track fee.id) {
+            <li class="fee">
+              <div>
+                <div class="fee__ref">{{ fee.reference }}</div>
+                <div class="fee__meta">
+                  {{ fee.status === 'paid' ? ('label.paid' | translate: 'Paid') + ' ' + fee.paidAt : ('label.due' | translate: 'Due') + ' ' + fee.dueDate }}
+                </div>
+              </div>
+              <div class="fee__right">
+                <span class="fee__amount">R$ {{ fee.amount.toFixed(2) }}</span>
+                <ui-tag [label]="feeStatusLabel(fee.status)" [severity]="feeSeverity(fee.status)" [uppercase]="true" />
+              </div>
+            </li>
+          }
+        </ul>
+      </ui-section>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,209 @@
+:host {
+  display: block;
+  padding: var(--cp-space-lg) var(--cp-margin-mobile) var(--cp-space-xl);
+}
+@media (min-width: 768px) {
+  :host { padding: var(--cp-space-xl) var(--cp-margin-desktop); }
+}
+
+.platform { max-width: 1000px; margin: 0 auto; }
+
+.platform__notice {
+  display: flex;
+  gap: var(--cp-space-sm);
+  align-items: flex-start;
+  padding: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+  border-radius: var(--cp-radius-lg);
+  p { margin: 0; font-size: 13px; line-height: 18px; }
+}
+
+.platform__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+  padding: var(--cp-space-lg);
+  margin-bottom: var(--cp-space-lg);
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-shadow-card);
+  h3 { margin: 0; font-size: 18px; color: var(--cp-on-surface); }
+}
+.platform__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-md);
+}
+.platform__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+  min-width: 120px;
+
+  &--grow { flex: 1; }
+
+  input {
+    font: inherit;
+    font-weight: 400;
+    padding: var(--cp-space-sm) var(--cp-space-md);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius);
+    background: var(--cp-surface-container-low);
+    color: var(--cp-on-surface);
+    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  }
+}
+
+.platform__parties {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--cp-space-md);
+}
+.platform__party {
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  padding: var(--cp-space-md);
+  background: var(--cp-surface-container-low);
+}
+.platform__party-head {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+}
+.platform__party-badge {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cp-radius);
+  background: var(--cp-primary-container);
+  color: var(--cp-on-primary);
+  font-weight: 700;
+}
+.platform__party-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.platform__party-name { font-size: 15px; font-weight: 600; color: var(--cp-on-surface); em { font-style: normal; color: var(--cp-on-surface-variant); } }
+.platform__party-meta { font-size: 12px; color: var(--cp-on-surface-variant); }
+.platform__party-body { margin-top: var(--cp-space-sm); }
+.platform__party-president {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+}
+
+.platform__hint { margin: 0 0 var(--cp-space-md); font-size: 13px; color: var(--cp-on-surface-variant); }
+
+.platform__politicians {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-sm);
+}
+.platform__politician {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  padding: var(--cp-space-sm);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius);
+  background: var(--cp-surface-container-lowest);
+}
+.platform__politician-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.platform__politician-name { font-size: 14px; font-weight: 600; color: var(--cp-on-surface); }
+.platform__politician-office { font-size: 12px; color: var(--cp-on-surface-variant); }
+.platform__select {
+  font: inherit;
+  padding: var(--cp-space-xs) var(--cp-space-sm);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius);
+  background: var(--cp-surface-container-low);
+  color: var(--cp-on-surface);
+  &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+}
+
+ui-section { display: block; margin-bottom: var(--cp-space-md); }
+
+.platform__count {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+  color: var(--cp-on-surface-variant);
+}
+
+.platform__inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--cp-space-md);
+  padding-bottom: var(--cp-space-md);
+  margin-bottom: var(--cp-space-md);
+  border-bottom: 1px solid var(--cp-outline-variant);
+}
+
+.platform__params {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-sm);
+}
+.platform__param {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  padding: var(--cp-space-sm);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius);
+  background: var(--cp-surface-container-lowest);
+  flex-wrap: wrap;
+}
+.platform__param-name { flex: 1; min-width: 100px; font-size: 14px; font-weight: 600; color: var(--cp-on-surface); }
+.platform__param-meta { font-size: 12px; color: var(--cp-on-surface-variant); }
+
+.platform__table-wrap { overflow-x: auto; }
+.platform__table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+
+  th, td {
+    padding: var(--cp-space-sm);
+    border-bottom: 1px solid var(--cp-outline-variant);
+    text-align: left;
+    white-space: nowrap;
+  }
+  th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--cp-on-surface-variant);
+  }
+  td input {
+    width: 100%;
+    min-width: 120px;
+    font: inherit;
+    padding: var(--cp-space-xs) var(--cp-space-sm);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius);
+    background: var(--cp-surface-container-low);
+    color: var(--cp-on-surface);
+    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  }
+}
+.platform__table-key {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface);
+  font-family: var(--cp-font-mono, monospace);
+}

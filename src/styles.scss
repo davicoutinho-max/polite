@@ -1,0 +1,79 @@
+// ============================================================================
+// CivicPulse — global stylesheet
+// ============================================================================
+@use './styles/tokens';
+
+// PrimeIcons is loaded via angular.json "styles". Material Symbols drive our own icons.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root { color-scheme: light; }
+:root.cp-dark { color-scheme: dark; }
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--cp-font-family);
+  background-color: var(--cp-background);
+  color: var(--cp-on-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+// Material Symbols base config (matches the design system weights)
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  user-select: none;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+// Thin, on-brand scrollbars
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cp-outline-variant) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cp-outline-variant);
+  border-radius: var(--cp-radius-full);
+}

@@ -1,0 +1,156 @@
+:host {
+  display: block;
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-shadow-card);
+  padding: var(--cp-space-lg);
+}
+
+.composer {
+  display: flex;
+  gap: var(--cp-space-md);
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__input {
+    width: 100%;
+    resize: none;
+    border: none;
+    background: var(--cp-surface);
+    border-radius: var(--cp-radius-lg);
+    padding: var(--cp-space-sm);
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--cp-on-surface);
+    margin-top: var(--cp-space-sm);
+
+    &:focus {
+      outline: none;
+      background: var(--cp-surface-container-lowest);
+      box-shadow: 0 0 0 1px var(--cp-secondary);
+    }
+  }
+
+  &__fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-sm);
+    margin-top: var(--cp-space-sm);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-xs);
+    flex: 1;
+    min-width: 140px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cp-on-surface-variant);
+
+    &--grow { flex: 2; }
+
+    input {
+      font: inherit;
+      font-weight: 400;
+      font-size: 14px;
+      padding: var(--cp-space-sm) var(--cp-space-md);
+      border: 1px solid var(--cp-outline-variant);
+      border-radius: var(--cp-radius);
+      background: var(--cp-surface-container-low);
+      color: var(--cp-on-surface);
+      &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--cp-space-md);
+    margin-top: var(--cp-space-md);
+  }
+
+  &__tools {
+    display: flex;
+    gap: var(--cp-space-xs);
+  }
+}
+
+/* Full-width visibility setting — reads as an intentional row, never floats. */
+.visibility {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-md);
+  width: 100%;
+  margin-top: var(--cp-space-md);
+  padding: var(--cp-space-sm) var(--cp-space-md);
+  border-radius: var(--cp-radius-lg);
+  border: 1px solid var(--cp-outline-variant);
+  background: var(--cp-surface-container-low);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--cp-radius-full);
+    background: var(--cp-surface-container-high);
+    color: var(--cp-secondary);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  &__title { font-size: 14px; font-weight: 700; color: var(--cp-on-surface); }
+  &__hint { font-size: 12px; color: var(--cp-on-surface-variant); }
+
+  /* Keep the PrimeNG switch host shrink-wrapped so it sits flush at the right
+     edge (its host is otherwise wider than the visible control). */
+  &__switch {
+    flex-shrink: 0;
+    margin-left: auto;
+    display: inline-flex;
+  }
+
+  &--private {
+    border-color: var(--cp-tertiary-fixed-dim);
+    background: color-mix(in srgb, var(--cp-tertiary-fixed-dim) 14%, transparent);
+
+    .visibility__icon {
+      background: var(--cp-tertiary-fixed-dim);
+      color: var(--cp-on-tertiary-fixed-variant);
+    }
+  }
+}
+
+/* On narrow screens the Post button spans the full width below the tools. */
+@media (max-width: 520px) {
+  .composer__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--cp-space-sm);
+  }
+  .composer__tools {
+    justify-content: space-around;
+  }
+  .composer__actions ::ng-deep .ui-button {
+    width: 100%;
+  }
+}

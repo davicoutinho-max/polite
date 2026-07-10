@@ -1,0 +1,100 @@
+<div class="composer">
+  <ui-avatar [src]="author().avatarUrl" [alt]="author().name" [size]="40" />
+
+  <div class="composer__body">
+    <ui-tabs [tabs]="composerModes" [active]="mode()" (activeChange)="setMode($event)" />
+
+    <textarea
+      pTextarea
+      class="composer__input"
+      rows="2"
+      [placeholder]="mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+    ></textarea>
+
+    @if (mode() === 'agenda') {
+      <div class="composer__fields">
+        <label class="composer__field composer__field--grow">
+          <span>Title</span>
+          <input type="text" [ngModel]="agendaTitle()" (ngModelChange)="agendaTitle.set($event)" placeholder="e.g. Town hall meeting" />
+        </label>
+        <label class="composer__field">
+          <span>Date</span>
+          <input type="text" [ngModel]="agendaDate()" (ngModelChange)="agendaDate.set($event)" placeholder="Aug 12, 2026 · 14:00" />
+        </label>
+        <label class="composer__field composer__field--grow">
+          <span>Location</span>
+          <input type="text" [ngModel]="agendaLocation()" (ngModelChange)="agendaLocation.set($event)" placeholder="e.g. City Hall" />
+        </label>
+      </div>
+    }
+
+    @if (mode() === 'live') {
+      <div class="composer__fields">
+        <label class="composer__field composer__field--grow">
+          <span>Video ID</span>
+          <input type="text" [ngModel]="liveVideoId()" (ngModelChange)="liveVideoId.set($event)" placeholder="YouTube video id" />
+        </label>
+        <label class="composer__field composer__field--grow">
+          <span>Channel ID</span>
+          <input type="text" [ngModel]="liveChannelId()" (ngModelChange)="liveChannelId.set($event)" placeholder="YouTube channel id (optional)" />
+        </label>
+      </div>
+      <label class="visibility">
+        <span class="visibility__icon">
+          <ui-icon name="sensors" [size]="20" [fill]="liveIsNow()" />
+        </span>
+        <span class="visibility__text">
+          <span class="visibility__title">{{ liveIsNow() ? 'Live now' : 'Scheduled' }}</span>
+          <span class="visibility__hint">
+            {{ liveIsNow() ? 'Broadcasts immediately when published' : 'Set a date/time below' }}
+          </span>
+        </span>
+        <p-toggleswitch
+          class="visibility__switch"
+          [ngModel]="liveIsNow()"
+          (ngModelChange)="liveIsNow.set($event)"
+          ariaLabel="Toggle live now"
+        />
+      </label>
+      @if (!liveIsNow()) {
+        <label class="composer__field composer__field--grow">
+          <span>Scheduled for</span>
+          <input type="text" [ngModel]="liveScheduledFor()" (ngModelChange)="liveScheduledFor.set($event)" placeholder="Aug 12, 2026 · 20:00" />
+        </label>
+      }
+    }
+
+    <label class="visibility" [class.visibility--private]="!isPublic()">
+      <span class="visibility__icon">
+        <ui-icon [name]="isPublic() ? 'public' : 'lock'" [size]="20" [fill]="!isPublic()" />
+      </span>
+      <span class="visibility__text">
+        <span class="visibility__title">{{ isPublic() ? 'Public' : 'Supporters only' }}</span>
+        <span class="visibility__hint">
+          {{
+            isPublic()
+              ? 'Anyone can see this discussion'
+              : 'Only your party supporters can see this discussion'
+          }}
+        </span>
+      </span>
+      <p-toggleswitch
+        class="visibility__switch"
+        [ngModel]="isPublic()"
+        (ngModelChange)="isPublic.set($event)"
+        ariaLabel="Toggle post visibility"
+      />
+    </label>
+
+    <div class="composer__actions">
+      <div class="composer__tools">
+        <ui-icon-button icon="image" ariaLabel="Add image" [iconSize]="20" />
+        <ui-icon-button icon="poll" ariaLabel="Add poll" [iconSize]="20" />
+        <ui-icon-button icon="attach_file" ariaLabel="Attach file" [iconSize]="20" />
+      </div>
+      <ui-button label="Post" variant="filled" [disabled]="!canPublish()" (click)="onPublish()" />
+    </div>
+  </div>
+</div>

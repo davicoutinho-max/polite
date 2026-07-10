@@ -1,0 +1,84 @@
+<div class="privacy">
+  <app-page-header
+    [title]="'page.privacy.title' | translate: 'Privacy & Data'"
+    [subtitle]="'page.privacy.subtitle' | translate: 'Control your consent and exercise your data rights'"
+    icon="shield"
+  />
+
+  <div class="privacy__grid">
+    <ui-section [title]="'section.consent' | translate: 'Consent'" icon="rule" class="privacy__col">
+      <p class="privacy__lead">
+        {{ 'hint.consent-lead' | translate: 'Choose how your personal data is used. You can withdraw any non-essential consent at any time.' }}
+      </p>
+      <ul class="privacy__consents">
+        @for (consent of consents(); track consent.id) {
+          <li class="privacy__consent">
+            <div class="privacy__consent-text">
+              <span class="privacy__consent-label">{{ consent.label }}</span>
+              <span class="privacy__consent-desc">{{ consent.description }}</span>
+            </div>
+            <button
+              type="button"
+              class="privacy__switch"
+              role="switch"
+              [class.privacy__switch--on]="consent.enabled"
+              [class.privacy__switch--locked]="consent.locked"
+              [attr.aria-checked]="consent.enabled"
+              [attr.aria-label]="consent.label"
+              [disabled]="consent.locked"
+              (click)="toggle(consent.id)"
+            >
+              <span class="privacy__switch-knob"></span>
+            </button>
+          </li>
+        }
+      </ul>
+    </ui-section>
+
+    <ui-section [title]="'section.your-data' | translate: 'Your data'" icon="folder_shared" class="privacy__col">
+      <p class="privacy__lead">
+        {{ 'hint.your-data-lead' | translate: 'Export a portable copy of your data, or permanently delete your account.' }}
+      </p>
+
+      <div class="privacy__action-row">
+        <div class="privacy__action-text">
+          <span class="privacy__action-title">{{ 'label.export-my-data' | translate: 'Export my data' }}</span>
+          <span class="privacy__action-desc">{{ 'hint.export-my-data-desc' | translate: 'Download a JSON snapshot (right to portability).' }}</span>
+        </div>
+        <ui-button [label]="'button.export' | translate: 'Export'" icon="download" variant="outlined" (click)="exportData()" />
+      </div>
+
+      <div class="privacy__action-row privacy__action-row--danger">
+        <div class="privacy__action-text">
+          <span class="privacy__action-title">{{ 'label.delete-my-account' | translate: 'Delete my account' }}</span>
+          <span class="privacy__action-desc">{{ 'hint.delete-my-account-desc' | translate: 'Erase your personal data (right to erasure).' }}</span>
+        </div>
+        @if (!confirmingDelete()) {
+          <ui-button [label]="'button.delete' | translate: 'Delete'" icon="delete_forever" variant="outlined" (click)="requestDelete()" />
+        }
+      </div>
+
+      @if (confirmingDelete()) {
+        <div class="privacy__confirm">
+          <ui-icon name="warning" [size]="18" />
+          <p>{{ 'hint.confirm-delete' | translate: 'This will erase your data and sign you out. This cannot be undone.' }}</p>
+          <div class="privacy__confirm-actions">
+            <ui-button [label]="'button.cancel' | translate: 'Cancel'" variant="text" (click)="cancelDelete()" />
+            <ui-button [label]="'button.confirm-deletion' | translate: 'Confirm deletion'" icon="delete_forever" variant="filled" (click)="confirmDelete()" />
+          </div>
+        </div>
+      }
+    </ui-section>
+  </div>
+
+  <ui-section [title]="'section.lgpd-rights' | translate: 'Your rights under the LGPD'" icon="gavel">
+    <ul class="privacy__rights">
+      @for (right of rights; track right) {
+        <li><ui-icon name="check_circle" [size]="18" [fill]="true" /><span>{{ right }}</span></li>
+      }
+    </ul>
+    <p class="privacy__policy">
+      {{ 'hint.policy-lead' | translate: 'Read our' }} <a href="#">{{ 'label.terms-of-use' | translate: 'Terms of Use' }}</a> {{ 'label.and' | translate: 'and' }} <a href="#">{{ 'label.privacy-policy' | translate: 'Privacy Policy' }}</a> {{ 'hint.policy-tail' | translate: 'for the full detail of how data is collected, stored (encrypted) and shared.' }}
+    </p>
+  </ui-section>
+</div>

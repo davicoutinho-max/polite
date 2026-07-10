@@ -1,0 +1,96 @@
+<div class="dir">
+  <app-page-header
+    [title]="'page.parties.title' | translate: 'Parties'"
+    [subtitle]="'page.parties.subtitle' | translate: 'Browse and filter every party on the platform'"
+    icon="flag"
+  />
+
+  <div class="dir__filters">
+    <p-iconfield class="dir__search">
+      <p-inputicon class="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        [placeholder]="'placeholder.search-parties' | translate: 'Search by name, acronym or ideology…'"
+        [ngModel]="search()"
+        (ngModelChange)="setSearch($event)"
+      />
+    </p-iconfield>
+
+    <div class="dir__selects">
+      <p-select
+        [options]="spectrumSelect"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="spectrum()"
+        (ngModelChange)="spectrum.set($event)"
+        appendTo="body"
+      />
+      <p-select
+        [options]="sortSelect"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="sort()"
+        (ngModelChange)="sort.set($event)"
+        appendTo="body"
+      />
+    </div>
+  </div>
+
+  <div class="dir__meta">
+    <span>{{ resultCount() }} {{ (resultCount() === 1 ? 'label.party' : 'label.parties') | translate: (resultCount() === 1 ? 'party' : 'parties') }}</span>
+    <button type="button" class="dir__reset" (click)="clearFilters()">
+      <ui-icon name="filter_alt_off" [size]="16" /> {{ 'button.clear-filters' | translate: 'Clear filters' }}
+    </button>
+  </div>
+
+  @if (resultCount() === 0) {
+    <div class="dir__empty">
+      <ui-icon name="search_off" [size]="40" />
+      <p>{{ 'empty.no-parties-match' | translate: 'No parties match your filters.' }}</p>
+    </div>
+  } @else {
+    <div class="dir__grid">
+      @for (p of visible(); track p.id) {
+        <article class="qcard">
+          <a class="qcard__head" [routerLink]="['/party', p.id]">
+            <span class="qcard__badge">{{ p.number }}</span>
+            <div class="qcard__id">
+              <span class="qcard__name">{{ p.name }}</span>
+              <span class="qcard__acronym">{{ p.acronym }} · {{ 'label.founded-lower' | translate: 'founded' }} {{ p.founded }}</span>
+            </div>
+          </a>
+
+          <p class="qcard__ideology">{{ p.ideology }}</p>
+
+          <div class="qcard__tags">
+            <ui-tag [label]="spectrumLabel(p.spectrum)" severity="secondary" />
+            <ui-tag [label]="(p.members | compactNumber) + ' ' + ('label.members-lower' | translate: 'members')" severity="neutral" />
+          </div>
+
+          <div class="qcard__actions">
+            <a class="qcard__view" [routerLink]="['/party', p.id]">{{ 'button.view-party' | translate: 'View party' }}</a>
+            @if (canFollow()) {
+              <button
+                type="button"
+                class="qcard__follow"
+                [class.qcard__follow--on]="isFollowing(p.id)"
+                (click)="toggleFollow(p.id)"
+              >
+                <ui-icon [name]="isFollowing(p.id) ? 'check' : 'add'" [size]="16" />
+                {{ (isFollowing(p.id) ? 'button.following' : 'button.follow') | translate: (isFollowing(p.id) ? 'Following' : 'Follow') }}
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (!allLoaded()) {
+      <div class="dir__sentinel" appInfiniteScroll [disabled]="allLoaded()" (loadMore)="loadMore()">
+        <ui-icon name="progress_activity" [size]="22" class="dir__spinner" />
+        <span>{{ 'label.loading-more' | translate: 'Loading more…' }}</span>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.feed {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cp-space-lg);
+  padding: var(--cp-margin-mobile);
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-lg);
+    min-width: 0;
+  }
+
+  &__sidebar {
+    display: none;
+    flex-direction: column;
+    gap: var(--cp-space-lg);
+  }
+
+  &__empty {
+    text-align: center;
+    color: var(--cp-on-surface-variant);
+    padding: var(--cp-space-xl);
+  }
+}
+
+@media (min-width: 768px) {
+  .feed {
+    padding: var(--cp-space-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop: fill the viewport and let each column scroll on its own,
+     like a typical social feed. */
+  .feed {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .feed__main,
+  .feed__sidebar {
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    /* room so the last card clears the bottom edge while scrolling */
+    padding-bottom: var(--cp-space-lg);
+  }
+  .feed__sidebar {
+    display: flex;
+  }
+}

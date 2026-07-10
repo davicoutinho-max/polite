@@ -1,0 +1,128 @@
+<div class="party">
+  <header class="hero">
+    <div class="hero__cover" [style.background-image]="'url(' + party().coverUrl + ')'"></div>
+    <div class="hero__scrim"></div>
+    <div class="hero__body">
+      <div class="hero__logo">
+        <img [src]="party().logoUrl" [alt]="party().name" referrerpolicy="no-referrer" />
+      </div>
+      <div class="hero__info">
+        <div class="hero__title-row">
+          <h1 class="hero__name">{{ party().name }}</h1>
+          <span class="hero__badge">{{ party().acronym }} · {{ party().number }}</span>
+        </div>
+        <p class="hero__ideology">{{ party().ideology }}</p>
+      </div>
+      <div class="hero__actions">
+        <ui-button [label]="'button.join-party' | translate: 'Join party'" icon="how_to_reg" variant="filled" routerLink="/wallet" />
+        @if (following()) {
+          <ui-button [label]="'button.following' | translate: 'Following'" icon="check" variant="tonal" (click)="toggleFollow()" />
+        } @else {
+          <ui-button [label]="'button.follow' | translate: 'Follow'" icon="add" variant="outlined" (click)="toggleFollow()" />
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="party__content">
+    <div class="stats">
+      <ui-stat icon="groups" [label]="'label.members' | translate: 'Members'" [value]="party().memberCount.toLocaleString('pt-BR')" [caption]="'label.nationwide' | translate: 'Nationwide'" />
+      <ui-stat icon="location_city" [label]="'label.directories' | translate: 'Directories'" [value]="party().directories.length.toString()" [caption]="'label.active-levels' | translate: 'Active levels'" />
+      <ui-stat icon="event" [label]="'label.founded' | translate: 'Founded'" [value]="party().foundedYear.toString()" [caption]="'label.years-of-history' | translate: 'Years of history'" />
+      <ui-stat icon="how_to_vote" [label]="'label.representatives' | translate: 'Representatives'" [value]="party().representatives.length.toString()" [caption]="'label.in-office' | translate: 'In office'" />
+    </div>
+
+    <app-profile-tabs [tabs]="tabs" [activeId]="activeTab()" (tabChange)="setActiveTab($event)" />
+
+    @switch (activeTab()) {
+      @case ('activity') {
+        <div class="party__activity">
+          @for (post of activityPosts(); track post.id) {
+            <app-post-card
+              [post]="post"
+              [currentUserAvatar]="currentUserAvatar()"
+              [canReact]="canReact()"
+              (like)="onLike($event)"
+              (addComment)="onComment($event)"
+            />
+          } @empty {
+            <ui-empty
+              icon="forum"
+              [title]="'empty.party-activity.title' | translate: 'No publications yet'"
+              [description]="'empty.party-activity.desc' | translate: 'Posts from this party will appear here.'"
+            />
+          }
+        </div>
+      }
+      @case ('overview') {
+        <div class="grid">
+          <div class="grid__main">
+            <ui-section [title]="'section.history' | translate: 'History'" icon="history_edu">
+              <p class="prose">{{ party().history }}</p>
+            </ui-section>
+
+            <ui-section [title]="'section.program' | translate: 'Program'" icon="menu_book">
+              <p class="prose">{{ party().program }}</p>
+            </ui-section>
+
+            <ui-section [title]="'section.directories' | translate: 'Directories'" icon="account_tree">
+              <ul class="directories">
+                @for (dir of party().directories; track dir.location) {
+                  <li class="directory">
+                    <ui-tag [label]="dir.scope" severity="secondary" />
+                    <div class="directory__body">
+                      <div class="directory__location">{{ dir.location }}</div>
+                      <div class="directory__leader">{{ 'label.leader' | translate: 'Leader' }}: {{ dir.leader }}</div>
+                    </div>
+                    <div class="directory__members">{{ dir.members.toLocaleString('pt-BR') }} {{ 'label.members-lower' | translate: 'members' }}</div>
+                  </li>
+                }
+              </ul>
+            </ui-section>
+
+            <ui-section [title]="'section.events-agenda' | translate: 'Events, courses & agenda'" icon="calendar_month">
+              <ul class="events">
+                @for (event of party().events; track event.id) {
+                  <li class="event">
+                    <div class="event__date">
+                      <ui-icon name="event" [size]="20" />
+                    </div>
+                    <div class="event__body">
+                      <div class="event__title">{{ event.title }}</div>
+                      <div class="event__meta">{{ event.date }} · {{ event.location }}</div>
+                    </div>
+                    <ui-tag [label]="event.tag.label" [severity]="event.tag.severity" />
+                  </li>
+                }
+              </ul>
+            </ui-section>
+          </div>
+
+          <div class="grid__side">
+            <ui-section [title]="'tab.overview' | translate: 'Overview'" icon="info">
+              <ui-data-list [items]="overview()" />
+              <div class="statute">
+                <ui-button [label]="'button.read-statute' | translate: 'Read the statute'" icon="description" variant="tonal" [block]="true" />
+              </div>
+            </ui-section>
+
+            <ui-section [title]="'section.representatives' | translate: 'Representatives'" icon="badge">
+              <ul class="reps">
+                @for (rep of party().representatives; track rep.id) {
+                  <li class="rep" [routerLink]="['/profile', rep.id]">
+                    <ui-avatar [src]="rep.avatarUrl" [alt]="rep.name" [size]="40" [ring]="true" />
+                    <div>
+                      <div class="rep__name">{{ rep.name }}</div>
+                      <div class="rep__role">{{ rep.role }}</div>
+                    </div>
+                    <ui-icon name="chevron_right" [size]="20" />
+                  </li>
+                }
+              </ul>
+            </ui-section>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

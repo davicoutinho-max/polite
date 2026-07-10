@@ -1,0 +1,37 @@
+<div class="timeline-page">
+  <app-page-header
+    [title]="'page.timeline.title' | translate: 'Timeline'"
+    [subtitle]="'page.timeline.subtitle' | translate: 'Smart activity from the people and parties you follow'"
+    icon="timeline"
+  />
+
+  @for (bucket of groups(); track bucket.group) {
+    <section class="bucket">
+      <h2 class="bucket__title">{{ bucket.group }}</h2>
+      <ol class="events">
+        @for (event of bucket.events; track event.id) {
+          <li class="event">
+            <div class="event__marker" [attr.data-severity]="visual(event.type).severity">
+              <ui-icon [name]="visual(event.type).icon" [size]="20" [fill]="true" />
+            </div>
+            <div class="event__card">
+              <div class="event__head">
+                <span class="event__title">{{ event.title }}</span>
+                <span class="event__time">{{ event.timeLabel }}</span>
+              </div>
+              @if (event.detail; as d) {
+                <div class="event__detail">{{ d }}</div>
+              }
+              @if (event.actor; as actor) {
+                <div class="event__actor">
+                  <ui-icon name="person" [size]="14" />
+                  {{ actor }}
+                </div>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+  }
+</div>

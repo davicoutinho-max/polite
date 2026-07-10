@@ -1,0 +1,35 @@
+<div class="alerts-page">
+  <app-page-header
+    [title]="'page.alerts.title' | translate: 'Alerts'"
+    [subtitle]="unreadCount() + ' ' + ('page.alerts.unread' | translate: 'unread notifications')"
+    icon="notifications"
+  >
+    @if (unreadCount() > 0) {
+      <ui-button slot="action" [label]="'button.mark-all-read' | translate: 'Mark all as read'" icon="done_all" variant="text" (click)="onReadAll()" />
+    }
+  </app-page-header>
+
+  @if (alerts().length) {
+    <ul class="alerts">
+      @for (alert of alerts(); track alert.id) {
+        <li class="alert" [class.alert--unread]="!alert.read" (click)="onRead(alert.id)">
+          <div class="alert__icon">
+            <ui-icon [name]="alert.icon" [size]="22" [fill]="!alert.read" />
+          </div>
+          <div class="alert__body">
+            <div class="alert__head">
+              <span class="alert__title">{{ alert.title }}</span>
+              <span class="alert__time">{{ alert.timeLabel }}</span>
+            </div>
+            <p class="alert__message">{{ alert.message }}</p>
+          </div>
+          @if (!alert.read) {
+            <span class="alert__dot" [attr.aria-label]="'a11y.unread' | translate: 'Unread'"></span>
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <ui-empty icon="notifications_off" [title]="'empty.no-alerts.title' | translate: 'No alerts'" [description]="'empty.no-alerts.desc' | translate: 'You are all caught up.'" />
+  }
+</div>

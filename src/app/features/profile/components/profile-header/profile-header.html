@@ -1,0 +1,34 @@
+<header class="profile-header">
+  <div class="profile-header__cover">
+    <div class="profile-header__cover-img" [style.background-image]="'url(' + politician().coverUrl + ')'"></div>
+    <div class="profile-header__cover-scrim"></div>
+  </div>
+
+  <div class="profile-header__body">
+    <div class="profile-header__avatar">
+      <img [src]="politician().avatarUrl" [alt]="politician().name" referrerpolicy="no-referrer" />
+    </div>
+
+    <div class="profile-header__info">
+      <div class="profile-header__identity">
+        <h2 class="profile-header__name">{{ politician().name }}</h2>
+        <a class="profile-header__party" [routerLink]="['/party', politician().partyId]">
+          <ui-icon name="verified" [fill]="true" [size]="16" />
+          {{ politician().party }}
+        </a>
+      </div>
+      <p class="profile-header__position">
+        {{ politician().position }} • {{ 'label.serving-since' | translate: 'Serving since' }} {{ politician().servingSince }}
+      </p>
+    </div>
+
+    <div class="profile-header__actions">
+      <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" />
+      @if (following()) {
+        <ui-button [label]="'button.following' | translate: 'Following'" icon="how_to_reg" variant="tonal" (click)="toggleFollow()" />
+      } @else {
+        <ui-button [label]="'button.follow' | translate: 'Follow'" icon="person_add" variant="outlined" (click)="toggleFollow()" />
+      }
+    </div>
+  </div>
+</header>

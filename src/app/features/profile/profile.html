@@ -1,0 +1,43 @@
+<div class="profile">
+  <app-profile-header [politician]="politician()" />
+
+  <div class="profile__tabs">
+    <app-profile-tabs [tabs]="tabs()" [activeId]="activeTab()" (tabChange)="onTabChange($event)" />
+  </div>
+
+  <section class="profile__content">
+    @switch (activeTab()) {
+      @case ('activity') {
+        <div class="profile__activity">
+          @for (post of activityPosts(); track post.id) {
+            <app-post-card
+              [post]="post"
+              [currentUserAvatar]="currentUserAvatar()"
+              [canReact]="canReact()"
+              (like)="onLike($event)"
+              (addComment)="onComment($event)"
+            />
+          } @empty {
+            <ui-empty
+              icon="forum"
+              [title]="'empty.profile-activity.title' | translate: 'No publications yet'"
+              [description]="'empty.profile-activity.desc' | translate: 'Posts from this politician will appear here.'"
+            />
+          }
+        </div>
+      }
+      @case ('overview') {
+        <app-profile-overview [politician]="politician()" />
+      }
+      @case ('parliamentary') {
+        <app-profile-parliamentary [activity]="activity()" />
+      }
+      @case ('transparency') {
+        <app-profile-transparency [report]="transparency()" />
+      }
+      @case ('timeline') {
+        <app-profile-career [milestones]="career()" />
+      }
+    }
+  </section>
+</div>

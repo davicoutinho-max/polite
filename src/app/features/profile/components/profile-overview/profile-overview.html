@@ -1,0 +1,59 @@
+<div class="overview">
+  <div class="overview__main">
+    <ui-section [title]="'section.civic-dossier' | translate: 'Civic dossier'" icon="badge">
+      <ui-data-list [items]="dossier()" [columns]="true" />
+    </ui-section>
+
+    <ui-section [title]="'section.mandates' | translate: 'Mandates'" icon="how_to_reg">
+      <ul class="mandates">
+        @for (mandate of politician().mandates; track mandate.role) {
+          <li class="mandate">
+            <div class="mandate__dot" [class.mandate__dot--current]="mandate.current"></div>
+            <div>
+              <div class="mandate__role">
+                {{ mandate.role }}
+                @if (mandate.current) {
+                  <ui-tag [label]="'label.current' | translate: 'Current'" severity="success" />
+                }
+              </div>
+              <div class="mandate__period">{{ mandate.period }}</div>
+            </div>
+          </li>
+        }
+      </ul>
+    </ui-section>
+  </div>
+
+  <div class="overview__side">
+    <ui-section [title]="'section.social-networks' | translate: 'Social networks'" icon="share">
+      <ul class="links">
+        @for (link of politician().socialLinks; track link.label) {
+          <li>
+            <a class="link" [href]="link.url">
+              <ui-icon [name]="link.icon" [size]="20" />
+              <div>
+                <div class="link__label">{{ link.label }}</div>
+                <div class="link__handle">{{ link.handle }}</div>
+              </div>
+              <ui-icon name="open_in_new" [size]="16" />
+            </a>
+          </li>
+        }
+      </ul>
+    </ui-section>
+
+    <ui-section [title]="'section.team-advisors' | translate: 'Team & advisors'" icon="groups">
+      <ul class="team">
+        @for (member of politician().team; track member.name) {
+          <li class="member">
+            <ui-avatar [src]="member.avatarUrl" [alt]="member.name" [size]="40" [ring]="true" />
+            <div>
+              <div class="member__name">{{ member.name }}</div>
+              <div class="member__role">{{ member.role }}</div>
+            </div>
+          </li>
+        }
+      </ul>
+    </ui-section>
+  </div>
+</div>

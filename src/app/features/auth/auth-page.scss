@@ -1,0 +1,106 @@
+:host {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.auth {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cp-space-lg) var(--cp-margin-mobile);
+  background: var(--cp-background);
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--cp-space-xl);
+  background: var(--cp-surface-container-lowest);
+  border: 1px solid var(--cp-outline-variant);
+  border-radius: var(--cp-radius-xl);
+  box-shadow: var(--cp-shadow-hover);
+}
+
+.auth__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  margin-bottom: var(--cp-space-lg);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cp-brand-text);
+}
+.auth__brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--cp-radius);
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+}
+
+.auth__title {
+  margin: 0 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--cp-on-surface);
+}
+.auth__subtitle {
+  margin: 0 0 var(--cp-space-lg);
+  font-size: 14px;
+  color: var(--cp-on-surface-variant);
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+}
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+
+  input, select {
+    font: inherit;
+    font-weight: 400;
+    padding: var(--cp-space-sm) var(--cp-space-md);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius);
+    background: var(--cp-surface-container-low);
+    color: var(--cp-on-surface);
+    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  }
+}
+.auth__error {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cp-error);
+}
+
+.auth__switch {
+  margin: var(--cp-space-lg) 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+  a { color: var(--cp-secondary); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+}
+.auth__guest {
+  display: block;
+  margin-top: var(--cp-space-sm);
+  text-align: center;
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}

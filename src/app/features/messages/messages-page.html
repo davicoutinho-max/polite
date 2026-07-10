@@ -1,0 +1,87 @@
+<div class="messages" [class.messages--thread-open]="showThread()">
+  <!-- Conversation list -->
+  <aside class="list">
+    <header class="list__head">
+      <h1 class="list__title">{{ 'page.messages.title' | translate: 'Messages' }}</h1>
+      <ui-icon-button *appCan="'create-group-chat'" icon="edit_square" ariaLabel="New message" [iconSize]="20" (click)="openPicker()" />
+    </header>
+    <ul class="conversations">
+      @for (conversation of conversations(); track conversation.id) {
+        <li>
+          <button
+            type="button"
+            class="conversation"
+            [class.conversation--active]="conversation.id === activeId()"
+            (click)="onSelect(conversation.id)"
+          >
+            <ui-avatar [src]="peerAvatar(conversation)" [alt]="peerName(conversation)" [size]="48" [ring]="true" />
+            <div class="conversation__body">
+              <div class="conversation__top">
+                <span class="conversation__name">
+                  {{ peerName(conversation) }}
+                  @if (peerVerified(conversation)) {
+                    <ui-icon name="verified" [size]="14" [fill]="true" />
+                  }
+                </span>
+                <span class="conversation__time">{{ conversation.timeLabel }}</span>
+              </div>
+              <div class="conversation__preview">{{ conversation.lastMessage }}</div>
+            </div>
+            @if (conversation.unread > 0) {
+              <span class="conversation__badge">{{ conversation.unread }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  </aside>
+
+  <!-- Thread -->
+  <section class="thread">
+    @if (active(); as conversation) {
+      <header class="thread__head">
+        <button type="button" class="thread__back" (click)="onBack()">
+          <ui-icon name="arrow_back" [size]="22" />
+        </button>
+        <ui-avatar [src]="peerAvatar(conversation)" [alt]="peerName(conversation)" [size]="40" [ring]="true" />
+        <div class="thread__peer">
+          <span class="thread__name">
+            {{ peerName(conversation) }}
+            @if (peerVerified(conversation)) {
+              <ui-icon name="verified" [size]="14" [fill]="true" />
+            }
+          </span>
+          <span class="thread__role">{{ peerRole(conversation) }}</span>
+        </div>
+      </header>
+
+      <div class="thread__body">
+        @for (message of conversation.messages; track message.id) {
+          <div class="bubble" [class.bubble--me]="message.fromMe">
+            <div class="bubble__text">{{ message.text }}</div>
+            <div class="bubble__time">{{ message.timeLabel }}</div>
+          </div>
+        }
+      </div>
+
+      <form class="composer" (submit)="$event.preventDefault(); onSend()">
+        <input
+          class="composer__input"
+          type="text"
+          [placeholder]="'placeholder.write-message' | translate: 'Write a message…'"
+          [ngModel]="draft()"
+          (ngModelChange)="draft.set($event)"
+          name="draft"
+          autocomplete="off"
+        />
+        <button type="submit" class="composer__send" [disabled]="!draft().trim()" aria-label="Send">
+          <ui-icon name="send" [size]="20" [fill]="true" />
+        </button>
+      </form>
+    }
+  </section>
+</div>
+
+@if (showPicker()) {
+  <app-new-conversation-picker (create)="onCreateConversation($event)" (close)="closePicker()" />
+}

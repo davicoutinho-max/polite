@@ -1,0 +1,45 @@
+<div class="participation">
+  <app-page-header
+    [title]="'page.participation.title' | translate: 'Citizen Participation'"
+    [subtitle]="'page.participation.subtitle' | translate: 'Sign petitions, weigh in on consultations and answer surveys'"
+    icon="how_to_vote"
+  />
+
+  <div class="participation__notice">
+    <ui-icon name="info" [size]="18" />
+    <p>
+      {{ 'hint.opinion-instruments' | translate: 'These are opinion instruments — they gauge public sentiment and are not official electoral votes or officially registered polls.' }}
+      @if (!isAuthenticated()) {
+        <span> {{ 'hint.sign-in-to-participate' | translate: 'Sign in to participate.' }}</span>
+      }
+    </p>
+  </div>
+
+  <div class="participation__tabs">
+    <ui-tabs [tabs]="tabs" [active]="active()" (activeChange)="active.set($event)" />
+  </div>
+
+  @switch (active()) {
+    @case ('petitions') {
+      <div class="grid">
+        @for (petition of petitions(); track petition.id) {
+          <app-petition-card [petition]="petition" (sign)="onSign($event)" />
+        }
+      </div>
+    }
+    @case ('consultations') {
+      <div class="grid">
+        @for (consultation of consultations(); track consultation.id) {
+          <app-consultation-card [consultation]="consultation" (stanceChange)="onStance($event)" />
+        }
+      </div>
+    }
+    @case ('surveys') {
+      <div class="grid">
+        @for (survey of surveys(); track survey.id) {
+          <app-survey-card [survey]="survey" (vote)="onVote($event)" />
+        }
+      </div>
+    }
+  }
+</div>

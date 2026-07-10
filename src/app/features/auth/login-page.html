@@ -1,0 +1,33 @@
+<div class="auth">
+  <div class="auth__card">
+    <div class="auth__brand">
+      <div class="auth__brand-icon"><ui-icon name="account_balance" [size]="26" [fill]="true" /></div>
+      <span>CivicPulse</span>
+    </div>
+
+    <h1 class="auth__title">{{ 'page.login.title' | translate: 'Welcome back' }}</h1>
+    <p class="auth__subtitle">{{ 'page.login.subtitle' | translate: 'Sign in to follow politicians, parties and take part in civic life.' }}</p>
+
+    <form class="auth__form" (submit)="submit(); $event.preventDefault()">
+      <label class="auth__field">
+        <span>{{ 'field.email' | translate: 'Email' }}</span>
+        <input type="email" autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+      </label>
+      <label class="auth__field">
+        <span>{{ 'field.password' | translate: 'Password' }}</span>
+        <input type="password" autocomplete="current-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+      </label>
+
+      @if (error()) {
+        <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+      }
+
+      <ui-button [label]="'button.sign-in' | translate: 'Sign in'" icon="login" variant="filled" type="submit" [block]="true" />
+    </form>
+
+    <p class="auth__switch">
+      {{ 'hint.no-account' | translate: 'Do not have an account?' }} <a routerLink="/register">{{ 'button.create-one' | translate: 'Create one' }}</a>
+    </p>
+    <a class="auth__guest" routerLink="/feed">{{ 'button.continue-as-visitor' | translate: 'Continue as a visitor' }}</a>
+  </div>
+</div>

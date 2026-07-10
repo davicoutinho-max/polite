@@ -1,0 +1,46 @@
+<div class="parliamentary">
+  <div class="stats">
+    <ui-stat icon="event_available" [label]="'label.attendance' | translate: 'Attendance'" [value]="activity().attendance.presenceRate + '%'" [caption]="activity().attendance.present + ' ' + ('label.sessions-present' | translate: 'sessions present')" />
+    <ui-stat icon="event_busy" [label]="'label.absences' | translate: 'Absences'" [value]="activity().attendance.absent.toString()" [caption]="'label.recorded-absences' | translate: 'Recorded absences'" />
+    <ui-stat icon="record_voice_over" [label]="'label.speeches' | translate: 'Speeches'" [value]="activity().speeches.toString()" [caption]="'label.floor-speeches' | translate: 'Floor speeches'" />
+    <ui-stat icon="mic" [label]="'label.interviews' | translate: 'Interviews'" [value]="activity().interviews.toString()" [caption]="'label.press-media' | translate: 'Press & media'" />
+    <ui-stat icon="flight_takeoff" [label]="'label.official-trips' | translate: 'Official trips'" [value]="activity().trips.toString()" [caption]="'label.this-term' | translate: 'This term'" />
+    <ui-stat icon="how_to_vote" [label]="'label.votes' | translate: 'Votes'" [value]="activity().votes.length.toString()" [caption]="'label.recent-records' | translate: 'Recent records'" />
+  </div>
+
+  <ui-section [title]="'section.committees' | translate: 'Committees, fronts & inquiries'" icon="gavel">
+    <ul class="committees">
+      @for (c of activity().committees; track c.name) {
+        <li class="committee">
+          <ui-icon [name]="c.kind === 'cpi' ? 'policy' : c.kind === 'front' ? 'diversity_3' : 'balance'" [size]="20" />
+          <div class="committee__body">
+            <div class="committee__name">{{ c.name }}</div>
+            <div class="committee__role">{{ c.role }}</div>
+          </div>
+        </li>
+      }
+    </ul>
+  </ui-section>
+
+  <div class="lists">
+    <app-legislative-list [title]="'section.bills-presented' | translate: 'Bills presented'" icon="description" [items]="activity().projects" [emptyTitle]="'empty.bills' | translate: 'No bills presented'" />
+    <app-legislative-list [title]="'section.approved-laws' | translate: 'Approved laws'" icon="task_alt" [items]="activity().approvedLaws" [emptyTitle]="'empty.approved-laws' | translate: 'No approved laws yet'" />
+    <app-legislative-list [title]="'section.rejected-laws' | translate: 'Rejected laws'" icon="cancel" [items]="activity().rejectedLaws" [emptyTitle]="'empty.rejected-laws' | translate: 'No rejected laws'" />
+    <app-legislative-list [title]="'section.pecs' | translate: 'PECs'" icon="account_balance" [items]="activity().pecs" [emptyTitle]="'empty.pecs' | translate: 'No PECs'" />
+    <app-legislative-list [title]="'section.cpis' | translate: 'CPIs'" icon="policy" [items]="activity().cpis" [emptyTitle]="'empty.cpis' | translate: 'No inquiries'" />
+  </div>
+
+  <ui-section [title]="'section.recent-votes' | translate: 'Recent votes'" icon="ballot">
+    <ul class="votes">
+      @for (v of activity().votes; track v.id) {
+        <li class="vote">
+          <div class="vote__body">
+            <div class="vote__matter">{{ v.matter }}</div>
+            <div class="vote__date">{{ v.date }}</div>
+          </div>
+          <ui-tag [label]="voteMeta(v.vote).key | translate: voteMeta(v.vote).label" [severity]="voteMeta(v.vote).severity" [uppercase]="true" />
+        </li>
+      }
+    </ul>
+  </ui-section>
+</div>

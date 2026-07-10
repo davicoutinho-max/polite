@@ -1,0 +1,46 @@
+<aside class="side-nav">
+  <a class="side-nav__brand" routerLink="/feed">
+    <span class="side-nav__brand-icon">
+      <ui-icon name="account_balance" [size]="22" [fill]="true" />
+    </span>
+    <span class="side-nav__brand-text">
+      <span class="side-nav__brand-title">CivicPulse</span>
+      <span class="side-nav__brand-subtitle">{{ 'chrome.brand-subtitle' | translate: 'Institutional Transparency' }}</span>
+    </span>
+  </a>
+
+  <nav class="side-nav__nav">
+    @for (item of primaryItems(); track item.route) {
+      <ui-nav-item [item]="item" layout="sidebar" />
+    }
+  </nav>
+
+  @if (isAuthenticated()) {
+    <ui-button
+      [label]="(canPublish() ? 'chrome.create-post' : 'chrome.join-discussion') | translate: (canPublish() ? 'Create post' : 'Join discussion')"
+      [icon]="canPublish() ? 'add' : 'add_comment'"
+      variant="filled"
+      [block]="true"
+      routerLink="/feed"
+    />
+  }
+
+  <div class="side-nav__secondary">
+    <button type="button" class="side-nav__theme" (click)="theme.toggle()">
+      <ui-icon [name]="theme.isDark() ? 'light_mode' : 'dark_mode'" [size]="22" />
+      <span>{{ (theme.isDark() ? 'chrome.light-mode' : 'chrome.dark-mode') | translate: (theme.isDark() ? 'Light mode' : 'Dark mode') }}</span>
+    </button>
+    @for (item of secondaryItems(); track item.route) {
+      <ui-nav-item [item]="item" layout="sidebar" />
+    }
+  </div>
+
+  <a class="side-nav__user" routerLink="/profile/me">
+    <ui-avatar [src]="currentUser().avatarUrl" [alt]="currentUser().name" [size]="40" [ring]="true" />
+    <span class="side-nav__user-info">
+      <span class="side-nav__user-name">{{ currentUser().name }}</span>
+      <span class="side-nav__user-handle">{{ currentUser().handle }}</span>
+    </span>
+    <ui-icon name="chevron_right" [size]="20" />
+  </a>
+</aside>

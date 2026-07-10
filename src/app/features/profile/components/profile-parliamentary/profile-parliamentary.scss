@@ -1,0 +1,33 @@
+:host { display: block; }
+
+.parliamentary { display: flex; flex-direction: column; gap: var(--cp-space-lg); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--cp-space-md);
+}
+
+.committees {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: 1fr; gap: var(--cp-space-md);
+}
+@media (min-width: 640px) { .committees { grid-template-columns: 1fr 1fr; } }
+.committee { display: flex; gap: var(--cp-space-md); align-items: center; color: var(--cp-secondary); }
+.committee__body { color: var(--cp-on-surface); }
+.committee__name { font-weight: 600; }
+.committee__role { font-size: 14px; color: var(--cp-on-surface-variant); }
+
+.lists {
+  display: grid; grid-template-columns: 1fr; gap: var(--cp-space-lg);
+}
+@media (min-width: 1024px) { .lists { grid-template-columns: 1fr 1fr; align-items: start; } }
+
+.votes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.vote {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--cp-space-md);
+  padding: var(--cp-space-md) 0; border-bottom: 1px solid var(--cp-outline-variant);
+}
+.vote:last-child { border-bottom: none; }
+.vote__matter { font-weight: 600; color: var(--cp-on-surface); }
+.vote__date { font-size: 12px; color: var(--cp-on-surface-variant); }

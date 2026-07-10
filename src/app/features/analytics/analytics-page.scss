@@ -1,0 +1,23 @@
+:host { display: block; }
+
+.analytics { padding: var(--cp-margin-mobile); }
+@media (min-width: 768px) { .analytics { padding: var(--cp-space-xl); } }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cp-space-lg);
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+  /* The time-series chart spans the full width on top. */
+  .grid > ui-section:first-child { grid-column: 1 / -1; }
+}

@@ -1,0 +1,27 @@
+<div class="analytics">
+  <app-page-header
+    [title]="'page.analytics.title' | translate: 'Analytics'"
+    [subtitle]="'page.analytics.subtitle' | translate: 'Reach, engagement and audience insights'"
+    icon="analytics"
+  />
+
+  <div class="kpis">
+    @for (kpi of kpis(); track kpi.label) {
+      <ui-stat [icon]="kpi.icon" [label]="kpi.label" [value]="kpi.value" [caption]="kpi.caption" />
+    }
+  </div>
+
+  <div class="grid">
+    <ui-section [title]="'section.engagement-rate-week' | translate: 'Engagement rate — this week'" icon="show_chart">
+      <ui-area-chart [points]="engagement()" suffix="%" />
+    </ui-section>
+
+    <ui-section [title]="'section.interactions-by-content-type' | translate: 'Interactions by content type'" icon="bar_chart">
+      <ui-bar-chart [data]="byContentType()" />
+    </ui-section>
+
+    <ui-section [title]="'section.reach-by-district' | translate: 'Reach by district'" icon="map">
+      <ui-bar-chart [data]="byDistrict()" />
+    </ui-section>
+  </div>
+</div>

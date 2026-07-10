@@ -1,0 +1,68 @@
+<div class="acct">
+  <button
+    type="button"
+    class="acct__trigger"
+    aria-label="Account menu"
+    [attr.aria-expanded]="open()"
+    (click)="toggle()"
+  >
+    <ui-avatar [src]="account().avatarUrl" [alt]="account().name" [size]="34" [ring]="true" />
+  </button>
+
+  @if (open()) {
+    <div class="acct__backdrop" (click)="close()"></div>
+    <div class="acct__panel" role="menu">
+      <header class="acct__head">
+        <ui-avatar [src]="account().avatarUrl" [alt]="account().name" [size]="44" [ring]="true" />
+        <div class="acct__id">
+          <span class="acct__name">{{ account().name }}</span>
+          <span class="acct__role">{{ account().role }}</span>
+        </div>
+      </header>
+
+      <div class="acct__section">
+        <span class="acct__section-label">{{ 'account.testing-as' | translate: 'Testing as (MVP)' }}</span>
+        @for (option of typeOptions; track option.type) {
+          <button
+            type="button"
+            class="acct__role-option"
+            [class.acct__role-option--active]="type() === option.type"
+            (click)="selectType(option.type)"
+          >
+            <span class="acct__role-icon"><ui-icon [name]="option.icon" [size]="18" /></span>
+            <span class="acct__role-text">
+              <span class="acct__role-name">{{ ('account.type.' + option.type) | translate: option.label }}</span>
+              <span class="acct__role-desc">{{ option.description }}</span>
+            </span>
+            @if (type() === option.type) {
+              <ui-icon name="check" [size]="18" />
+            }
+          </button>
+        }
+      </div>
+
+      <div class="acct__links">
+        @if (isAuthenticated()) {
+          @if (canFollow()) {
+            <a class="acct__link" routerLink="/profile/me" (click)="close()">
+              <ui-icon name="person" [size]="18" /><span>{{ 'account.my-profile' | translate: 'My profile' }}</span>
+            </a>
+          }
+          <a class="acct__link" routerLink="/privacy" (click)="close()">
+            <ui-icon name="shield" [size]="18" /><span>{{ 'account.privacy' | translate: 'Privacy & data' }}</span>
+          </a>
+          <button type="button" class="acct__link acct__link--danger" (click)="logout()">
+            <ui-icon name="logout" [size]="18" /><span>{{ 'account.sign-out' | translate: 'Sign out' }}</span>
+          </button>
+        } @else {
+          <a class="acct__link" routerLink="/login" (click)="close()">
+            <ui-icon name="login" [size]="18" /><span>{{ 'account.log-in' | translate: 'Log in' }}</span>
+          </a>
+          <a class="acct__link" routerLink="/register" (click)="close()">
+            <ui-icon name="person_add" [size]="18" /><span>{{ 'account.create-account' | translate: 'Create account' }}</span>
+          </a>
+        }
+      </div>
+    </div>
+  }
+</div>

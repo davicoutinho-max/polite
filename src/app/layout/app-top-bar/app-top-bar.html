@@ -1,0 +1,24 @@
+<header class="top-bar">
+  <a class="top-bar__brand" routerLink="/feed">CivicPulse</a>
+
+  <div class="top-bar__spacer"></div>
+
+  <div class="top-bar__actions">
+    @if (canMessage()) {
+      <a routerLink="/messages" class="top-bar__link" aria-label="Messages">
+        <ui-icon name="chat" [size]="22" />
+        @if (unreadMessages() > 0) {
+          <span class="top-bar__badge">{{ unreadMessages() > 9 ? '9+' : unreadMessages() }}</span>
+        }
+      </a>
+    }
+
+    @if (isAuthenticated()) {
+      <app-notifications-menu />
+    }
+
+    <app-language-switcher />
+    <app-theme-toggle />
+    <app-account-menu />
+  </div>
+</header>

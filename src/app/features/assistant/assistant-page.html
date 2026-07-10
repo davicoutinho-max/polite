@@ -1,0 +1,82 @@
+<div class="assistant">
+  <app-page-header
+    [title]="'page.assistant.title' | translate: 'Ask AI'"
+    [subtitle]="'page.assistant.subtitle' | translate: 'Understand bills, PECs and inquiries in plain language'"
+    icon="auto_awesome"
+  />
+
+  <div class="assistant__disclaimer">
+    <ui-icon name="info" [size]="18" />
+    <p>
+      {{ 'hint.assistant-disclaimer' | translate: 'AI-generated explanations for civic understanding only. They can be incomplete or wrong and are not legal advice. Always check the official text.' }}
+    </p>
+  </div>
+
+  <section class="assistant__controls">
+    <span class="assistant__label">{{ 'label.choose-topic' | translate: 'Choose a topic' }}</span>
+    <div class="assistant__topics">
+      @for (topic of topics; track topic.id) {
+        <button
+          type="button"
+          class="assistant__chip"
+          [class.assistant__chip--active]="topic.id === activeTopicId()"
+          (click)="selectTopic(topic.id)"
+        >
+          <strong>{{ topic.reference }}</strong>
+          <span>{{ topic.title }}</span>
+        </button>
+      }
+    </div>
+
+    <span class="assistant__label">{{ 'label.ask' | translate: 'Ask' }}</span>
+    <div class="assistant__prompts">
+      @for (prompt of prompts; track prompt.kind) {
+        <button
+          type="button"
+          class="assistant__prompt"
+          [disabled]="thinking()"
+          (click)="ask(prompt.kind, prompt.label)"
+        >
+          <ui-icon [name]="prompt.icon" [size]="18" />
+          <span>{{ prompt.label }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="assistant__thread">
+    @for (message of conversation(); track message.id) {
+      <article class="assistant__msg assistant__msg--{{ message.role }}">
+        @if (message.role === 'assistant') {
+          <span class="assistant__ai-icon"><ui-icon name="auto_awesome" [size]="18" [fill]="true" /></span>
+        }
+        <div class="assistant__bubble">
+          <p>{{ message.text }}</p>
+          @if (message.role === 'assistant') {
+            <span class="assistant__tag">{{ 'label.ai-generated' | translate: 'AI-generated' }} · {{ message.topicReference }}</span>
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="assistant__placeholder">
+        <ui-icon name="auto_awesome" [size]="40" />
+        <p>{{ 'hint.assistant-placeholder' | translate: 'Pick a topic above, then ask for a summary, a plain-language explanation, or what would change if it passed.' }}</p>
+      </div>
+    }
+
+    @if (thinking()) {
+      <article class="assistant__msg assistant__msg--assistant">
+        <span class="assistant__ai-icon"><ui-icon name="auto_awesome" [size]="18" [fill]="true" /></span>
+        <div class="assistant__bubble assistant__bubble--typing">
+          <span></span><span></span><span></span>
+        </div>
+      </article>
+    }
+  </section>
+
+  @if (conversation().length > 0) {
+    <button type="button" class="assistant__clear" (click)="clear()">
+      <ui-icon name="delete_sweep" [size]="18" /><span>{{ 'button.clear-conversation' | translate: 'Clear conversation' }}</span>
+    </button>
+  }
+</div>

@@ -1,0 +1,27 @@
+:host { display: block; }
+
+.participation { padding: var(--cp-margin-mobile); }
+@media (min-width: 768px) { .participation { padding: var(--cp-space-xl); } }
+
+.participation__notice {
+  display: flex;
+  gap: var(--cp-space-sm);
+  align-items: flex-start;
+  padding: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+  border-radius: var(--cp-radius-lg);
+
+  p { margin: 0; font-size: 13px; line-height: 18px; }
+}
+
+.participation__tabs { margin-bottom: var(--cp-space-lg); }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cp-space-lg);
+  align-items: start;
+}
+@media (min-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }

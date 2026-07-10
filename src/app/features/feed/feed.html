@@ -1,0 +1,27 @@
+<div class="feed">
+  <section class="feed__main">
+    @if (canPublish()) {
+      <app-post-composer [author]="currentUser()" (publish)="onPublish($event)" />
+    }
+
+    <app-feed-sort [value]="sort()" (sortChange)="onSort($event)" />
+
+    @for (post of posts(); track post.id) {
+      <app-post-card
+        [post]="post"
+        [currentUserAvatar]="currentUser().avatarUrl"
+        [canReact]="canReact()"
+        (like)="onLike($event)"
+        (addComment)="onComment($event)"
+      />
+    } @empty {
+      <p class="feed__empty">{{ 'empty.no-posts-filter' | translate: 'No posts to show for this filter.' }}</p>
+    }
+  </section>
+
+  <aside class="feed__sidebar">
+    <app-live-now />
+    <app-trending-topics [topics]="topics()" />
+    <app-relevant-bills [bills]="bills()" />
+  </aside>
+</div>

@@ -1,0 +1,55 @@
+<div class="elections">
+  <app-page-header
+    [title]="'page.elections.title' | translate: 'Elections'"
+    [subtitle]="'page.elections.subtitle' | translate: 'Election calendar and candidates'"
+    icon="ballot"
+  />
+
+  <div class="elections__stats">
+    <ui-stat icon="event_upcoming" [label]="'label.upcoming' | translate: 'Upcoming'" [value]="upcomingCount().toString()" [caption]="'label.scheduled-elections' | translate: 'Scheduled elections'" />
+    <ui-stat icon="groups" [label]="'label.candidates' | translate: 'Candidates'" [value]="totalCandidates().toString()" [caption]="'label.running-across-elections' | translate: 'Running across all elections'" />
+    <ui-stat icon="calendar_month" [label]="'label.next-election' | translate: 'Next election'" [value]="nextDate()" [caption]="'label.closest-upcoming-date' | translate: 'Closest upcoming date'" />
+  </div>
+
+  <div class="elections__filter">
+    <p-select
+      [options]="scopeOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="scope()"
+      (ngModelChange)="scope.set($event)"
+      appendTo="body"
+    />
+  </div>
+
+  @if (elections().length) {
+    <div class="elections__grid">
+      @for (election of elections(); track election.id) {
+        <ui-card padding="lg" [hover]="true" class="election">
+          <a class="election__link" [routerLink]="['/elections', election.id]">
+            <header class="election__head">
+              <ui-tag [label]="election.scope" [severity]="scopeSeverity(election.scope)" [uppercase]="true" />
+              <span class="election__date">{{ election.date }}</span>
+            </header>
+            <h3 class="election__title">{{ election.title }}</h3>
+            <p class="election__desc">{{ election.description }}</p>
+          </a>
+
+          @if (candidatesOf(election.id).length) {
+            <div class="election__candidates">
+              @for (candidate of candidatesOf(election.id); track candidate.id) {
+                <a class="candidate" [routerLink]="['/profile', candidate.id]">
+                  <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="28" [ring]="true" />
+                  <span class="candidate__name">{{ candidate.name }}</span>
+                  <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+                </a>
+              }
+            </div>
+          }
+        </ui-card>
+      }
+    </div>
+  } @else {
+    <ui-empty icon="ballot" [title]="'empty.no-elections.title' | translate: 'No elections found'" [description]="'empty.try-different-scope' | translate: 'Try a different scope filter.'" />
+  }
+</div>
