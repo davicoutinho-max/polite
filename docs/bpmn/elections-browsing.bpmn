@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_elections_browsing"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Elections Browsing &amp; Candidacy Lookup">
+  <bpmn:collaboration id="Collaboration_elections_browsing">
+    <bpmn:participant id="Process_elections_browsing_participant" name="Elections Browsing &amp; Candidacy Lookup" processRef="Process_elections_browsing" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_elections_browsing" name="Elections Browsing &amp; Candidacy Lookup" isExecutable="false">
+    <bpmn:laneSet id="Process_elections_browsing_laneSet">
+      <bpmn:lane id="Process_elections_browsing_lane_0" name="Any User (incl. Visitor)">
+        <bpmn:flowNodeRef>Process_elections_browsing_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_elections_browsing_lane_1" name="Elections Service">
+        <bpmn:flowNodeRef>Process_elections_browsing_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_t6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_elections_browsing_end0</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_elections_browsing_lane_2" name="Directory Service">
+        <bpmn:flowNodeRef>Process_elections_browsing_t5</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_elections_browsing_start" name="Open /elections (public, no auth)" />
+      <bpmn:task id="Process_elections_browsing_t1" name="Return elections list + stats (upcoming, candidates, next date)" />
+      <bpmn:task id="Process_elections_browsing_t2" name="Filter by scope (Nacional/Estadual/Municipal/All)" />
+      <bpmn:task id="Process_elections_browsing_t3" name="Click an election card" />
+      <bpmn:task id="Process_elections_browsing_t4" name="byId lookup + candidatesOf(electionId)" />
+      <bpmn:task id="Process_elections_browsing_t5" name="Join candidate ids with PoliticianSummary records" />
+      <bpmn:exclusiveGateway id="Process_elections_browsing_g1" name="Election found?" />
+      <bpmn:task id="Process_elections_browsing_t6" name="Show &quot;not found&quot; empty state" />
+      <bpmn:endEvent id="Process_elections_browsing_end0" name="Empty state shown" />
+      <bpmn:task id="Process_elections_browsing_t7" name="Render detail: status computed from date vs now" />
+      <bpmn:task id="Process_elections_browsing_t8" name="Click a candidate → open their Profile" />
+      <bpmn:endEvent id="Process_elections_browsing_end" name="Candidate profile opened" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_0" sourceRef="Process_elections_browsing_start" targetRef="Process_elections_browsing_t1" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_1" sourceRef="Process_elections_browsing_t1" targetRef="Process_elections_browsing_t2" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_2" sourceRef="Process_elections_browsing_t2" targetRef="Process_elections_browsing_t3" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_3" sourceRef="Process_elections_browsing_t3" targetRef="Process_elections_browsing_t4" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_4" sourceRef="Process_elections_browsing_t4" targetRef="Process_elections_browsing_t5" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_5" sourceRef="Process_elections_browsing_t5" targetRef="Process_elections_browsing_g1" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_6" sourceRef="Process_elections_browsing_g1" targetRef="Process_elections_browsing_t6" name="No" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_7" sourceRef="Process_elections_browsing_t6" targetRef="Process_elections_browsing_end0" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_8" sourceRef="Process_elections_browsing_g1" targetRef="Process_elections_browsing_t7" name="Yes" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_9" sourceRef="Process_elections_browsing_t7" targetRef="Process_elections_browsing_t8" />
+      <bpmn:sequenceFlow id="Process_elections_browsing_flow_10" sourceRef="Process_elections_browsing_t8" targetRef="Process_elections_browsing_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_elections_browsing">
+    <bpmndi:BPMNPlane id="Plane_elections_browsing" bpmnElement="Collaboration_elections_browsing">
+      <bpmndi:BPMNShape id="Process_elections_browsing_participant_di" bpmnElement="Process_elections_browsing_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1976.0000000000002" height="470" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_lane_0_di" bpmnElement="Process_elections_browsing_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1946.0000000000002" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_lane_1_di" bpmnElement="Process_elections_browsing_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1946.0000000000002" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_lane_2_di" bpmnElement="Process_elections_browsing_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1946.0000000000002" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_start_di" bpmnElement="Process_elections_browsing_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t1_di" bpmnElement="Process_elections_browsing_t1">
+        <dc:Bounds x="435" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t2_di" bpmnElement="Process_elections_browsing_t2">
+        <dc:Bounds x="605" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t3_di" bpmnElement="Process_elections_browsing_t3">
+        <dc:Bounds x="775" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t4_di" bpmnElement="Process_elections_browsing_t4">
+        <dc:Bounds x="945" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t5_di" bpmnElement="Process_elections_browsing_t5">
+        <dc:Bounds x="1081" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_g1_di" bpmnElement="Process_elections_browsing_g1">
+        <dc:Bounds x="1298" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1298" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t6_di" bpmnElement="Process_elections_browsing_t6">
+        <dc:Bounds x="1421" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1421" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_end0_di" bpmnElement="Process_elections_browsing_end0">
+        <dc:Bounds x="1641" y="245" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1641" y="287" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t7_di" bpmnElement="Process_elections_browsing_t7">
+        <dc:Bounds x="1421" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1421" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_t8_di" bpmnElement="Process_elections_browsing_t8">
+        <dc:Bounds x="1591" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1591" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_elections_browsing_end_di" bpmnElement="Process_elections_browsing_end">
+        <dc:Bounds x="1811" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1811" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_0_di" bpmnElement="Process_elections_browsing_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_1_di" bpmnElement="Process_elections_browsing_flow_1">
+        <di:waypoint x="505" y="265" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_2_di" bpmnElement="Process_elections_browsing_flow_2">
+        <di:waypoint x="675" y="115" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_3_di" bpmnElement="Process_elections_browsing_flow_3">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_4_di" bpmnElement="Process_elections_browsing_flow_4">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1151" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_5_di" bpmnElement="Process_elections_browsing_flow_5">
+        <di:waypoint x="1151" y="415" />
+        <di:waypoint x="1321" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_6_di" bpmnElement="Process_elections_browsing_flow_6">
+        <di:waypoint x="1321" y="265" />
+        <di:waypoint x="1491" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_7_di" bpmnElement="Process_elections_browsing_flow_7">
+        <di:waypoint x="1491" y="265" />
+        <di:waypoint x="1661" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_8_di" bpmnElement="Process_elections_browsing_flow_8">
+        <di:waypoint x="1321" y="265" />
+        <di:waypoint x="1491" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_9_di" bpmnElement="Process_elections_browsing_flow_9">
+        <di:waypoint x="1491" y="115" />
+        <di:waypoint x="1661" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_elections_browsing_flow_10_di" bpmnElement="Process_elections_browsing_flow_10">
+        <di:waypoint x="1661" y="115" />
+        <di:waypoint x="1831" y="115" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

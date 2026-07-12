@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_notifications_alerts"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Cross-Cutting Notifications &amp; Alerts">
+  <bpmn:collaboration id="Collaboration_notifications_alerts">
+    <bpmn:participant id="Process_notifications_alerts_participant" name="Cross-Cutting Notifications &amp; Alerts" processRef="Process_notifications_alerts" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_notifications_alerts" name="Cross-Cutting Notifications &amp; Alerts" isExecutable="false">
+    <bpmn:laneSet id="Process_notifications_alerts_laneSet">
+      <bpmn:lane id="Process_notifications_alerts_lane_0" name="Domain Services (event sources)">
+        <bpmn:flowNodeRef>Process_notifications_alerts_start</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_notifications_alerts_lane_1" name="Notification Service">
+        <bpmn:flowNodeRef>Process_notifications_alerts_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_notifications_alerts_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_notifications_alerts_t4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_notifications_alerts_lane_2" name="User">
+        <bpmn:flowNodeRef>Process_notifications_alerts_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_notifications_alerts_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_notifications_alerts_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:intermediateCatchEvent id="Process_notifications_alerts_start" name="Domain event occurs (new bill, affiliation update, vote registered, new CPI, ...)"><bpmn:messageEventDefinition /></bpmn:intermediateCatchEvent>
+      <bpmn:task id="Process_notifications_alerts_t1" name="Create Alert (category, icon, title, message, link)" />
+      <bpmn:task id="Process_notifications_alerts_t2" name="Prepend to user's alert store, unread=true" />
+      <bpmn:task id="Process_notifications_alerts_t3" name="Open Alerts / bell icon (badge = unread count)" />
+      <bpmn:exclusiveGateway id="Process_notifications_alerts_g1" name="Mark one or mark all read?" />
+      <bpmn:task id="Process_notifications_alerts_t4" name="Flip read flag(s), recompute unread badge" />
+      <bpmn:endEvent id="Process_notifications_alerts_end" name="Notification acknowledged" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_0" sourceRef="Process_notifications_alerts_start" targetRef="Process_notifications_alerts_t1" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_1" sourceRef="Process_notifications_alerts_t1" targetRef="Process_notifications_alerts_t2" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_2" sourceRef="Process_notifications_alerts_t2" targetRef="Process_notifications_alerts_t3" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_3" sourceRef="Process_notifications_alerts_t3" targetRef="Process_notifications_alerts_g1" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_4" sourceRef="Process_notifications_alerts_g1" targetRef="Process_notifications_alerts_t4" name="one / all" />
+      <bpmn:sequenceFlow id="Process_notifications_alerts_flow_5" sourceRef="Process_notifications_alerts_t4" targetRef="Process_notifications_alerts_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_notifications_alerts">
+    <bpmndi:BPMNPlane id="Plane_notifications_alerts" bpmnElement="Collaboration_notifications_alerts">
+      <bpmndi:BPMNShape id="Process_notifications_alerts_participant_di" bpmnElement="Process_notifications_alerts_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1500" height="470" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_lane_0_di" bpmnElement="Process_notifications_alerts_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_lane_1_di" bpmnElement="Process_notifications_alerts_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_lane_2_di" bpmnElement="Process_notifications_alerts_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_start_di" bpmnElement="Process_notifications_alerts_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_t1_di" bpmnElement="Process_notifications_alerts_t1">
+        <dc:Bounds x="435" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_t2_di" bpmnElement="Process_notifications_alerts_t2">
+        <dc:Bounds x="605" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_t3_di" bpmnElement="Process_notifications_alerts_t3">
+        <dc:Bounds x="775" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_g1_di" bpmnElement="Process_notifications_alerts_g1">
+        <dc:Bounds x="992" y="392" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="440" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_t4_di" bpmnElement="Process_notifications_alerts_t4">
+        <dc:Bounds x="1115" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_notifications_alerts_end_di" bpmnElement="Process_notifications_alerts_end">
+        <dc:Bounds x="1335" y="395" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1335" y="437" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_0_di" bpmnElement="Process_notifications_alerts_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_1_di" bpmnElement="Process_notifications_alerts_flow_1">
+        <di:waypoint x="505" y="265" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_2_di" bpmnElement="Process_notifications_alerts_flow_2">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="845" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_3_di" bpmnElement="Process_notifications_alerts_flow_3">
+        <di:waypoint x="845" y="415" />
+        <di:waypoint x="1015" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_4_di" bpmnElement="Process_notifications_alerts_flow_4">
+        <di:waypoint x="1015" y="415" />
+        <di:waypoint x="1185" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_notifications_alerts_flow_5_di" bpmnElement="Process_notifications_alerts_flow_5">
+        <di:waypoint x="1185" y="265" />
+        <di:waypoint x="1355" y="415" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

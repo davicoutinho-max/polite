@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_privacy_lgpd"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Privacy, Consent &amp; LGPD Data Rights">
+  <bpmn:collaboration id="Collaboration_privacy_lgpd">
+    <bpmn:participant id="Process_privacy_lgpd_participant" name="Privacy, Consent &amp; LGPD Data Rights" processRef="Process_privacy_lgpd" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_privacy_lgpd" name="Privacy, Consent &amp; LGPD Data Rights" isExecutable="false">
+    <bpmn:laneSet id="Process_privacy_lgpd_laneSet">
+      <bpmn:lane id="Process_privacy_lgpd_lane_0" name="User">
+        <bpmn:flowNodeRef>Process_privacy_lgpd_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_g0</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_exp1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_end1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_privacy_lgpd_lane_1" name="Privacy/Compliance Service">
+        <bpmn:flowNodeRef>Process_privacy_lgpd_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_exp2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_exp4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_del4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_privacy_lgpd_lane_2" name="All Domain Services (data owners)">
+        <bpmn:flowNodeRef>Process_privacy_lgpd_exp3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_del3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_privacy_lgpd_lane_3" name="User (Delete flow)">
+        <bpmn:flowNodeRef>Process_privacy_lgpd_del1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_del2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_end2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_privacy_lgpd_end3</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_privacy_lgpd_start" name="Open Privacy &amp; Data" />
+      <bpmn:task id="Process_privacy_lgpd_t1" name="View/toggle consent (essential locked, rest togglable)" />
+      <bpmn:task id="Process_privacy_lgpd_t2" name="Persist consent preferences" />
+      <bpmn:exclusiveGateway id="Process_privacy_lgpd_g0" name="Action?" />
+      <bpmn:task id="Process_privacy_lgpd_exp1" name="Click &quot;Export my data&quot;" />
+      <bpmn:task id="Process_privacy_lgpd_exp2" name="Aggregate personal data across services" />
+      <bpmn:task id="Process_privacy_lgpd_exp3" name="Return profile, posts, messages, wallet, participation" />
+      <bpmn:task id="Process_privacy_lgpd_exp4" name="Generate JSON snapshot" />
+      <bpmn:endEvent id="Process_privacy_lgpd_end1" name="Download delivered (right to portability)" />
+      <bpmn:task id="Process_privacy_lgpd_del1" name="Click &quot;Delete my account&quot;" />
+      <bpmn:task id="Process_privacy_lgpd_del2" name="Confirm irreversible warning" />
+      <bpmn:exclusiveGateway id="Process_privacy_lgpd_g1" name="Confirmed?" />
+      <bpmn:task id="Process_privacy_lgpd_del3" name="Erase personal data (right to erasure), anonymize authored content" />
+      <bpmn:task id="Process_privacy_lgpd_del4" name="Terminate session, sign out" />
+      <bpmn:endEvent id="Process_privacy_lgpd_end2" name="Account deleted" />
+      <bpmn:endEvent id="Process_privacy_lgpd_end3" name="Cancelled" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_0" sourceRef="Process_privacy_lgpd_start" targetRef="Process_privacy_lgpd_t1" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_1" sourceRef="Process_privacy_lgpd_t1" targetRef="Process_privacy_lgpd_t2" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_2" sourceRef="Process_privacy_lgpd_t2" targetRef="Process_privacy_lgpd_g0" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_3" sourceRef="Process_privacy_lgpd_g0" targetRef="Process_privacy_lgpd_exp1" name="Export" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_4" sourceRef="Process_privacy_lgpd_exp1" targetRef="Process_privacy_lgpd_exp2" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_5" sourceRef="Process_privacy_lgpd_exp2" targetRef="Process_privacy_lgpd_exp3" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_6" sourceRef="Process_privacy_lgpd_exp3" targetRef="Process_privacy_lgpd_exp4" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_7" sourceRef="Process_privacy_lgpd_exp4" targetRef="Process_privacy_lgpd_end1" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_8" sourceRef="Process_privacy_lgpd_g0" targetRef="Process_privacy_lgpd_del1" name="Delete" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_9" sourceRef="Process_privacy_lgpd_del1" targetRef="Process_privacy_lgpd_del2" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_10" sourceRef="Process_privacy_lgpd_del2" targetRef="Process_privacy_lgpd_g1" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_11" sourceRef="Process_privacy_lgpd_g1" targetRef="Process_privacy_lgpd_del3" name="Yes" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_12" sourceRef="Process_privacy_lgpd_del3" targetRef="Process_privacy_lgpd_del4" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_13" sourceRef="Process_privacy_lgpd_del4" targetRef="Process_privacy_lgpd_end2" />
+      <bpmn:sequenceFlow id="Process_privacy_lgpd_flow_14" sourceRef="Process_privacy_lgpd_g1" targetRef="Process_privacy_lgpd_end3" name="No" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_privacy_lgpd">
+    <bpmndi:BPMNPlane id="Plane_privacy_lgpd" bpmnElement="Collaboration_privacy_lgpd">
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_participant_di" bpmnElement="Process_privacy_lgpd_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="2010" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_lane_0_di" bpmnElement="Process_privacy_lgpd_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1980" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_lane_1_di" bpmnElement="Process_privacy_lgpd_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1980" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_lane_2_di" bpmnElement="Process_privacy_lgpd_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1980" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_lane_3_di" bpmnElement="Process_privacy_lgpd_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="1980" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_start_di" bpmnElement="Process_privacy_lgpd_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_t1_di" bpmnElement="Process_privacy_lgpd_t1">
+        <dc:Bounds x="435" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_t2_di" bpmnElement="Process_privacy_lgpd_t2">
+        <dc:Bounds x="605" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_g0_di" bpmnElement="Process_privacy_lgpd_g0">
+        <dc:Bounds x="822" y="92" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="822" y="140" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_exp1_di" bpmnElement="Process_privacy_lgpd_exp1">
+        <dc:Bounds x="945" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_exp2_di" bpmnElement="Process_privacy_lgpd_exp2">
+        <dc:Bounds x="1115" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_exp3_di" bpmnElement="Process_privacy_lgpd_exp3">
+        <dc:Bounds x="1285" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1285" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_exp4_di" bpmnElement="Process_privacy_lgpd_exp4">
+        <dc:Bounds x="1455" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1455" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_end1_di" bpmnElement="Process_privacy_lgpd_end1">
+        <dc:Bounds x="1675" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1675" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_del1_di" bpmnElement="Process_privacy_lgpd_del1">
+        <dc:Bounds x="945" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_del2_di" bpmnElement="Process_privacy_lgpd_del2">
+        <dc:Bounds x="1115" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_g1_di" bpmnElement="Process_privacy_lgpd_g1">
+        <dc:Bounds x="1332" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1332" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_del3_di" bpmnElement="Process_privacy_lgpd_del3">
+        <dc:Bounds x="1455" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1455" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_del4_di" bpmnElement="Process_privacy_lgpd_del4">
+        <dc:Bounds x="1625" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1625" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_end2_di" bpmnElement="Process_privacy_lgpd_end2">
+        <dc:Bounds x="1845" y="545" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1845" y="587" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_privacy_lgpd_end3_di" bpmnElement="Process_privacy_lgpd_end3">
+        <dc:Bounds x="1505" y="545" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1505" y="587" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_0_di" bpmnElement="Process_privacy_lgpd_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_1_di" bpmnElement="Process_privacy_lgpd_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_2_di" bpmnElement="Process_privacy_lgpd_flow_2">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_3_di" bpmnElement="Process_privacy_lgpd_flow_3">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1015" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_4_di" bpmnElement="Process_privacy_lgpd_flow_4">
+        <di:waypoint x="1015" y="115" />
+        <di:waypoint x="1185" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_5_di" bpmnElement="Process_privacy_lgpd_flow_5">
+        <di:waypoint x="1185" y="265" />
+        <di:waypoint x="1355" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_6_di" bpmnElement="Process_privacy_lgpd_flow_6">
+        <di:waypoint x="1355" y="415" />
+        <di:waypoint x="1525" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_7_di" bpmnElement="Process_privacy_lgpd_flow_7">
+        <di:waypoint x="1525" y="265" />
+        <di:waypoint x="1695" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_8_di" bpmnElement="Process_privacy_lgpd_flow_8">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1015" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_9_di" bpmnElement="Process_privacy_lgpd_flow_9">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1185" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_10_di" bpmnElement="Process_privacy_lgpd_flow_10">
+        <di:waypoint x="1185" y="565" />
+        <di:waypoint x="1355" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_11_di" bpmnElement="Process_privacy_lgpd_flow_11">
+        <di:waypoint x="1355" y="565" />
+        <di:waypoint x="1525" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_12_di" bpmnElement="Process_privacy_lgpd_flow_12">
+        <di:waypoint x="1525" y="415" />
+        <di:waypoint x="1695" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_13_di" bpmnElement="Process_privacy_lgpd_flow_13">
+        <di:waypoint x="1695" y="265" />
+        <di:waypoint x="1865" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_privacy_lgpd_flow_14_di" bpmnElement="Process_privacy_lgpd_flow_14">
+        <di:waypoint x="1355" y="565" />
+        <di:waypoint x="1525" y="565" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

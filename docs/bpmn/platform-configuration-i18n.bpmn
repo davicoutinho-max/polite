@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_platform_configuration_i18n"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Platform Configuration &amp; Internationalization">
+  <bpmn:collaboration id="Collaboration_platform_configuration_i18n">
+    <bpmn:participant id="Process_platform_configuration_i18n_participant" name="Platform Configuration &amp; Internationalization" processRef="Process_platform_configuration_i18n" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_platform_configuration_i18n" name="Platform Configuration &amp; Internationalization" isExecutable="false">
+    <bpmn:laneSet id="Process_platform_configuration_i18n_laneSet">
+      <bpmn:lane id="Process_platform_configuration_i18n_lane_0" name="Platform Admin">
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_start2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_start3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_platform_configuration_i18n_lane_1" name="Platform Configuration Service">
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t7</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_platform_configuration_i18n_lane_2" name="End User Session">
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t8</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_platform_configuration_i18n_lane_3" name="Feature Modules (consumers)">
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_t10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_platform_configuration_i18n_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_platform_configuration_i18n_start" name="Manage Countries &amp; States" />
+      <bpmn:task id="Process_platform_configuration_i18n_t1" name="Add/remove country (cascades: removes its states)" />
+      <bpmn:task id="Process_platform_configuration_i18n_t2" name="Add/remove state (linked to a country)" />
+      <bpmn:startEvent id="Process_platform_configuration_i18n_start2" name="Manage Languages" />
+      <bpmn:task id="Process_platform_configuration_i18n_t3" name="Add language → seed empty translation slot for every key" />
+      <bpmn:task id="Process_platform_configuration_i18n_t4" name="Set default language" />
+      <bpmn:task id="Process_platform_configuration_i18n_t5" name="Remove language → prune its values from every key" />
+      <bpmn:startEvent id="Process_platform_configuration_i18n_start3" name="Manage Translation Tags" />
+      <bpmn:task id="Process_platform_configuration_i18n_t6" name="Add a new translation key" />
+      <bpmn:task id="Process_platform_configuration_i18n_t7" name="Edit per-language value for each key" />
+      <bpmn:task id="Process_platform_configuration_i18n_t8" name="User selects display language (chrome dropdown)" />
+      <bpmn:task id="Process_platform_configuration_i18n_t9" name="Resolve key → value[lang] at render time" />
+      <bpmn:exclusiveGateway id="Process_platform_configuration_i18n_g1" name="Value present for language?" />
+      <bpmn:task id="Process_platform_configuration_i18n_t10" name="Fall back to literal template string" />
+      <bpmn:endEvent id="Process_platform_configuration_i18n_end" name="UI fully localized for the session" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_0" sourceRef="Process_platform_configuration_i18n_start" targetRef="Process_platform_configuration_i18n_t1" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_1" sourceRef="Process_platform_configuration_i18n_t1" targetRef="Process_platform_configuration_i18n_t2" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_2" sourceRef="Process_platform_configuration_i18n_start2" targetRef="Process_platform_configuration_i18n_t3" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_3" sourceRef="Process_platform_configuration_i18n_t3" targetRef="Process_platform_configuration_i18n_t4" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_4" sourceRef="Process_platform_configuration_i18n_t4" targetRef="Process_platform_configuration_i18n_t5" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_5" sourceRef="Process_platform_configuration_i18n_start3" targetRef="Process_platform_configuration_i18n_t6" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_6" sourceRef="Process_platform_configuration_i18n_t6" targetRef="Process_platform_configuration_i18n_t7" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_7" sourceRef="Process_platform_configuration_i18n_t7" targetRef="Process_platform_configuration_i18n_t8" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_8" sourceRef="Process_platform_configuration_i18n_t2" targetRef="Process_platform_configuration_i18n_t8" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_9" sourceRef="Process_platform_configuration_i18n_t5" targetRef="Process_platform_configuration_i18n_t8" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_10" sourceRef="Process_platform_configuration_i18n_t8" targetRef="Process_platform_configuration_i18n_t9" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_11" sourceRef="Process_platform_configuration_i18n_t9" targetRef="Process_platform_configuration_i18n_g1" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_12" sourceRef="Process_platform_configuration_i18n_g1" targetRef="Process_platform_configuration_i18n_t10" name="No" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_13" sourceRef="Process_platform_configuration_i18n_g1" targetRef="Process_platform_configuration_i18n_end" name="Yes" />
+      <bpmn:sequenceFlow id="Process_platform_configuration_i18n_flow_14" sourceRef="Process_platform_configuration_i18n_t10" targetRef="Process_platform_configuration_i18n_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_platform_configuration_i18n">
+    <bpmndi:BPMNPlane id="Plane_platform_configuration_i18n" bpmnElement="Collaboration_platform_configuration_i18n">
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_participant_di" bpmnElement="Process_platform_configuration_i18n_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="2826" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_lane_0_di" bpmnElement="Process_platform_configuration_i18n_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2796" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_lane_1_di" bpmnElement="Process_platform_configuration_i18n_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="2796" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_lane_2_di" bpmnElement="Process_platform_configuration_i18n_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="2796" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_lane_3_di" bpmnElement="Process_platform_configuration_i18n_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="2796" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_start_di" bpmnElement="Process_platform_configuration_i18n_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t1_di" bpmnElement="Process_platform_configuration_i18n_t1">
+        <dc:Bounds x="435" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t2_di" bpmnElement="Process_platform_configuration_i18n_t2">
+        <dc:Bounds x="605" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_start2_di" bpmnElement="Process_platform_configuration_i18n_start2">
+        <dc:Bounds x="825" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="825" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t3_di" bpmnElement="Process_platform_configuration_i18n_t3">
+        <dc:Bounds x="945" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t4_di" bpmnElement="Process_platform_configuration_i18n_t4">
+        <dc:Bounds x="1115" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t5_di" bpmnElement="Process_platform_configuration_i18n_t5">
+        <dc:Bounds x="1285" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1285" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_start3_di" bpmnElement="Process_platform_configuration_i18n_start3">
+        <dc:Bounds x="1505" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1505" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t6_di" bpmnElement="Process_platform_configuration_i18n_t6">
+        <dc:Bounds x="1625" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1625" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t7_di" bpmnElement="Process_platform_configuration_i18n_t7">
+        <dc:Bounds x="1795" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1795" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t8_di" bpmnElement="Process_platform_configuration_i18n_t8">
+        <dc:Bounds x="1965" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1965" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t9_di" bpmnElement="Process_platform_configuration_i18n_t9">
+        <dc:Bounds x="2135" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2135" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_g1_di" bpmnElement="Process_platform_configuration_i18n_g1">
+        <dc:Bounds x="2352" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2352" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_t10_di" bpmnElement="Process_platform_configuration_i18n_t10">
+        <dc:Bounds x="2441" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2441" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_platform_configuration_i18n_end_di" bpmnElement="Process_platform_configuration_i18n_end">
+        <dc:Bounds x="2661" y="545" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2661" y="587" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_0_di" bpmnElement="Process_platform_configuration_i18n_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_1_di" bpmnElement="Process_platform_configuration_i18n_flow_1">
+        <di:waypoint x="505" y="265" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_2_di" bpmnElement="Process_platform_configuration_i18n_flow_2">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_3_di" bpmnElement="Process_platform_configuration_i18n_flow_3">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1185" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_4_di" bpmnElement="Process_platform_configuration_i18n_flow_4">
+        <di:waypoint x="1185" y="265" />
+        <di:waypoint x="1355" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_5_di" bpmnElement="Process_platform_configuration_i18n_flow_5">
+        <di:waypoint x="1525" y="115" />
+        <di:waypoint x="1695" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_6_di" bpmnElement="Process_platform_configuration_i18n_flow_6">
+        <di:waypoint x="1695" y="265" />
+        <di:waypoint x="1865" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_7_di" bpmnElement="Process_platform_configuration_i18n_flow_7">
+        <di:waypoint x="1865" y="265" />
+        <di:waypoint x="2035" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_8_di" bpmnElement="Process_platform_configuration_i18n_flow_8">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="2035" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_9_di" bpmnElement="Process_platform_configuration_i18n_flow_9">
+        <di:waypoint x="1355" y="265" />
+        <di:waypoint x="2035" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_10_di" bpmnElement="Process_platform_configuration_i18n_flow_10">
+        <di:waypoint x="2035" y="415" />
+        <di:waypoint x="2205" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_11_di" bpmnElement="Process_platform_configuration_i18n_flow_11">
+        <di:waypoint x="2205" y="565" />
+        <di:waypoint x="2375" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_12_di" bpmnElement="Process_platform_configuration_i18n_flow_12">
+        <di:waypoint x="2375" y="565" />
+        <di:waypoint x="2511" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_13_di" bpmnElement="Process_platform_configuration_i18n_flow_13">
+        <di:waypoint x="2375" y="565" />
+        <di:waypoint x="2681" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_platform_configuration_i18n_flow_14_di" bpmnElement="Process_platform_configuration_i18n_flow_14">
+        <di:waypoint x="2511" y="565" />
+        <di:waypoint x="2681" y="565" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

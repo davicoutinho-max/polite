@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_auth_registration_login"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Account Registration &amp; Login">
+  <bpmn:collaboration id="Collaboration_auth_registration_login">
+    <bpmn:participant id="Process_auth_registration_login_participant" name="Account Registration &amp; Login" processRef="Process_auth_registration_login" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_auth_registration_login" name="Account Registration &amp; Login" isExecutable="false">
+    <bpmn:laneSet id="Process_auth_registration_login_laneSet">
+      <bpmn:lane id="Process_auth_registration_login_lane_0" name="New User">
+        <bpmn:flowNodeRef>Process_auth_registration_login_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_g0</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_r1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_e1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_auth_registration_login_lane_1" name="Web App (SPA)">
+        <bpmn:flowNodeRef>Process_auth_registration_login_r2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_g3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_auth_registration_login_lane_2" name="Returning User">
+        <bpmn:flowNodeRef>Process_auth_registration_login_l1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_e2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_auth_registration_login_lane_3" name="Identity &amp; Access Service">
+        <bpmn:flowNodeRef>Process_auth_registration_login_r4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_l2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_auth_registration_login_iss</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_auth_registration_login_start" name="Open CivicPulse" />
+      <bpmn:exclusiveGateway id="Process_auth_registration_login_g0" name="Have an account?" />
+      <bpmn:task id="Process_auth_registration_login_r1" name="Go to /register fill Name, Email, CPF, Password" />
+      <bpmn:task id="Process_auth_registration_login_r2" name="Client-side validation (required fields + CPF 11 digits)" />
+      <bpmn:exclusiveGateway id="Process_auth_registration_login_g1" name="Valid?" />
+      <bpmn:task id="Process_auth_registration_login_e1" name="Show inline error" />
+      <bpmn:task id="Process_auth_registration_login_r4" name="Create account (role=citizen) hash password, store CPF" />
+      <bpmn:task id="Process_auth_registration_login_l1" name="Go to /login fill Email, Password" />
+      <bpmn:task id="Process_auth_registration_login_l2" name="Verify credentials" />
+      <bpmn:exclusiveGateway id="Process_auth_registration_login_g2" name="Match?" />
+      <bpmn:task id="Process_auth_registration_login_e2" name="Show &quot;invalid credentials&quot;" />
+      <bpmn:task id="Process_auth_registration_login_iss" name="Issue session/JWT + default permission set for role" />
+      <bpmn:task id="Process_auth_registration_login_g3" name="Apply permission-based route guards, render nav" />
+      <bpmn:endEvent id="Process_auth_registration_login_end" name="Redirect to /feed" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_0" sourceRef="Process_auth_registration_login_start" targetRef="Process_auth_registration_login_g0" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_1" sourceRef="Process_auth_registration_login_g0" targetRef="Process_auth_registration_login_r1" name="No" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_2" sourceRef="Process_auth_registration_login_g0" targetRef="Process_auth_registration_login_l1" name="Yes" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_3" sourceRef="Process_auth_registration_login_r1" targetRef="Process_auth_registration_login_r2" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_4" sourceRef="Process_auth_registration_login_r2" targetRef="Process_auth_registration_login_g1" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_5" sourceRef="Process_auth_registration_login_g1" targetRef="Process_auth_registration_login_e1" name="Invalid" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_6" sourceRef="Process_auth_registration_login_e1" targetRef="Process_auth_registration_login_r1" name="retry" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_7" sourceRef="Process_auth_registration_login_g1" targetRef="Process_auth_registration_login_r4" name="Valid" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_8" sourceRef="Process_auth_registration_login_l1" targetRef="Process_auth_registration_login_l2" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_9" sourceRef="Process_auth_registration_login_l2" targetRef="Process_auth_registration_login_g2" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_10" sourceRef="Process_auth_registration_login_g2" targetRef="Process_auth_registration_login_e2" name="No" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_11" sourceRef="Process_auth_registration_login_e2" targetRef="Process_auth_registration_login_l1" name="retry" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_12" sourceRef="Process_auth_registration_login_g2" targetRef="Process_auth_registration_login_iss" name="Yes" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_13" sourceRef="Process_auth_registration_login_r4" targetRef="Process_auth_registration_login_iss" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_14" sourceRef="Process_auth_registration_login_iss" targetRef="Process_auth_registration_login_g3" />
+      <bpmn:sequenceFlow id="Process_auth_registration_login_flow_15" sourceRef="Process_auth_registration_login_g3" targetRef="Process_auth_registration_login_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_auth_registration_login">
+    <bpmndi:BPMNPlane id="Plane_auth_registration_login" bpmnElement="Collaboration_auth_registration_login">
+      <bpmndi:BPMNShape id="Process_auth_registration_login_participant_di" bpmnElement="Process_auth_registration_login_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1942" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_lane_0_di" bpmnElement="Process_auth_registration_login_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1912" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_lane_1_di" bpmnElement="Process_auth_registration_login_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1912" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_lane_2_di" bpmnElement="Process_auth_registration_login_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1912" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_lane_3_di" bpmnElement="Process_auth_registration_login_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="1912" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_start_di" bpmnElement="Process_auth_registration_login_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_g0_di" bpmnElement="Process_auth_registration_login_g0">
+        <dc:Bounds x="482" y="92" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="482" y="140" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_r1_di" bpmnElement="Process_auth_registration_login_r1">
+        <dc:Bounds x="605" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_r2_di" bpmnElement="Process_auth_registration_login_r2">
+        <dc:Bounds x="775" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_g1_di" bpmnElement="Process_auth_registration_login_g1">
+        <dc:Bounds x="992" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_e1_di" bpmnElement="Process_auth_registration_login_e1">
+        <dc:Bounds x="1081" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_r4_di" bpmnElement="Process_auth_registration_login_r4">
+        <dc:Bounds x="1217" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1217" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_l1_di" bpmnElement="Process_auth_registration_login_l1">
+        <dc:Bounds x="605" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_l2_di" bpmnElement="Process_auth_registration_login_l2">
+        <dc:Bounds x="775" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_g2_di" bpmnElement="Process_auth_registration_login_g2">
+        <dc:Bounds x="992" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_e2_di" bpmnElement="Process_auth_registration_login_e2">
+        <dc:Bounds x="1081" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_iss_di" bpmnElement="Process_auth_registration_login_iss">
+        <dc:Bounds x="1387" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1387" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_g3_di" bpmnElement="Process_auth_registration_login_g3">
+        <dc:Bounds x="1557" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1557" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_auth_registration_login_end_di" bpmnElement="Process_auth_registration_login_end">
+        <dc:Bounds x="1777" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1777" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_0_di" bpmnElement="Process_auth_registration_login_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_1_di" bpmnElement="Process_auth_registration_login_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_2_di" bpmnElement="Process_auth_registration_login_flow_2">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_3_di" bpmnElement="Process_auth_registration_login_flow_3">
+        <di:waypoint x="675" y="115" />
+        <di:waypoint x="845" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_4_di" bpmnElement="Process_auth_registration_login_flow_4">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_5_di" bpmnElement="Process_auth_registration_login_flow_5">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1151" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_6_di" bpmnElement="Process_auth_registration_login_flow_6">
+        <di:waypoint x="1151" y="115" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_7_di" bpmnElement="Process_auth_registration_login_flow_7">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1287" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_8_di" bpmnElement="Process_auth_registration_login_flow_8">
+        <di:waypoint x="675" y="415" />
+        <di:waypoint x="845" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_9_di" bpmnElement="Process_auth_registration_login_flow_9">
+        <di:waypoint x="845" y="565" />
+        <di:waypoint x="1015" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_10_di" bpmnElement="Process_auth_registration_login_flow_10">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1151" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_11_di" bpmnElement="Process_auth_registration_login_flow_11">
+        <di:waypoint x="1151" y="415" />
+        <di:waypoint x="675" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_12_di" bpmnElement="Process_auth_registration_login_flow_12">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1457" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_13_di" bpmnElement="Process_auth_registration_login_flow_13">
+        <di:waypoint x="1287" y="565" />
+        <di:waypoint x="1457" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_14_di" bpmnElement="Process_auth_registration_login_flow_14">
+        <di:waypoint x="1457" y="565" />
+        <di:waypoint x="1627" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_auth_registration_login_flow_15_di" bpmnElement="Process_auth_registration_login_flow_15">
+        <di:waypoint x="1627" y="265" />
+        <di:waypoint x="1797" y="115" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

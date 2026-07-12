@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_party_onboarding_platform_admin"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Party Onboarding &amp; Politician Assignment (Platform Admin)">
+  <bpmn:collaboration id="Collaboration_party_onboarding_platform_admin">
+    <bpmn:participant id="Process_party_onboarding_platform_admin_participant" name="Party Onboarding &amp; Politician Assignment (Platform Admin)" processRef="Process_party_onboarding_platform_admin" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_party_onboarding_platform_admin" name="Party Onboarding &amp; Politician Assignment (Platform Admin)" isExecutable="false">
+    <bpmn:laneSet id="Process_party_onboarding_platform_admin_laneSet">
+      <bpmn:lane id="Process_party_onboarding_platform_admin_lane_0" name="Platform Admin — New Party">
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_end1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_party_onboarding_platform_admin_lane_1" name="Party Registry">
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_party_onboarding_platform_admin_lane_2" name="Platform Admin — Reassignment">
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_start2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_end2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_party_onboarding_platform_admin_lane_3" name="Politician Directory">
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_party_onboarding_platform_admin_t7</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_party_onboarding_platform_admin_start" name="Open Platform Admin → Register a party" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t1" name="Fill Name, Acronym, Number, President, Ideology" />
+      <bpmn:exclusiveGateway id="Process_party_onboarding_platform_admin_g1" name="Acronym/id already taken?" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t2" name="Suffix id with timestamp" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t3" name="Create PartyRegistryEntry (memberCount=0)" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t4" name="Party visible in registered- parties list &amp; public directory" />
+      <bpmn:endEvent id="Process_party_onboarding_platform_admin_end1" name="Party registered" />
+      <bpmn:startEvent id="Process_party_onboarding_platform_admin_start2" name="Select an independent or affiliated politician" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t5" name="Choose target party (or &quot;Independent&quot;)" />
+      <bpmn:exclusiveGateway id="Process_party_onboarding_platform_admin_g2" name="Already assigned elsewhere?" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t6" name="Move from previous party to new one" />
+      <bpmn:task id="Process_party_onboarding_platform_admin_t7" name="Set partyId (or null)" />
+      <bpmn:endEvent id="Process_party_onboarding_platform_admin_end2" name="Assignment updated" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_0" sourceRef="Process_party_onboarding_platform_admin_start" targetRef="Process_party_onboarding_platform_admin_t1" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_1" sourceRef="Process_party_onboarding_platform_admin_t1" targetRef="Process_party_onboarding_platform_admin_g1" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_2" sourceRef="Process_party_onboarding_platform_admin_g1" targetRef="Process_party_onboarding_platform_admin_t2" name="Yes" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_3" sourceRef="Process_party_onboarding_platform_admin_t2" targetRef="Process_party_onboarding_platform_admin_t3" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_4" sourceRef="Process_party_onboarding_platform_admin_g1" targetRef="Process_party_onboarding_platform_admin_t3" name="No" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_5" sourceRef="Process_party_onboarding_platform_admin_t3" targetRef="Process_party_onboarding_platform_admin_t4" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_6" sourceRef="Process_party_onboarding_platform_admin_t4" targetRef="Process_party_onboarding_platform_admin_end1" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_7" sourceRef="Process_party_onboarding_platform_admin_start2" targetRef="Process_party_onboarding_platform_admin_t5" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_8" sourceRef="Process_party_onboarding_platform_admin_t5" targetRef="Process_party_onboarding_platform_admin_g2" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_9" sourceRef="Process_party_onboarding_platform_admin_g2" targetRef="Process_party_onboarding_platform_admin_t6" name="Yes" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_10" sourceRef="Process_party_onboarding_platform_admin_t6" targetRef="Process_party_onboarding_platform_admin_end2" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_11" sourceRef="Process_party_onboarding_platform_admin_g2" targetRef="Process_party_onboarding_platform_admin_t7" name="No" />
+      <bpmn:sequenceFlow id="Process_party_onboarding_platform_admin_flow_12" sourceRef="Process_party_onboarding_platform_admin_t7" targetRef="Process_party_onboarding_platform_admin_end2" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_party_onboarding_platform_admin">
+    <bpmndi:BPMNPlane id="Plane_party_onboarding_platform_admin" bpmnElement="Collaboration_party_onboarding_platform_admin">
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_participant_di" bpmnElement="Process_party_onboarding_platform_admin_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1500" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_lane_0_di" bpmnElement="Process_party_onboarding_platform_admin_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_lane_1_di" bpmnElement="Process_party_onboarding_platform_admin_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_lane_2_di" bpmnElement="Process_party_onboarding_platform_admin_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_lane_3_di" bpmnElement="Process_party_onboarding_platform_admin_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="1470" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_start_di" bpmnElement="Process_party_onboarding_platform_admin_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t1_di" bpmnElement="Process_party_onboarding_platform_admin_t1">
+        <dc:Bounds x="435" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_g1_di" bpmnElement="Process_party_onboarding_platform_admin_g1">
+        <dc:Bounds x="652" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="652" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t2_di" bpmnElement="Process_party_onboarding_platform_admin_t2">
+        <dc:Bounds x="741" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="741" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t3_di" bpmnElement="Process_party_onboarding_platform_admin_t3">
+        <dc:Bounds x="945" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t4_di" bpmnElement="Process_party_onboarding_platform_admin_t4">
+        <dc:Bounds x="1115" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_end1_di" bpmnElement="Process_party_onboarding_platform_admin_end1">
+        <dc:Bounds x="1335" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1335" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_start2_di" bpmnElement="Process_party_onboarding_platform_admin_start2">
+        <dc:Bounds x="315" y="395" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="437" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t5_di" bpmnElement="Process_party_onboarding_platform_admin_t5">
+        <dc:Bounds x="435" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_g2_di" bpmnElement="Process_party_onboarding_platform_admin_g2">
+        <dc:Bounds x="652" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="652" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t6_di" bpmnElement="Process_party_onboarding_platform_admin_t6">
+        <dc:Bounds x="775" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_t7_di" bpmnElement="Process_party_onboarding_platform_admin_t7">
+        <dc:Bounds x="945" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_party_onboarding_platform_admin_end2_di" bpmnElement="Process_party_onboarding_platform_admin_end2">
+        <dc:Bounds x="1165" y="395" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1165" y="437" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_0_di" bpmnElement="Process_party_onboarding_platform_admin_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_1_di" bpmnElement="Process_party_onboarding_platform_admin_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_2_di" bpmnElement="Process_party_onboarding_platform_admin_flow_2">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="811" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_3_di" bpmnElement="Process_party_onboarding_platform_admin_flow_3">
+        <di:waypoint x="811" y="265" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_4_di" bpmnElement="Process_party_onboarding_platform_admin_flow_4">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_5_di" bpmnElement="Process_party_onboarding_platform_admin_flow_5">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1185" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_6_di" bpmnElement="Process_party_onboarding_platform_admin_flow_6">
+        <di:waypoint x="1185" y="265" />
+        <di:waypoint x="1355" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_7_di" bpmnElement="Process_party_onboarding_platform_admin_flow_7">
+        <di:waypoint x="335" y="415" />
+        <di:waypoint x="505" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_8_di" bpmnElement="Process_party_onboarding_platform_admin_flow_8">
+        <di:waypoint x="505" y="415" />
+        <di:waypoint x="675" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_9_di" bpmnElement="Process_party_onboarding_platform_admin_flow_9">
+        <di:waypoint x="675" y="565" />
+        <di:waypoint x="845" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_10_di" bpmnElement="Process_party_onboarding_platform_admin_flow_10">
+        <di:waypoint x="845" y="565" />
+        <di:waypoint x="1185" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_11_di" bpmnElement="Process_party_onboarding_platform_admin_flow_11">
+        <di:waypoint x="675" y="565" />
+        <di:waypoint x="1015" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_party_onboarding_platform_admin_flow_12_di" bpmnElement="Process_party_onboarding_platform_admin_flow_12">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1185" y="415" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

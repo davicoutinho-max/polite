@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_fundraising_campaign"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Fundraising Campaign Lifecycle">
+  <bpmn:collaboration id="Collaboration_fundraising_campaign">
+    <bpmn:participant id="Process_fundraising_campaign_participant" name="Fundraising Campaign Lifecycle" processRef="Process_fundraising_campaign" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_fundraising_campaign" name="Fundraising Campaign Lifecycle" isExecutable="false">
+    <bpmn:laneSet id="Process_fundraising_campaign_laneSet">
+      <bpmn:lane id="Process_fundraising_campaign_lane_0" name="Organizer (Politician/Party)">
+        <bpmn:flowNodeRef>Process_fundraising_campaign_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_e1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_fundraising_campaign_lane_1" name="Fundraising Service">
+        <bpmn:flowNodeRef>Process_fundraising_campaign_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_g3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_fundraising_campaign_lane_2" name="Supporter (Citizen)">
+        <bpmn:flowNodeRef>Process_fundraising_campaign_t4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_fundraising_campaign_e2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_fundraising_campaign_start" name="Create action (requires create-fundraiser)" />
+      <bpmn:task id="Process_fundraising_campaign_t1" name="Fill Title, Description, Category, Goal, Deadline" />
+      <bpmn:exclusiveGateway id="Process_fundraising_campaign_g1" name="Fields valid?" />
+      <bpmn:task id="Process_fundraising_campaign_e1" name="Block create" />
+      <bpmn:task id="Process_fundraising_campaign_t2" name="Create Fundraiser (raised=0, ledgerPublic=true)" />
+      <bpmn:task id="Process_fundraising_campaign_t3" name="Publish to public Fundraising directory" />
+      <bpmn:task id="Process_fundraising_campaign_t4" name="Browse &amp; pick amount ($25 / $50 / $100 / custom)" />
+      <bpmn:exclusiveGateway id="Process_fundraising_campaign_g2" name="Signed in?" />
+      <bpmn:task id="Process_fundraising_campaign_e2" name="Prompt sign in" />
+      <bpmn:task id="Process_fundraising_campaign_t5" name="Process contribution (payment gateway)" />
+      <bpmn:task id="Process_fundraising_campaign_t6" name="Increment raised/supporters, append public ledger entry" />
+      <bpmn:exclusiveGateway id="Process_fundraising_campaign_g3" name="Goal reached?" />
+      <bpmn:task id="Process_fundraising_campaign_t7" name="Mark fully funded" />
+      <bpmn:endEvent id="Process_fundraising_campaign_end" name="Contribution recorded" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_0" sourceRef="Process_fundraising_campaign_start" targetRef="Process_fundraising_campaign_t1" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_1" sourceRef="Process_fundraising_campaign_t1" targetRef="Process_fundraising_campaign_g1" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_2" sourceRef="Process_fundraising_campaign_g1" targetRef="Process_fundraising_campaign_e1" name="No" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_3" sourceRef="Process_fundraising_campaign_e1" targetRef="Process_fundraising_campaign_t1" name="retry" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_4" sourceRef="Process_fundraising_campaign_g1" targetRef="Process_fundraising_campaign_t2" name="Yes" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_5" sourceRef="Process_fundraising_campaign_t2" targetRef="Process_fundraising_campaign_t3" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_6" sourceRef="Process_fundraising_campaign_t3" targetRef="Process_fundraising_campaign_t4" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_7" sourceRef="Process_fundraising_campaign_t4" targetRef="Process_fundraising_campaign_g2" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_8" sourceRef="Process_fundraising_campaign_g2" targetRef="Process_fundraising_campaign_e2" name="No" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_9" sourceRef="Process_fundraising_campaign_g2" targetRef="Process_fundraising_campaign_t5" name="Yes" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_10" sourceRef="Process_fundraising_campaign_t5" targetRef="Process_fundraising_campaign_t6" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_11" sourceRef="Process_fundraising_campaign_t6" targetRef="Process_fundraising_campaign_g3" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_12" sourceRef="Process_fundraising_campaign_g3" targetRef="Process_fundraising_campaign_t7" name="Yes" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_13" sourceRef="Process_fundraising_campaign_t7" targetRef="Process_fundraising_campaign_end" />
+      <bpmn:sequenceFlow id="Process_fundraising_campaign_flow_14" sourceRef="Process_fundraising_campaign_g3" targetRef="Process_fundraising_campaign_end" name="No" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_fundraising_campaign">
+    <bpmndi:BPMNPlane id="Plane_fundraising_campaign" bpmnElement="Collaboration_fundraising_campaign">
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_participant_di" bpmnElement="Process_fundraising_campaign_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="2588" height="470" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_lane_0_di" bpmnElement="Process_fundraising_campaign_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2558" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_lane_1_di" bpmnElement="Process_fundraising_campaign_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="2558" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_lane_2_di" bpmnElement="Process_fundraising_campaign_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="2558" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_start_di" bpmnElement="Process_fundraising_campaign_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t1_di" bpmnElement="Process_fundraising_campaign_t1">
+        <dc:Bounds x="435" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_g1_di" bpmnElement="Process_fundraising_campaign_g1">
+        <dc:Bounds x="652" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="652" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_e1_di" bpmnElement="Process_fundraising_campaign_e1">
+        <dc:Bounds x="741" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="741" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t2_di" bpmnElement="Process_fundraising_campaign_t2">
+        <dc:Bounds x="911" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="911" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t3_di" bpmnElement="Process_fundraising_campaign_t3">
+        <dc:Bounds x="1081" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t4_di" bpmnElement="Process_fundraising_campaign_t4">
+        <dc:Bounds x="1251" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1251" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_g2_di" bpmnElement="Process_fundraising_campaign_g2">
+        <dc:Bounds x="1468" y="392" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1468" y="440" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_e2_di" bpmnElement="Process_fundraising_campaign_e2">
+        <dc:Bounds x="1557" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1557" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t5_di" bpmnElement="Process_fundraising_campaign_t5">
+        <dc:Bounds x="1727" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1727" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t6_di" bpmnElement="Process_fundraising_campaign_t6">
+        <dc:Bounds x="1897" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1897" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_g3_di" bpmnElement="Process_fundraising_campaign_g3">
+        <dc:Bounds x="2114" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2114" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_t7_di" bpmnElement="Process_fundraising_campaign_t7">
+        <dc:Bounds x="2203" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2203" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_fundraising_campaign_end_di" bpmnElement="Process_fundraising_campaign_end">
+        <dc:Bounds x="2423" y="245" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2423" y="287" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_0_di" bpmnElement="Process_fundraising_campaign_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_1_di" bpmnElement="Process_fundraising_campaign_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_2_di" bpmnElement="Process_fundraising_campaign_flow_2">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="811" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_3_di" bpmnElement="Process_fundraising_campaign_flow_3">
+        <di:waypoint x="811" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_4_di" bpmnElement="Process_fundraising_campaign_flow_4">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="981" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_5_di" bpmnElement="Process_fundraising_campaign_flow_5">
+        <di:waypoint x="981" y="265" />
+        <di:waypoint x="1151" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_6_di" bpmnElement="Process_fundraising_campaign_flow_6">
+        <di:waypoint x="1151" y="265" />
+        <di:waypoint x="1321" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_7_di" bpmnElement="Process_fundraising_campaign_flow_7">
+        <di:waypoint x="1321" y="415" />
+        <di:waypoint x="1491" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_8_di" bpmnElement="Process_fundraising_campaign_flow_8">
+        <di:waypoint x="1491" y="415" />
+        <di:waypoint x="1627" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_9_di" bpmnElement="Process_fundraising_campaign_flow_9">
+        <di:waypoint x="1491" y="415" />
+        <di:waypoint x="1797" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_10_di" bpmnElement="Process_fundraising_campaign_flow_10">
+        <di:waypoint x="1797" y="265" />
+        <di:waypoint x="1967" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_11_di" bpmnElement="Process_fundraising_campaign_flow_11">
+        <di:waypoint x="1967" y="265" />
+        <di:waypoint x="2137" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_12_di" bpmnElement="Process_fundraising_campaign_flow_12">
+        <di:waypoint x="2137" y="265" />
+        <di:waypoint x="2273" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_13_di" bpmnElement="Process_fundraising_campaign_flow_13">
+        <di:waypoint x="2273" y="265" />
+        <di:waypoint x="2443" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_fundraising_campaign_flow_14_di" bpmnElement="Process_fundraising_campaign_flow_14">
+        <di:waypoint x="2137" y="265" />
+        <di:waypoint x="2443" y="265" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

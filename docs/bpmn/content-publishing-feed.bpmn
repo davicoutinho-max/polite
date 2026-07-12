@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_content_publishing_feed"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Content Publishing &amp; Feed Interaction">
+  <bpmn:collaboration id="Collaboration_content_publishing_feed">
+    <bpmn:participant id="Process_content_publishing_feed_participant" name="Content Publishing &amp; Feed Interaction" processRef="Process_content_publishing_feed" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_content_publishing_feed" name="Content Publishing &amp; Feed Interaction" isExecutable="false">
+    <bpmn:laneSet id="Process_content_publishing_feed_laneSet">
+      <bpmn:lane id="Process_content_publishing_feed_lane_0" name="Author — Text">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_e1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_content_publishing_feed_lane_1" name="Author — Agenda">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_content_publishing_feed_lane_2" name="Author — Live">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_content_publishing_feed_lane_3" name="Feed Service">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_content_publishing_feed_lane_4" name="Follower (Reader)">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t9</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_content_publishing_feed_lane_5" name="Notification Service">
+        <bpmn:flowNodeRef>Process_content_publishing_feed_t7</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_content_publishing_feed_start" name="Open composer (requires publish-content)" />
+      <bpmn:exclusiveGateway id="Process_content_publishing_feed_g1" name="Post kind?" />
+      <bpmn:task id="Process_content_publishing_feed_t1" name="Text: write content" />
+      <bpmn:task id="Process_content_publishing_feed_t2" name="Agenda: title, date, location" />
+      <bpmn:task id="Process_content_publishing_feed_t3" name="Live: video/channel id, live-now or scheduled" />
+      <bpmn:task id="Process_content_publishing_feed_t4" name="Choose visibility (public/private)" />
+      <bpmn:exclusiveGateway id="Process_content_publishing_feed_g2" name="Required fields for kind present?" />
+      <bpmn:task id="Process_content_publishing_feed_e1" name="Block publish" />
+      <bpmn:task id="Process_content_publishing_feed_t5" name="Persist Post (id, tags, metrics=0)" />
+      <bpmn:task id="Process_content_publishing_feed_t6" name="Prepend to feed store (invalidate feed cache)" />
+      <bpmn:task id="Process_content_publishing_feed_t7" name="Fan-out notification to followers (async)" />
+      <bpmn:task id="Process_content_publishing_feed_t8" name="Browse feed (Top / Latest / Following)" />
+      <bpmn:task id="Process_content_publishing_feed_t9" name="Like / Comment" />
+      <bpmn:task id="Process_content_publishing_feed_t10" name="Atomically update metrics (likes/comments)" />
+      <bpmn:endEvent id="Process_content_publishing_feed_end" name="Post live &amp; interactive" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_0" sourceRef="Process_content_publishing_feed_start" targetRef="Process_content_publishing_feed_g1" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_1" sourceRef="Process_content_publishing_feed_g1" targetRef="Process_content_publishing_feed_t1" name="text" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_2" sourceRef="Process_content_publishing_feed_g1" targetRef="Process_content_publishing_feed_t2" name="agenda" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_3" sourceRef="Process_content_publishing_feed_g1" targetRef="Process_content_publishing_feed_t3" name="live" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_4" sourceRef="Process_content_publishing_feed_t1" targetRef="Process_content_publishing_feed_t4" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_5" sourceRef="Process_content_publishing_feed_t2" targetRef="Process_content_publishing_feed_t4" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_6" sourceRef="Process_content_publishing_feed_t3" targetRef="Process_content_publishing_feed_t4" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_7" sourceRef="Process_content_publishing_feed_t4" targetRef="Process_content_publishing_feed_g2" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_8" sourceRef="Process_content_publishing_feed_g2" targetRef="Process_content_publishing_feed_e1" name="No" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_9" sourceRef="Process_content_publishing_feed_e1" targetRef="Process_content_publishing_feed_t4" name="retry" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_10" sourceRef="Process_content_publishing_feed_g2" targetRef="Process_content_publishing_feed_t5" name="Yes" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_11" sourceRef="Process_content_publishing_feed_t5" targetRef="Process_content_publishing_feed_t6" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_12" sourceRef="Process_content_publishing_feed_t6" targetRef="Process_content_publishing_feed_t7" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_13" sourceRef="Process_content_publishing_feed_t6" targetRef="Process_content_publishing_feed_t8" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_14" sourceRef="Process_content_publishing_feed_t8" targetRef="Process_content_publishing_feed_t9" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_15" sourceRef="Process_content_publishing_feed_t9" targetRef="Process_content_publishing_feed_t10" />
+      <bpmn:sequenceFlow id="Process_content_publishing_feed_flow_16" sourceRef="Process_content_publishing_feed_t10" targetRef="Process_content_publishing_feed_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_content_publishing_feed">
+    <bpmndi:BPMNPlane id="Plane_content_publishing_feed" bpmnElement="Collaboration_content_publishing_feed">
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_participant_di" bpmnElement="Process_content_publishing_feed_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="2316" height="920" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_0_di" bpmnElement="Process_content_publishing_feed_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_1_di" bpmnElement="Process_content_publishing_feed_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_2_di" bpmnElement="Process_content_publishing_feed_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_3_di" bpmnElement="Process_content_publishing_feed_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_4_di" bpmnElement="Process_content_publishing_feed_lane_4" isHorizontal="true">
+        <dc:Bounds x="40" y="640" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_lane_5_di" bpmnElement="Process_content_publishing_feed_lane_5" isHorizontal="true">
+        <dc:Bounds x="40" y="790" width="2286" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_start_di" bpmnElement="Process_content_publishing_feed_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_g1_di" bpmnElement="Process_content_publishing_feed_g1">
+        <dc:Bounds x="482" y="92" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="482" y="140" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t1_di" bpmnElement="Process_content_publishing_feed_t1">
+        <dc:Bounds x="605" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t2_di" bpmnElement="Process_content_publishing_feed_t2">
+        <dc:Bounds x="605" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t3_di" bpmnElement="Process_content_publishing_feed_t3">
+        <dc:Bounds x="605" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t4_di" bpmnElement="Process_content_publishing_feed_t4">
+        <dc:Bounds x="775" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_g2_di" bpmnElement="Process_content_publishing_feed_g2">
+        <dc:Bounds x="992" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_e1_di" bpmnElement="Process_content_publishing_feed_e1">
+        <dc:Bounds x="1081" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t5_di" bpmnElement="Process_content_publishing_feed_t5">
+        <dc:Bounds x="1251" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1251" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t6_di" bpmnElement="Process_content_publishing_feed_t6">
+        <dc:Bounds x="1421" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1421" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t7_di" bpmnElement="Process_content_publishing_feed_t7">
+        <dc:Bounds x="1591" y="830" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1591" y="902" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t8_di" bpmnElement="Process_content_publishing_feed_t8">
+        <dc:Bounds x="1591" y="680" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1591" y="752" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t9_di" bpmnElement="Process_content_publishing_feed_t9">
+        <dc:Bounds x="1761" y="680" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1761" y="752" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_t10_di" bpmnElement="Process_content_publishing_feed_t10">
+        <dc:Bounds x="1931" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1931" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_content_publishing_feed_end_di" bpmnElement="Process_content_publishing_feed_end">
+        <dc:Bounds x="2151" y="545" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="2151" y="587" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_0_di" bpmnElement="Process_content_publishing_feed_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_1_di" bpmnElement="Process_content_publishing_feed_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_2_di" bpmnElement="Process_content_publishing_feed_flow_2">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_3_di" bpmnElement="Process_content_publishing_feed_flow_3">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_4_di" bpmnElement="Process_content_publishing_feed_flow_4">
+        <di:waypoint x="675" y="115" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_5_di" bpmnElement="Process_content_publishing_feed_flow_5">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_6_di" bpmnElement="Process_content_publishing_feed_flow_6">
+        <di:waypoint x="675" y="415" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_7_di" bpmnElement="Process_content_publishing_feed_flow_7">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1015" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_8_di" bpmnElement="Process_content_publishing_feed_flow_8">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1151" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_9_di" bpmnElement="Process_content_publishing_feed_flow_9">
+        <di:waypoint x="1151" y="115" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_10_di" bpmnElement="Process_content_publishing_feed_flow_10">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1321" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_11_di" bpmnElement="Process_content_publishing_feed_flow_11">
+        <di:waypoint x="1321" y="565" />
+        <di:waypoint x="1491" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_12_di" bpmnElement="Process_content_publishing_feed_flow_12">
+        <di:waypoint x="1491" y="565" />
+        <di:waypoint x="1661" y="865" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_13_di" bpmnElement="Process_content_publishing_feed_flow_13">
+        <di:waypoint x="1491" y="565" />
+        <di:waypoint x="1661" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_14_di" bpmnElement="Process_content_publishing_feed_flow_14">
+        <di:waypoint x="1661" y="715" />
+        <di:waypoint x="1831" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_15_di" bpmnElement="Process_content_publishing_feed_flow_15">
+        <di:waypoint x="1831" y="715" />
+        <di:waypoint x="2001" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_content_publishing_feed_flow_16_di" bpmnElement="Process_content_publishing_feed_flow_16">
+        <di:waypoint x="2001" y="565" />
+        <di:waypoint x="2171" y="565" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

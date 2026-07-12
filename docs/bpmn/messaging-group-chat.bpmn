@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_messaging_group_chat"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Direct Messaging &amp; Group Chat Creation">
+  <bpmn:collaboration id="Collaboration_messaging_group_chat">
+    <bpmn:participant id="Process_messaging_group_chat_participant" name="Direct Messaging &amp; Group Chat Creation" processRef="Process_messaging_group_chat" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_messaging_group_chat" name="Direct Messaging &amp; Group Chat Creation" isExecutable="false">
+    <bpmn:laneSet id="Process_messaging_group_chat_laneSet">
+      <bpmn:lane id="Process_messaging_group_chat_lane_0" name="Politician/Party (initiator)">
+        <bpmn:flowNodeRef>Process_messaging_group_chat_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t6</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_messaging_group_chat_lane_1" name="Messages Service">
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_messaging_group_chat_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_messaging_group_chat_lane_2" name="Directory Service">
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_messaging_group_chat_lane_3" name="Recipient(s)">
+        <bpmn:flowNodeRef>Process_messaging_group_chat_t8</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_messaging_group_chat_start" name="Click &quot;New message&quot; (requires create-group-chat)" />
+      <bpmn:task id="Process_messaging_group_chat_t1" name="Open picker: candidates = politicians + parties only" />
+      <bpmn:task id="Process_messaging_group_chat_t2" name="Search &amp; select 1..N participants" />
+      <bpmn:exclusiveGateway id="Process_messaging_group_chat_g1" name="More than 1 selected?" />
+      <bpmn:task id="Process_messaging_group_chat_t3" name="Enter group name (optional)" />
+      <bpmn:task id="Process_messaging_group_chat_t4" name="createConversation() assign id, isGroup flag" />
+      <bpmn:task id="Process_messaging_group_chat_t5" name="Set as active conversation" />
+      <bpmn:task id="Process_messaging_group_chat_t6" name="Send message(s)" />
+      <bpmn:task id="Process_messaging_group_chat_t7" name="Append ChatMessage, update lastMessage/time" />
+      <bpmn:task id="Process_messaging_group_chat_t8" name="Receive &amp; read messages" />
+      <bpmn:endEvent id="Process_messaging_group_chat_end" name="Conversation active &amp; persisted" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_0" sourceRef="Process_messaging_group_chat_start" targetRef="Process_messaging_group_chat_t1" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_1" sourceRef="Process_messaging_group_chat_t1" targetRef="Process_messaging_group_chat_t2" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_2" sourceRef="Process_messaging_group_chat_t2" targetRef="Process_messaging_group_chat_g1" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_3" sourceRef="Process_messaging_group_chat_g1" targetRef="Process_messaging_group_chat_t3" name="Yes (group)" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_4" sourceRef="Process_messaging_group_chat_t3" targetRef="Process_messaging_group_chat_t4" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_5" sourceRef="Process_messaging_group_chat_g1" targetRef="Process_messaging_group_chat_t4" name="No (1:1)" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_6" sourceRef="Process_messaging_group_chat_t4" targetRef="Process_messaging_group_chat_t5" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_7" sourceRef="Process_messaging_group_chat_t5" targetRef="Process_messaging_group_chat_t6" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_8" sourceRef="Process_messaging_group_chat_t6" targetRef="Process_messaging_group_chat_t7" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_9" sourceRef="Process_messaging_group_chat_t7" targetRef="Process_messaging_group_chat_t8" />
+      <bpmn:sequenceFlow id="Process_messaging_group_chat_flow_10" sourceRef="Process_messaging_group_chat_t8" targetRef="Process_messaging_group_chat_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_messaging_group_chat">
+    <bpmndi:BPMNPlane id="Plane_messaging_group_chat" bpmnElement="Collaboration_messaging_group_chat">
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_participant_di" bpmnElement="Process_messaging_group_chat_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="2146" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_lane_0_di" bpmnElement="Process_messaging_group_chat_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2116" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_lane_1_di" bpmnElement="Process_messaging_group_chat_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="2116" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_lane_2_di" bpmnElement="Process_messaging_group_chat_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="2116" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_lane_3_di" bpmnElement="Process_messaging_group_chat_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="2116" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_start_di" bpmnElement="Process_messaging_group_chat_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t1_di" bpmnElement="Process_messaging_group_chat_t1">
+        <dc:Bounds x="435" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t2_di" bpmnElement="Process_messaging_group_chat_t2">
+        <dc:Bounds x="605" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_g1_di" bpmnElement="Process_messaging_group_chat_g1">
+        <dc:Bounds x="822" y="92" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="822" y="140" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t3_di" bpmnElement="Process_messaging_group_chat_t3">
+        <dc:Bounds x="911" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="911" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t4_di" bpmnElement="Process_messaging_group_chat_t4">
+        <dc:Bounds x="1081" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1081" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t5_di" bpmnElement="Process_messaging_group_chat_t5">
+        <dc:Bounds x="1251" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1251" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t6_di" bpmnElement="Process_messaging_group_chat_t6">
+        <dc:Bounds x="1421" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1421" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t7_di" bpmnElement="Process_messaging_group_chat_t7">
+        <dc:Bounds x="1591" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1591" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_t8_di" bpmnElement="Process_messaging_group_chat_t8">
+        <dc:Bounds x="1761" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1761" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_messaging_group_chat_end_di" bpmnElement="Process_messaging_group_chat_end">
+        <dc:Bounds x="1981" y="245" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1981" y="287" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_0_di" bpmnElement="Process_messaging_group_chat_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_1_di" bpmnElement="Process_messaging_group_chat_flow_1">
+        <di:waypoint x="505" y="415" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_2_di" bpmnElement="Process_messaging_group_chat_flow_2">
+        <di:waypoint x="675" y="115" />
+        <di:waypoint x="845" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_3_di" bpmnElement="Process_messaging_group_chat_flow_3">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="981" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_4_di" bpmnElement="Process_messaging_group_chat_flow_4">
+        <di:waypoint x="981" y="115" />
+        <di:waypoint x="1151" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_5_di" bpmnElement="Process_messaging_group_chat_flow_5">
+        <di:waypoint x="845" y="115" />
+        <di:waypoint x="1151" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_6_di" bpmnElement="Process_messaging_group_chat_flow_6">
+        <di:waypoint x="1151" y="265" />
+        <di:waypoint x="1321" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_7_di" bpmnElement="Process_messaging_group_chat_flow_7">
+        <di:waypoint x="1321" y="265" />
+        <di:waypoint x="1491" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_8_di" bpmnElement="Process_messaging_group_chat_flow_8">
+        <di:waypoint x="1491" y="115" />
+        <di:waypoint x="1661" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_9_di" bpmnElement="Process_messaging_group_chat_flow_9">
+        <di:waypoint x="1661" y="265" />
+        <di:waypoint x="1831" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_messaging_group_chat_flow_10_di" bpmnElement="Process_messaging_group_chat_flow_10">
+        <di:waypoint x="1831" y="565" />
+        <di:waypoint x="2001" y="265" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

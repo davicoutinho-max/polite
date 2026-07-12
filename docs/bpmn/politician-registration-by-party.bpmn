@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_politician_registration_by_party"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Politician Registration by a Party">
+  <bpmn:collaboration id="Collaboration_politician_registration_by_party">
+    <bpmn:participant id="Process_politician_registration_by_party_participant" name="Politician Registration by a Party" processRef="Process_politician_registration_by_party" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_politician_registration_by_party" name="Politician Registration by a Party" isExecutable="false">
+    <bpmn:laneSet id="Process_politician_registration_by_party_laneSet">
+      <bpmn:lane id="Process_politician_registration_by_party_lane_0" name="Party Admin (user)">
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_t1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_e1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_e2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_e3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_politician_registration_by_party_lane_1" name="Party Admin Module">
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_g3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_politician_registration_by_party_lane_2" name="Directory Service">
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_t2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_t4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_politician_registration_by_party_lane_3" name="Party Service">
+        <bpmn:flowNodeRef>Process_politician_registration_by_party_t3</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_politician_registration_by_party_start" name="Open Party Admin → Politicians → Register new" />
+      <bpmn:task id="Process_politician_registration_by_party_t1" name="Fill Name, Handle, CPF, CNPJ, Position, Level, State" />
+      <bpmn:exclusiveGateway id="Process_politician_registration_by_party_g1" name="Name/Position/ State present?" />
+      <bpmn:task id="Process_politician_registration_by_party_e1" name="Show required-fields error" />
+      <bpmn:exclusiveGateway id="Process_politician_registration_by_party_g2" name="CPF valid (11 digits)?" />
+      <bpmn:task id="Process_politician_registration_by_party_e2" name="Show &quot;invalid CPF&quot;" />
+      <bpmn:exclusiveGateway id="Process_politician_registration_by_party_g3" name="CNPJ valid (14 digits)?" />
+      <bpmn:task id="Process_politician_registration_by_party_e3" name="Show &quot;invalid CNPJ&quot;" />
+      <bpmn:task id="Process_politician_registration_by_party_t2" name="Create PoliticianSummary (verified=false, followers=0)" />
+      <bpmn:task id="Process_politician_registration_by_party_t3" name="Link politician as Representative of the party" />
+      <bpmn:task id="Process_politician_registration_by_party_t4" name="Politician searchable in public /politicians directory" />
+      <bpmn:endEvent id="Process_politician_registration_by_party_end" name="Politician provisioned &amp; linked" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_0" sourceRef="Process_politician_registration_by_party_start" targetRef="Process_politician_registration_by_party_t1" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_1" sourceRef="Process_politician_registration_by_party_t1" targetRef="Process_politician_registration_by_party_g1" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_2" sourceRef="Process_politician_registration_by_party_g1" targetRef="Process_politician_registration_by_party_e1" name="No" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_3" sourceRef="Process_politician_registration_by_party_e1" targetRef="Process_politician_registration_by_party_t1" name="retry" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_4" sourceRef="Process_politician_registration_by_party_g1" targetRef="Process_politician_registration_by_party_g2" name="Yes" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_5" sourceRef="Process_politician_registration_by_party_g2" targetRef="Process_politician_registration_by_party_e2" name="No" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_6" sourceRef="Process_politician_registration_by_party_e2" targetRef="Process_politician_registration_by_party_t1" name="retry" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_7" sourceRef="Process_politician_registration_by_party_g2" targetRef="Process_politician_registration_by_party_g3" name="Yes" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_8" sourceRef="Process_politician_registration_by_party_g3" targetRef="Process_politician_registration_by_party_e3" name="No" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_9" sourceRef="Process_politician_registration_by_party_e3" targetRef="Process_politician_registration_by_party_t1" name="retry" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_10" sourceRef="Process_politician_registration_by_party_g3" targetRef="Process_politician_registration_by_party_t2" name="Yes" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_11" sourceRef="Process_politician_registration_by_party_t2" targetRef="Process_politician_registration_by_party_t3" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_12" sourceRef="Process_politician_registration_by_party_t3" targetRef="Process_politician_registration_by_party_t4" />
+      <bpmn:sequenceFlow id="Process_politician_registration_by_party_flow_13" sourceRef="Process_politician_registration_by_party_t4" targetRef="Process_politician_registration_by_party_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_politician_registration_by_party">
+    <bpmndi:BPMNPlane id="Plane_politician_registration_by_party" bpmnElement="Collaboration_politician_registration_by_party">
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_participant_di" bpmnElement="Process_politician_registration_by_party_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1840" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_lane_0_di" bpmnElement="Process_politician_registration_by_party_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1810" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_lane_1_di" bpmnElement="Process_politician_registration_by_party_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1810" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_lane_2_di" bpmnElement="Process_politician_registration_by_party_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1810" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_lane_3_di" bpmnElement="Process_politician_registration_by_party_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="1810" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_start_di" bpmnElement="Process_politician_registration_by_party_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_t1_di" bpmnElement="Process_politician_registration_by_party_t1">
+        <dc:Bounds x="435" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_g1_di" bpmnElement="Process_politician_registration_by_party_g1">
+        <dc:Bounds x="652" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="652" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_e1_di" bpmnElement="Process_politician_registration_by_party_e1">
+        <dc:Bounds x="707" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="707" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_g2_di" bpmnElement="Process_politician_registration_by_party_g2">
+        <dc:Bounds x="822" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="822" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_e2_di" bpmnElement="Process_politician_registration_by_party_e2">
+        <dc:Bounds x="877" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="877" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_g3_di" bpmnElement="Process_politician_registration_by_party_g3">
+        <dc:Bounds x="992" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_e3_di" bpmnElement="Process_politician_registration_by_party_e3">
+        <dc:Bounds x="1047" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1047" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_t2_di" bpmnElement="Process_politician_registration_by_party_t2">
+        <dc:Bounds x="1115" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_t3_di" bpmnElement="Process_politician_registration_by_party_t3">
+        <dc:Bounds x="1285" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1285" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_t4_di" bpmnElement="Process_politician_registration_by_party_t4">
+        <dc:Bounds x="1455" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1455" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_politician_registration_by_party_end_di" bpmnElement="Process_politician_registration_by_party_end">
+        <dc:Bounds x="1675" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1675" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_0_di" bpmnElement="Process_politician_registration_by_party_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_1_di" bpmnElement="Process_politician_registration_by_party_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_2_di" bpmnElement="Process_politician_registration_by_party_flow_2">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="777" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_3_di" bpmnElement="Process_politician_registration_by_party_flow_3">
+        <di:waypoint x="777" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_4_di" bpmnElement="Process_politician_registration_by_party_flow_4">
+        <di:waypoint x="675" y="265" />
+        <di:waypoint x="845" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_5_di" bpmnElement="Process_politician_registration_by_party_flow_5">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="947" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_6_di" bpmnElement="Process_politician_registration_by_party_flow_6">
+        <di:waypoint x="947" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_7_di" bpmnElement="Process_politician_registration_by_party_flow_7">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_8_di" bpmnElement="Process_politician_registration_by_party_flow_8">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1117" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_9_di" bpmnElement="Process_politician_registration_by_party_flow_9">
+        <di:waypoint x="1117" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_10_di" bpmnElement="Process_politician_registration_by_party_flow_10">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1185" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_11_di" bpmnElement="Process_politician_registration_by_party_flow_11">
+        <di:waypoint x="1185" y="415" />
+        <di:waypoint x="1355" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_12_di" bpmnElement="Process_politician_registration_by_party_flow_12">
+        <di:waypoint x="1355" y="565" />
+        <di:waypoint x="1525" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_politician_registration_by_party_flow_13_di" bpmnElement="Process_politician_registration_by_party_flow_13">
+        <di:waypoint x="1525" y="415" />
+        <di:waypoint x="1695" y="115" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

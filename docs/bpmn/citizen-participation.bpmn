@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                   id="Definitions_citizen_participation"
+                   targetNamespace="https://civicpulse.example/bpmn"
+                   name="Citizen Participation (Petitions, Consultations, Surveys)">
+  <bpmn:collaboration id="Collaboration_citizen_participation">
+    <bpmn:participant id="Process_citizen_participation_participant" name="Citizen Participation (Petitions, Consultations, Surveys)" processRef="Process_citizen_participation" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_citizen_participation" name="Citizen Participation (Petitions, Consultations, Surveys)" isExecutable="false">
+    <bpmn:laneSet id="Process_citizen_participation_laneSet">
+      <bpmn:lane id="Process_citizen_participation_lane_0" name="Citizen — Petitions">
+        <bpmn:flowNodeRef>Process_citizen_participation_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_g0</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_p1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_end1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_end1b</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_citizen_participation_lane_1" name="Participation Service (Petitions)">
+        <bpmn:flowNodeRef>Process_citizen_participation_g1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_p2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_citizen_participation_lane_2" name="Citizen — Consultations">
+        <bpmn:flowNodeRef>Process_citizen_participation_c1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_c2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_end2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_citizen_participation_lane_3" name="Participation Service (Consultations)">
+        <bpmn:flowNodeRef>Process_citizen_participation_g2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_c3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_c4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_citizen_participation_lane_4" name="Citizen — Surveys">
+        <bpmn:flowNodeRef>Process_citizen_participation_s1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_end3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_end3b</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Process_citizen_participation_lane_5" name="Participation Service (Surveys)">
+        <bpmn:flowNodeRef>Process_citizen_participation_g3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Process_citizen_participation_s2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+      <bpmn:startEvent id="Process_citizen_participation_start" name="Open Participation (requires participate)" />
+      <bpmn:exclusiveGateway id="Process_citizen_participation_g0" name="Choose tab" />
+      <bpmn:task id="Process_citizen_participation_p1" name="View petition" />
+      <bpmn:exclusiveGateway id="Process_citizen_participation_g1" name="Already signed?" />
+      <bpmn:task id="Process_citizen_participation_p2" name="Sign: signatures++, signed=true" />
+      <bpmn:endEvent id="Process_citizen_participation_end1" name="Signature recorded" />
+      <bpmn:endEvent id="Process_citizen_participation_end1b" name="Already signed (no-op)" />
+      <bpmn:task id="Process_citizen_participation_c1" name="Read consultation description" />
+      <bpmn:task id="Process_citizen_participation_c2" name="Choose stance (favor / against / neutral)" />
+      <bpmn:exclusiveGateway id="Process_citizen_participation_g2" name="First response from this citizen?" />
+      <bpmn:task id="Process_citizen_participation_c3" name="responses++, store stance" />
+      <bpmn:task id="Process_citizen_participation_c4" name="Overwrite stance (no recount)" />
+      <bpmn:endEvent id="Process_citizen_participation_end2" name="Stance recorded" />
+      <bpmn:task id="Process_citizen_participation_s1" name="View survey options" />
+      <bpmn:exclusiveGateway id="Process_citizen_participation_g3" name="Already voted?" />
+      <bpmn:task id="Process_citizen_participation_s2" name="Vote option, lock votedOptionId" />
+      <bpmn:endEvent id="Process_citizen_participation_end3" name="Vote recorded" />
+      <bpmn:endEvent id="Process_citizen_participation_end3b" name="Read-only (already voted)" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_0" sourceRef="Process_citizen_participation_start" targetRef="Process_citizen_participation_g0" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_1" sourceRef="Process_citizen_participation_g0" targetRef="Process_citizen_participation_p1" name="Petitions" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_2" sourceRef="Process_citizen_participation_p1" targetRef="Process_citizen_participation_g1" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_3" sourceRef="Process_citizen_participation_g1" targetRef="Process_citizen_participation_p2" name="No" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_4" sourceRef="Process_citizen_participation_p2" targetRef="Process_citizen_participation_end1" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_5" sourceRef="Process_citizen_participation_g1" targetRef="Process_citizen_participation_end1b" name="Yes" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_6" sourceRef="Process_citizen_participation_g0" targetRef="Process_citizen_participation_c1" name="Consultations" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_7" sourceRef="Process_citizen_participation_c1" targetRef="Process_citizen_participation_c2" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_8" sourceRef="Process_citizen_participation_c2" targetRef="Process_citizen_participation_g2" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_9" sourceRef="Process_citizen_participation_g2" targetRef="Process_citizen_participation_c3" name="Yes" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_10" sourceRef="Process_citizen_participation_g2" targetRef="Process_citizen_participation_c4" name="No" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_11" sourceRef="Process_citizen_participation_c3" targetRef="Process_citizen_participation_end2" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_12" sourceRef="Process_citizen_participation_c4" targetRef="Process_citizen_participation_end2" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_13" sourceRef="Process_citizen_participation_g0" targetRef="Process_citizen_participation_s1" name="Surveys" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_14" sourceRef="Process_citizen_participation_s1" targetRef="Process_citizen_participation_g3" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_15" sourceRef="Process_citizen_participation_g3" targetRef="Process_citizen_participation_s2" name="No" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_16" sourceRef="Process_citizen_participation_s2" targetRef="Process_citizen_participation_end3" />
+      <bpmn:sequenceFlow id="Process_citizen_participation_flow_17" sourceRef="Process_citizen_participation_g3" targetRef="Process_citizen_participation_end3b" name="Yes" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_citizen_participation">
+    <bpmndi:BPMNPlane id="Plane_citizen_participation" bpmnElement="Collaboration_citizen_participation">
+      <bpmndi:BPMNShape id="Process_citizen_participation_participant_di" bpmnElement="Process_citizen_participation_participant" isHorizontal="true">
+        <dc:Bounds x="10" y="30" width="1670" height="920" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_0_di" bpmnElement="Process_citizen_participation_lane_0" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_1_di" bpmnElement="Process_citizen_participation_lane_1" isHorizontal="true">
+        <dc:Bounds x="40" y="190" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_2_di" bpmnElement="Process_citizen_participation_lane_2" isHorizontal="true">
+        <dc:Bounds x="40" y="340" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_3_di" bpmnElement="Process_citizen_participation_lane_3" isHorizontal="true">
+        <dc:Bounds x="40" y="490" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_4_di" bpmnElement="Process_citizen_participation_lane_4" isHorizontal="true">
+        <dc:Bounds x="40" y="640" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_lane_5_di" bpmnElement="Process_citizen_participation_lane_5" isHorizontal="true">
+        <dc:Bounds x="40" y="790" width="1640" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_start_di" bpmnElement="Process_citizen_participation_start">
+        <dc:Bounds x="315" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="315" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_g0_di" bpmnElement="Process_citizen_participation_g0">
+        <dc:Bounds x="482" y="92" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="482" y="140" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_p1_di" bpmnElement="Process_citizen_participation_p1">
+        <dc:Bounds x="605" y="80" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="152" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_g1_di" bpmnElement="Process_citizen_participation_g1">
+        <dc:Bounds x="822" y="242" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="822" y="290" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_p2_di" bpmnElement="Process_citizen_participation_p2">
+        <dc:Bounds x="945" y="230" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="302" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_end1_di" bpmnElement="Process_citizen_participation_end1">
+        <dc:Bounds x="1165" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1165" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_end1b_di" bpmnElement="Process_citizen_participation_end1b">
+        <dc:Bounds x="995" y="95" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="995" y="137" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_c1_di" bpmnElement="Process_citizen_participation_c1">
+        <dc:Bounds x="605" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_c2_di" bpmnElement="Process_citizen_participation_c2">
+        <dc:Bounds x="775" y="380" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="775" y="452" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_g2_di" bpmnElement="Process_citizen_participation_g2">
+        <dc:Bounds x="992" y="542" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="992" y="590" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_c3_di" bpmnElement="Process_citizen_participation_c3">
+        <dc:Bounds x="1115" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1115" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_c4_di" bpmnElement="Process_citizen_participation_c4">
+        <dc:Bounds x="1285" y="530" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1285" y="602" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_end2_di" bpmnElement="Process_citizen_participation_end2">
+        <dc:Bounds x="1505" y="395" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1505" y="437" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_s1_di" bpmnElement="Process_citizen_participation_s1">
+        <dc:Bounds x="605" y="680" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="605" y="752" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_g3_di" bpmnElement="Process_citizen_participation_g3">
+        <dc:Bounds x="822" y="842" width="46" height="46" />
+        <bpmndi:BPMNLabel><dc:Bounds x="822" y="890" width="46" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_s2_di" bpmnElement="Process_citizen_participation_s2">
+        <dc:Bounds x="945" y="830" width="140" height="70" />
+        <bpmndi:BPMNLabel><dc:Bounds x="945" y="902" width="140" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_end3_di" bpmnElement="Process_citizen_participation_end3">
+        <dc:Bounds x="1165" y="695" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1165" y="737" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Process_citizen_participation_end3b_di" bpmnElement="Process_citizen_participation_end3b">
+        <dc:Bounds x="995" y="695" width="40" height="40" />
+        <bpmndi:BPMNLabel><dc:Bounds x="995" y="737" width="40" height="30" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_0_di" bpmnElement="Process_citizen_participation_flow_0">
+        <di:waypoint x="335" y="115" />
+        <di:waypoint x="505" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_1_di" bpmnElement="Process_citizen_participation_flow_1">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_2_di" bpmnElement="Process_citizen_participation_flow_2">
+        <di:waypoint x="675" y="115" />
+        <di:waypoint x="845" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_3_di" bpmnElement="Process_citizen_participation_flow_3">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="1015" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_4_di" bpmnElement="Process_citizen_participation_flow_4">
+        <di:waypoint x="1015" y="265" />
+        <di:waypoint x="1185" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_5_di" bpmnElement="Process_citizen_participation_flow_5">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="1015" y="115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_6_di" bpmnElement="Process_citizen_participation_flow_6">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_7_di" bpmnElement="Process_citizen_participation_flow_7">
+        <di:waypoint x="675" y="415" />
+        <di:waypoint x="845" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_8_di" bpmnElement="Process_citizen_participation_flow_8">
+        <di:waypoint x="845" y="415" />
+        <di:waypoint x="1015" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_9_di" bpmnElement="Process_citizen_participation_flow_9">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1185" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_10_di" bpmnElement="Process_citizen_participation_flow_10">
+        <di:waypoint x="1015" y="565" />
+        <di:waypoint x="1355" y="565" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_11_di" bpmnElement="Process_citizen_participation_flow_11">
+        <di:waypoint x="1185" y="565" />
+        <di:waypoint x="1525" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_12_di" bpmnElement="Process_citizen_participation_flow_12">
+        <di:waypoint x="1355" y="565" />
+        <di:waypoint x="1525" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_13_di" bpmnElement="Process_citizen_participation_flow_13">
+        <di:waypoint x="505" y="115" />
+        <di:waypoint x="675" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_14_di" bpmnElement="Process_citizen_participation_flow_14">
+        <di:waypoint x="675" y="715" />
+        <di:waypoint x="845" y="865" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_15_di" bpmnElement="Process_citizen_participation_flow_15">
+        <di:waypoint x="845" y="865" />
+        <di:waypoint x="1015" y="865" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_16_di" bpmnElement="Process_citizen_participation_flow_16">
+        <di:waypoint x="1015" y="865" />
+        <di:waypoint x="1185" y="715" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Process_citizen_participation_flow_17_di" bpmnElement="Process_citizen_participation_flow_17">
+        <di:waypoint x="845" y="865" />
+        <di:waypoint x="1015" y="715" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
