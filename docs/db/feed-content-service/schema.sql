@@ -66,10 +66,14 @@ CREATE TABLE posts (
   PRIMARY KEY (id, created_at),
   FOREIGN KEY (kind) REFERENCES post_kind_options (code) ON DELETE RESTRICT,
   FOREIGN KEY (visibility) REFERENCES post_visibility_options (code) ON DELETE RESTRICT
-);
+) PARTITION BY RANGE (created_at);
 COMMENT ON TABLE posts IS 'Range-partitioned by created_at (monthly) — old partitions can be moved to cheaper storage without touching the hot one. created_at joins id in the primary key because Postgres requires the partition column in every unique constraint.';
 CREATE INDEX idx_posts_author_created ON posts (author_account_id, created_at DESC);
 COMMENT ON COLUMN posts.live_session_id IS 'reference into live-streaming-service.live_sessions.id — by value only';
+-- Bootstrap partition only — a scheduled job (pg_partman or equivalent) must
+-- create real time-bucket partitions ahead of need in production; without it
+-- every row simply lands here, so the table is correct, just not yet fast.
+CREATE TABLE posts_default PARTITION OF posts DEFAULT;
 
 -- No DB-level FK to posts: posts is partitioned by created_at, so Postgres can only enforce uniqueness/FKs against (id, created_at) together — referential integrity to the parent post is enforced at the application layer instead.
 CREATE TABLE post_agenda_details (
@@ -124,10 +128,35 @@ CREATE TABLE post_metrics (
 );
 COMMENT ON TABLE post_metrics IS 'Denormalized counters, updated by an async consumer of PostLiked/CommentAdded — never computed with COUNT(*) on render. No DB-level FK — posts is partitioned, see post_agenda_details.';
 
+-- Regex-extracted #hashtag tokens from Post.content at publish time (TEXT posts only — content
+-- is null for AGENDA/LIVE). No DB-level FK to posts — same partitioning reason as post_tags.
+CREATE TABLE post_hashtags (
+  id                           bigint GENERATED ALWAYS AS IDENTITY,
+  post_id                      uuid NOT NULL,
+  hashtag                      text NOT NULL,
+  created_at                   timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (id)
+);
+COMMENT ON COLUMN post_hashtags.post_id IS 'no DB-level FK — posts is partitioned, see post_agenda_details';
+COMMENT ON COLUMN post_hashtags.created_at IS 'copied from the post''s own publish time at extraction — lets the 24h trending window be computed here without joining the partitioned posts table.';
+CREATE INDEX idx_post_hashtags_hashtag_created ON post_hashtags (hashtag, created_at);
+CREATE INDEX idx_post_hashtags_post ON post_hashtags (post_id);
+
+-- Recomputed periodically by a @Scheduled job (see PostService's scope note) from post_hashtags
+-- — never trusted as an independently-writable table; GET /trending only ever reads this cache.
+CREATE TABLE trending_topics_cache (
+  hashtag                      text,
+  post_count_last_24h          integer NOT NULL,
+  rank                         smallint NOT NULL,
+  computed_at                  timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (hashtag)
+);
+COMMENT ON TABLE trending_topics_cache IS 'Recomputed periodically from post_hashtags by a @Scheduled job — never written to directly by request-handling code.';
+
 -- ---- Redis (not part of this relational schema, documented for ops) ----
 -- feed:timeline:{account_id} — sorted set of post ids by rank score, the actual "Top/Latest/Following" read path; rebuilt async from PostPublished.
 -- post:{id}:likes — fast counter, incremented synchronously on like; reconciled against the likes table periodically to correct drift.
--- feed:trending — sorted set powering the Trending Topics widget, decayed over time.
+-- feed:trending — sorted set powering the Trending Topics widget, decayed over time. Superseded in this pass by the Postgres-backed trending_topics_cache table above (same "no live COUNT(*) on render" goal via a periodic recompute instead of a Redis decay function).
 
 -- ---- Domain events published ----
 -- -> PostPublished(post_id, author_id, kind, visibility)

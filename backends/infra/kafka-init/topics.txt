@@ -1,0 +1,66 @@
+# One line per topic: <topic-name>:<partitions>:<replication-factor>
+# Names are the kebab-case form of the domain events from
+# docs/architecture/data-architecture.html's Event Flow Map.
+# Partition counts are deliberately higher for the highest fan-out
+# producers (feed, payments) — see system-architecture.html's
+# Communication Patterns section.
+
+account-registered:6:1
+session-issued:3:1
+session-revoked:3:1
+account-verified:3:1
+
+party-profile-updated:3:1
+politician-registered:3:1
+representative-linked:3:1
+representative-removed:3:1
+affiliation-request-approved:3:1
+affiliation-request-rejected:3:1
+party-member-status-changed:3:1
+
+party-registered:3:1
+politician-reassigned:3:1
+language-added:1:1
+language-removed:1:1
+default-language-changed:1:1
+translation-value-updated:3:1
+country-added:1:1
+country-removed:1:1
+
+affiliation-requested:6:1
+affiliation-under-review:3:1
+affiliation-confirmed:3:1
+membership-card-issued:3:1
+membership-fee-generated:3:1
+membership-fee-overdue:3:1
+
+payment-authorized:6:1
+payment-captured:6:1
+payment-failed:6:1
+payment-refunded:3:1
+
+post-published:12:1
+post-liked:12:1
+comment-added:6:1
+
+live-session-scheduled:3:1
+live-session-started:3:1
+live-session-ended:3:1
+
+fundraiser-created:3:1
+contribution-received:6:1
+fundraiser-goal-reached:3:1
+
+petition-signed:3:1
+consultation-stance-set:3:1
+survey-vote-cast:3:1
+
+conversation-created:3:1
+message-sent:12:1
+
+follow-created:6:1
+follow-removed:6:1
+
+consent-updated:3:1
+data-export-requested:3:1
+account-deletion-requested:3:1

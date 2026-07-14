@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: assistant-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/assistant_service
+    username: ${DB_USERNAME:assistant_service_app}
+    password: ${DB_PASSWORD:assistant_dev_pw}
+    hikari:
+      pool-name: assistant-service-pool
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "init schema (pre-applied by docker infra)"
+    validate-on-migrate: true
+
+server:
+  port: ${SERVER_PORT:8099}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    dev.civicpulse.assistant: INFO
+    org.flywaydb: INFO

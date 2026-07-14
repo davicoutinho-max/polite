@@ -42,3 +42,10 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Backend microservices (Java/Maven + local secrets)
+backends/**/target/
+backends/**/.env
+backends/.env
+*.env
+!*.env.example

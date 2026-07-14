@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${GATEWAY_CORS_ALLOWED_ORIGIN:http://localhost:4200}"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# Same env var name as identity-service's identity.jwt.signing-key-base64 — must never drift apart.
+identity:
+  jwt:
+    signing-key-base64: ${IDENTITY_JWT_SIGNING_KEY_BASE64:u10VaF3tQ7O+0UWpsVFAZ/TYKHKEYR7CZUTDrD53RmY=}
+
+gateway:
+  routes:
+    identity-uri: ${IDENTITY_SERVICE_URI:http://localhost:8081}
+    directory-uri: ${DIRECTORY_SERVICE_URI:http://localhost:8082}
+    party-management-uri: ${PARTY_MANAGEMENT_SERVICE_URI:http://localhost:8083}
+    platform-uri: ${PLATFORM_CONFIGURATION_SERVICE_URI:http://localhost:8084}
+    membership-uri: ${MEMBERSHIP_AFFILIATION_SERVICE_URI:http://localhost:8085}
+    payments-uri: ${PAYMENTS_SERVICE_URI:http://localhost:8086}
+    feed-uri: ${FEED_CONTENT_SERVICE_URI:http://localhost:8087}
+    live-uri: ${LIVE_STREAMING_SERVICE_URI:http://localhost:8088}
+    fundraising-uri: ${FUNDRAISING_SERVICE_URI:http://localhost:8089}
+    elections-uri: ${ELECTIONS_SERVICE_URI:http://localhost:8091}
+    participation-uri: ${PARTICIPATION_SERVICE_URI:http://localhost:8092}
+    messaging-uri: ${MESSAGING_SERVICE_URI:http://localhost:8093}
+    notification-uri: ${NOTIFICATION_SERVICE_URI:http://localhost:8094}
+    privacy-uri: ${PRIVACY_COMPLIANCE_SERVICE_URI:http://localhost:8095}
+    legislative-uri: ${LEGISLATIVE_SERVICE_URI:http://localhost:8096}
+    activity-feed-uri: ${ACTIVITY_FEED_SERVICE_URI:http://localhost:8097}
+    analytics-uri: ${ANALYTICS_SERVICE_URI:http://localhost:8098}
+    assistant-uri: ${ASSISTANT_SERVICE_URI:http://localhost:8099}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    dev.civicpulse.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO

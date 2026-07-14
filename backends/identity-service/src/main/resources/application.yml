@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: identity-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/identity_service
+    username: ${DB_USERNAME:identity_service_app}
+    password: ${DB_PASSWORD:identity_dev_pw}
+    hikari:
+      pool-name: identity-service-pool
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "init schema (pre-applied by docker infra)"
+    validate-on-migrate: true
+
+  kafka:
+    # localhost:9094 is Kafka's EXTERNAL listener (host access, see docker-compose.yml) — used
+    # when this app runs directly on the host. Inside the civicpulse Docker network (once this
+    # service itself is containerized) override to kafka:9092 via KAFKA_BOOTSTRAP_SERVERS.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+
+server:
+  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+identity:
+  jwt:
+    # Dev-only default (32 random bytes, base64) — override via env var in every real environment.
+    signing-key-base64: ${IDENTITY_JWT_SIGNING_KEY_BASE64:u10VaF3tQ7O+0UWpsVFAZ/TYKHKEYR7CZUTDrD53RmY=}
+    access-token-ttl-minutes: ${IDENTITY_JWT_ACCESS_TTL_MINUTES:15}
+  session:
+    refresh-token-ttl-days: ${IDENTITY_REFRESH_TTL_DAYS:30}
+  document-cipher:
+    # Dev-only default (32 random bytes, base64) — production uses real KMS envelope encryption.
+    master-key-base64: ${IDENTITY_DOCUMENT_CIPHER_KEY_BASE64:h8snMZgAXuNXxEtaSfdks61jrzc4ccnwtNkKpVuFOvY=}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    dev.civicpulse.identity: INFO
+    org.flywaydb: INFO
