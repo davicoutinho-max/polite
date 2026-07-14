@@ -34,6 +34,10 @@ spring:
 server:
   port: ${SERVER_PORT:8084}
 
+platform-configuration:
+  identity-service:
+    base-url: ${IDENTITY_SERVICE_BASE_URL:http://localhost:8081}
+
 management:
   endpoints:
     web:

@@ -6,7 +6,7 @@ import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../core/services/translate.service';
 
-/** Sign-in screen. Demo app: any non-empty credentials open the citizen experience. */
+/** Sign-in screen — a real login against identity-service. */
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +22,7 @@ export class LoginPage {
   protected readonly email = signal('');
   protected readonly password = signal('');
   protected readonly error = signal('');
+  protected readonly submitting = signal(false);
 
   protected submit(): void {
     if (!this.email().trim() || !this.password().trim()) {
@@ -29,7 +30,16 @@ export class LoginPage {
       return;
     }
     this.error.set('');
-    this.session.setType('citizen');
-    this.router.navigateByUrl('/feed');
+    this.submitting.set(true);
+    this.session.login(this.email().trim(), this.password().trim()).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.router.navigateByUrl('/feed');
+      },
+      error: () => {
+        this.submitting.set(false);
+        this.error.set(this.translate.t('error.invalid-credentials', 'Incorrect email or password.'));
+      },
+    });
   }
 }

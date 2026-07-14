@@ -22,7 +22,14 @@
         <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
       }
 
-      <ui-button [label]="'button.sign-in' | translate: 'Sign in'" icon="login" variant="filled" type="submit" [block]="true" />
+      <ui-button
+        [label]="'button.sign-in' | translate: 'Sign in'"
+        icon="login"
+        variant="filled"
+        type="submit"
+        [block]="true"
+        [disabled]="submitting()"
+      />
     </form>
 
     <p class="auth__switch">

@@ -75,8 +75,12 @@ public class RouteConfig {
         // --- Phase 1 additions: legislative-service, activity-feed-service, analytics-service, assistant-service ---
         .route("legislative", r -> r.path("/api/legislative/**").filters(f -> f.stripPrefix(2)).uri(uris.legislativeUri()))
         .route("activity-feed", r -> r.path("/api/activity-feed/**").filters(f -> f.stripPrefix(2)).uri(uris.activityFeedUri()))
-        .route("analytics", r -> r.path("/api/analytics/**").filters(f -> f.stripPrefix(2)).uri(uris.analyticsUri()))
-        .route("assistant", r -> r.path("/api/assistant/**").filters(f -> f.stripPrefix(2)).uri(uris.assistantUri()))
+        // analytics-service/assistant-service's own controllers are mapped at /analytics/** and
+        // /assistant/** respectively (the plan's intended resource naming) — which already equals
+        // the external namespace segment, so only "/api" is stripped here (stripPrefix(1)), unlike
+        // every other route above where the namespace segment must also be stripped.
+        .route("analytics", r -> r.path("/api/analytics/**").filters(f -> f.stripPrefix(1)).uri(uris.analyticsUri()))
+        .route("assistant", r -> r.path("/api/assistant/**").filters(f -> f.stripPrefix(1)).uri(uris.assistantUri()))
         .build();
   }
 }

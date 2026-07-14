@@ -37,8 +37,8 @@ export class AccountMenu {
   }
 
   protected selectType(type: AccountType): void {
-    this.session.setType(type);
     this.close();
+    this.session.loginAsDemo(type).subscribe({ error: () => undefined });
   }
 
   protected logout(): void {

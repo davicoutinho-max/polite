@@ -31,7 +31,18 @@ public class PartyRegistryController {
 
   @PostMapping
   public ResponseEntity<PartyRegistryResponse> register(@Valid @RequestBody RegisterPartyRequest request) {
-    var entry = registerPartyUseCase.registerParty(request.name(), request.acronym(), request.number(), request.president(), request.ideology());
+    var entry =
+        registerPartyUseCase.registerParty(
+            request.name(),
+            request.acronym(),
+            request.number(),
+            request.president(),
+            request.ideology(),
+            request.handle(),
+            request.email(),
+            request.password(),
+            request.documentType(),
+            request.documentNumber());
     PartyRegistryResponse body = PartyRegistryResponse.from(entry);
     return ResponseEntity.created(URI.create("/parties/" + body.id())).body(body);
   }
