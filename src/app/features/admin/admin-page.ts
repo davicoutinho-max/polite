@@ -4,9 +4,10 @@ import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { PartyService } from '../../core/services/party.service';
-import { DirectoryService, LEVEL_OPTIONS } from '../../core/services/directory.service';
-import { GovLevel, PoliticianSummary, TagSeverity } from '../../core/models';
-import { isValidCnpj, isValidCpf } from '../../shared/utils/br-documents';
+import { DirectoryService } from '../../core/services/directory.service';
+import { SessionService } from '../../core/services/session.service';
+import { PoliticianSummary, TagSeverity } from '../../core/models';
+import { isValidCpf } from '../../shared/utils/br-documents';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
 import { UiStat } from '../../shared/ui/ui-stat/ui-stat';
@@ -59,12 +60,20 @@ const REQUEST_SEVERITY: Record<string, TagSeverity> = {
 export class AdminPage {
   private readonly partyService = inject(PartyService);
   private readonly directory = inject(DirectoryService);
+  private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
 
   protected readonly party = this.partyService.party;
   protected readonly requests = this.partyService.requests;
   protected readonly pending = this.partyService.pendingRequests;
   protected readonly pendingCount = computed(() => this.pending().length);
+
+  constructor() {
+    const partyId = this.session.account().id;
+    this.partyService.load(partyId).subscribe();
+    this.partyService.reloadRequests(partyId).subscribe();
+    this.partyService.reloadMembers(partyId).subscribe();
+  }
 
   protected readonly tabs: UiTab[] = [
     { id: 'requests', label: 'Requests', key: 'tab.requests', icon: 'how_to_reg' },
@@ -89,15 +98,14 @@ export class AdminPage {
   });
 
   // ---- Register a new politician ----
-  protected readonly levelOptions = LEVEL_OPTIONS;
   protected readonly registerName = signal('');
   protected readonly registerHandle = signal('');
+  protected readonly registerEmail = signal('');
+  protected readonly registerPassword = signal('');
   protected readonly registerCpf = signal('');
-  protected readonly registerCnpj = signal('');
   protected readonly registerPosition = signal('');
-  protected readonly registerLevel = signal<GovLevel>('federal');
-  protected readonly registerState = signal('');
   protected readonly registerError = signal('');
+  protected readonly registerSubmitting = signal(false);
 
   protected readonly quickActions: (QuickAction & { labelKey: string; descKey: string })[] = [
     { icon: 'post_add', label: 'Publish content', labelKey: 'action.publish-content', description: 'Share news with your base', descKey: 'action.publish-content.desc' },
@@ -145,48 +153,44 @@ export class AdminPage {
   protected submitNewPolitician(): void {
     const name = this.registerName().trim();
     const position = this.registerPosition().trim();
-    const state = this.registerState().trim().toUpperCase();
+    const email = this.registerEmail().trim();
+    const password = this.registerPassword();
     const cpf = this.registerCpf();
-    const cnpj = this.registerCnpj();
 
-    if (!name || !position || !state) {
-      this.registerError.set(this.translate.t('error.register-politician-required', 'Fill in the name, position and state to register a politician.'));
+    if (!name || !position || !email || !password) {
+      this.registerError.set(
+        this.translate.t('error.register-politician-required', 'Fill in the name, position, email and password to register a politician.'),
+      );
       return;
     }
     if (!isValidCpf(cpf)) {
       this.registerError.set(this.translate.t('error.invalid-cpf', 'Enter a valid CPF (11 digits).'));
       return;
     }
-    if (!isValidCnpj(cnpj)) {
-      this.registerError.set(this.translate.t('error.invalid-cnpj', 'Enter a valid CNPJ (14 digits).'));
-      return;
-    }
 
     this.registerError.set('');
-    const handle = this.registerHandle().trim() || `@${name.toLowerCase().replace(/[^a-z0-9]+/g, '.')}`;
-    const pol = this.directory.addPolitician({
-      name,
-      handle,
-      cpf,
-      cnpj,
-      position,
-      level: this.registerLevel(),
-      state,
-      partyId: this.party().id,
-      partyAcronym: this.party().acronym,
+    this.registerSubmitting.set(true);
+    const handle = this.registerHandle().trim() || `${name.toLowerCase().replace(/[^a-z0-9]+/g, '')}${Math.floor(Math.random() * 10000)}`;
+    this.partyService.registerPolitician(this.party().id, { name, handle, email, password, documentNumber: cpf, roleTitle: position }).subscribe({
+      next: () => {
+        this.registerSubmitting.set(false);
+        this.directory.reloadPoliticians().subscribe();
+        this.resetRegisterForm();
+      },
+      error: () => {
+        this.registerSubmitting.set(false);
+        this.registerError.set(this.translate.t('error.register-politician-failed', 'Could not register this politician. That email or CPF may already be in use.'));
+      },
     });
-    this.partyService.addRepresentative(pol);
-    this.resetRegisterForm();
   }
 
   private resetRegisterForm(): void {
     this.registerName.set('');
     this.registerHandle.set('');
+    this.registerEmail.set('');
+    this.registerPassword.set('');
     this.registerCpf.set('');
-    this.registerCnpj.set('');
     this.registerPosition.set('');
-    this.registerLevel.set('federal');
-    this.registerState.set('');
     this.registerError.set('');
   }
 }

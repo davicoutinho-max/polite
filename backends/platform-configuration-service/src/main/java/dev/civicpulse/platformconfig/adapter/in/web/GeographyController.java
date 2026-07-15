@@ -50,4 +50,10 @@ public class GeographyController {
   public List<StateResponse> listStates(@PathVariable UUID countryId) {
     return manageGeographyUseCase.listStates(countryId).stream().map(StateResponse::from).toList();
   }
+
+  @DeleteMapping("/countries/{countryId}/states/{id}")
+  public ResponseEntity<Void> removeState(@PathVariable UUID countryId, @PathVariable UUID id) {
+    manageGeographyUseCase.removeState(id);
+    return ResponseEntity.noContent().build();
+  }
 }

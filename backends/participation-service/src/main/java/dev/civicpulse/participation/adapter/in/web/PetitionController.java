@@ -52,4 +52,9 @@ public class PetitionController {
     managePetitionUseCase.sign(id, request.citizenAccountId());
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/{id}/signatures/{citizenAccountId}")
+  public boolean hasSigned(@PathVariable UUID id, @PathVariable UUID citizenAccountId) {
+    return getPetitionUseCase.hasSigned(id, citizenAccountId);
+  }
 }

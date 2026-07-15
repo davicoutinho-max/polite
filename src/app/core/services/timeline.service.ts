@@ -1,5 +1,11 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Observable, forkJoin, map, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { TimelineEvent, TimelineEventType } from '../models';
+import { relativeTime } from '../utils/relative-time';
+import { DirectoryService } from './directory.service';
+import { SessionService } from './session.service';
 
 interface EventVisual {
   readonly icon: string;
@@ -10,29 +16,40 @@ interface EventVisual {
 export const TIMELINE_VISUALS: Record<TimelineEventType, EventVisual> = {
   vote: { icon: 'how_to_vote', severity: 'success' },
   project: { icon: 'description', severity: 'secondary' },
+  pec: { icon: 'history_edu', severity: 'warning' },
+  cpi: { icon: 'search', severity: 'info' },
+  status_change: { icon: 'sync', severity: 'secondary' },
   committee: { icon: 'gavel', severity: 'primary' },
   video: { icon: 'smart_display', severity: 'info' },
-  event: { icon: 'event', severity: 'secondary' },
-  honor: { icon: 'military_tech', severity: 'warning' },
-  'party-change': { icon: 'sync_alt', severity: 'warning' },
+  post: { icon: 'forum', severity: 'secondary' },
+  party_change: { icon: 'sync_alt', severity: 'warning' },
   campaign: { icon: 'campaign', severity: 'primary' },
-  accounts: { icon: 'receipt_long', severity: 'success' },
 };
 
+interface TimelineEventResponseDto {
+  readonly id: string;
+  readonly type: string;
+  readonly title: string;
+  readonly detail: string | null;
+  readonly occurredAt: string;
+  readonly group: string;
+  readonly actorAccountId: string;
+  readonly actorName: string | null;
+}
+
+/**
+ * Activity timeline — merges activity-feed-service's per-subject timeline for every account the
+ * current user follows (plus their own), since the real endpoint is scoped to one subject at a
+ * time. Purely a client-side fan-out + merge, no server-side aggregation exists.
+ */
 @Injectable({ providedIn: 'root' })
 export class TimelineService {
-  private readonly _events = signal<TimelineEvent[]>([
-    { id: 'e1', type: 'vote', title: 'Voted YES on PEC 33 — Fiscal Transparency', detail: 'Constitution & Justice Committee', timeLabel: '09:20', group: 'Today', actor: 'Jane Doe' },
-    { id: 'e2', type: 'committee', title: 'Attended the Finance & Taxation Committee', timeLabel: '11:00', group: 'Today', actor: 'Jane Doe' },
-    { id: 'e3', type: 'video', title: 'Published a video on the water bill', detail: '2.3k views', timeLabel: '14:45', group: 'Today', actor: 'Jane Doe' },
-    { id: 'e4', type: 'project', title: 'Filed a new bill: Open Municipal Budget Ledger', timeLabel: '16:10', group: 'Today', actor: 'Jane Doe' },
-    { id: 'e5', type: 'event', title: 'Joined the Open Government public hearing', detail: 'City Hall', timeLabel: 'Yesterday', group: 'Yesterday', actor: 'Jane Doe' },
-    { id: 'e6', type: 'honor', title: 'Received a civic transparency award', timeLabel: 'Yesterday', group: 'Yesterday', actor: 'Jane Doe' },
-    { id: 'e7', type: 'accounts', title: 'Filed quarterly expense accounts', detail: 'Q2 2026', timeLabel: 'Mon', group: 'This week', actor: 'Jane Doe' },
-    { id: 'e8', type: 'campaign', title: 'Launched the "Clean Water Now" campaign', timeLabel: 'Tue', group: 'This week', actor: 'Jane Doe' },
-    { id: 'e9', type: 'party-change', title: 'Marcus Chen changed party affiliation', detail: 'Now Independent', timeLabel: 'Wed', group: 'This week', actor: 'Marcus Chen' },
-  ]);
+  private readonly http = inject(HttpClient);
+  private readonly directory = inject(DirectoryService);
+  private readonly session = inject(SessionService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/activity-feed`;
 
+  private readonly _events = signal<TimelineEvent[]>([]);
   readonly events = this._events.asReadonly();
 
   /** Events grouped by their bucket, preserving order. */
@@ -45,4 +62,44 @@ export class TimelineService {
     }
     return [...groups.entries()].map(([group, events]) => ({ group, events }));
   });
+
+  constructor() {
+    this.reload().subscribe();
+  }
+
+  reload(limit = 20): Observable<TimelineEvent[]> {
+    const followed = [...this.directory.followingPoliticians(), ...this.directory.followingParties()];
+    const selfId = this.session.isAuthenticated() ? this.session.account().id : null;
+    const subjectIds = [...new Set(selfId ? [selfId, ...followed] : followed)];
+
+    if (!subjectIds.length) {
+      this._events.set([]);
+      return of([]);
+    }
+
+    return forkJoin(
+      subjectIds.map((id) =>
+        this.http.get<TimelineEventResponseDto[]>(`${this.apiBase}/timeline`, { params: { subjectAccountId: id, limit } }),
+      ),
+    ).pipe(
+      map((lists) =>
+        lists
+          .flat()
+          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+          .slice(0, limit)
+          .map(
+            (dto): TimelineEvent => ({
+              id: dto.id,
+              type: dto.type as TimelineEventType,
+              title: dto.title,
+              detail: dto.detail ?? undefined,
+              timeLabel: relativeTime(dto.occurredAt),
+              group: dto.group,
+              actor: dto.actorName ?? 'Unknown',
+            }),
+          ),
+      ),
+      tap((events) => this._events.set(events)),
+    );
+  }
 }

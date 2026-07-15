@@ -62,4 +62,10 @@ public class LikeService implements ManageLikeUseCase {
               postMetricsRepository.save(metrics);
             });
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean isLiked(UUID postId, UUID accountId) {
+    return likeRepository.exists(postId, accountId);
+  }
 }

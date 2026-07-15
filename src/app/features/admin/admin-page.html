@@ -150,27 +150,19 @@
                   <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
                   <input type="text" inputmode="numeric" [value]="registerCpf()" (input)="registerCpf.set($any($event.target).value)" placeholder="000.000.000-00" />
                 </label>
-                <label class="register-field">
-                  <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>
-                  <input type="text" inputmode="numeric" [value]="registerCnpj()" (input)="registerCnpj.set($any($event.target).value)" placeholder="00.000.000/0000-00" />
-                </label>
-              </div>
-              <div class="register-row">
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.position' | translate: 'Position' }}</span>
                   <input type="text" [value]="registerPosition()" (input)="registerPosition.set($any($event.target).value)" placeholder="e.g. Federal Deputy" />
                 </label>
-                <label class="register-field">
-                  <span>{{ 'field.level' | translate: 'Level' }}</span>
-                  <select class="register-select" [value]="registerLevel()" (change)="registerLevel.set($any($event.target).value)">
-                    @for (option of levelOptions; track option.value) {
-                      <option [value]="option.value">{{ option.label }}</option>
-                    }
-                  </select>
+              </div>
+              <div class="register-row">
+                <label class="register-field register-field--grow">
+                  <span>{{ 'field.email' | translate: 'Email' }}</span>
+                  <input type="email" [value]="registerEmail()" (input)="registerEmail.set($any($event.target).value)" placeholder="jane.doe@example.com" />
                 </label>
-                <label class="register-field">
-                  <span>{{ 'field.state' | translate: 'State' }}</span>
-                  <input type="text" maxlength="2" [value]="registerState()" (input)="registerState.set($any($event.target).value)" placeholder="e.g. SP" />
+                <label class="register-field register-field--grow">
+                  <span>{{ 'field.password' | translate: 'Password' }}</span>
+                  <input type="password" [value]="registerPassword()" (input)="registerPassword.set($any($event.target).value)" placeholder="••••••••" />
                 </label>
               </div>
 
@@ -178,7 +170,13 @@
                 <p class="register-error"><ui-icon name="error" [size]="16" /> {{ registerError() }}</p>
               }
 
-              <ui-button [label]="'button.register-link' | translate: 'Register & link'" icon="person_add_alt" variant="filled" type="submit" />
+              <ui-button
+                [label]="'button.register-link' | translate: 'Register & link'"
+                icon="person_add_alt"
+                variant="filled"
+                type="submit"
+                [disabled]="registerSubmitting()"
+              />
             </form>
           </ui-section>
         }

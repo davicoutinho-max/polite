@@ -7,4 +7,6 @@ public interface ManageLikeUseCase {
   void like(UUID postId, UUID accountId);
 
   void unlike(UUID postId, UUID accountId);
+
+  boolean isLiked(UUID postId, UUID accountId);
 }

@@ -19,6 +19,7 @@ import dev.civicpulse.membershipaffiliation.domain.model.AffiliationStatus;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,5 +88,14 @@ class AffiliationServiceTest {
     assertThat(result.status()).isEqualTo(AffiliationStatus.AFFILIATED);
     verify(membershipCardRepository).save(any());
     verify(eventPublisher, times(2)).publish(any(DomainEvent.class));
+  }
+
+  @Test
+  void getCardDelegatesToRepository() {
+    UUID affiliationId = UUID.randomUUID();
+    var card = dev.civicpulse.membershipaffiliation.domain.model.MembershipCard.issue(affiliationId, "CP-123456", "https://example.com/verify", NOW);
+    when(membershipCardRepository.findByAffiliationId(affiliationId)).thenReturn(Optional.of(card));
+
+    assertThat(service.getCard(affiliationId)).contains(card);
   }
 }

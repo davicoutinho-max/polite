@@ -13,7 +13,8 @@
         [steps]="steps"
         [status]="status()"
         [currentIndex]="currentStepIndex()"
-        (request)="onRequest()"
+        [parties]="parties()"
+        (request)="onRequest($event)"
         (advance)="onAdvance()"
         (reset)="onReset()"
       />

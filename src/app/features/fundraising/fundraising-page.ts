@@ -44,9 +44,9 @@ export class FundraisingPage {
   }
 
   protected money(value: number): string {
-    return value.toLocaleString('en-US', {
+    return value.toLocaleString('pt-BR', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BRL',
       maximumFractionDigits: 0,
     });
   }

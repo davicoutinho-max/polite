@@ -1,105 +1,187 @@
-import { computed, Injectable, signal } from '@angular/core';
-import { Conversation, UserSummary } from '../models';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { ChatMessage, Conversation, UserSummary } from '../models';
+import { relativeTime } from '../utils/relative-time';
+import { DirectoryService } from './directory.service';
+import { SessionService } from './session.service';
 
-const AVATAR_A =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDNF06tFrfgVfuEw_FOHQKoJQ-FGxIeD-WKKUf4bFAfJRNfHinpNj7IPKjXwJZ-BwhQhF5TBOJdOcahM6PA4rSbKCvV0Y9GUSm748-U1fFOS7Tv6AEJ-U6nJK75Cp_U9uPx1ebSN9gYtaN1t7AC4T7l2iXovmj25qvTxScJgZ0D0MVacpDHIs87kOvXrgibiMZj9zmtR_Oyed2kt01LUJlA5h_EHb7Yp1Ie1MVH0QLC5Bs06fXy4OuKpw';
-const AVATAR_B =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCE0D7JPXs4LxauFS-kbprWYD0-f7RD4Ydp-sfmuPS7GeKrwOzmWLMcM8So2XYtuMo0XRoKB7SSJjtsNMISN-k8Ir3lE5sh4D9A0hBEaXTEfegcl9xBAvm-Y1HJ9KR2mu2-pRJFtTe_dLVXrLZL89YvJipXpEpEMc0Yaz6ZnDIWEpRJ8_Z4xKTl6HEZocsNuZlqHHzZi2Lnvz37jInV5Ae79N_XeulYJMqQw8VN7FXRSeKD4Uvd5UoSaA';
+interface ConversationResponseDto {
+  readonly id: string;
+  readonly group: boolean;
+  readonly groupName: string | null;
+  readonly groupAvatarUrl: string | null;
+  readonly lastMessageAt: string | null;
+}
+
+interface ParticipantResponseDto {
+  readonly accountId: string;
+  readonly lastReadAt: string | null;
+}
+
+interface MessageResponseDto {
+  readonly id: string;
+  readonly senderAccountId: string;
+  readonly body: string;
+  readonly createdAt: string;
+}
+
+interface AccountResponseDto {
+  readonly id: string;
+  readonly name: string;
+  readonly handle: string;
+  readonly avatarUrl: string;
+  readonly verified: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class MessagesService {
-  private readonly _conversations = signal<Conversation[]>([
-    {
-      id: 'c1',
-      participants: [{ id: 'jane-doe', name: 'Jane Doe', role: 'Federal Deputy', verified: true, avatarUrl: AVATAR_A }],
-      isGroup: false,
-      lastMessage: 'Thanks for supporting the water bill!',
-      timeLabel: '2m',
-      unread: 2,
-      messages: [
-        { id: 'm1', fromMe: false, text: 'Hi! Thanks for signing the transparency petition.', timeLabel: '09:40' },
-        { id: 'm2', fromMe: true, text: 'Of course — it is an important cause.', timeLabel: '09:42' },
-        { id: 'm3', fromMe: false, text: 'We reached the committee stage this morning.', timeLabel: '09:45' },
-        { id: 'm4', fromMe: false, text: 'Thanks for supporting the water bill!', timeLabel: '09:46' },
-      ],
-    },
-    {
-      id: 'c2',
-      participants: [{ id: 'marcus-chen', name: 'Rep. Marcus Chen', role: 'City Councilor', verified: true, avatarUrl: AVATAR_B }],
-      isGroup: false,
-      lastMessage: 'The transit report will be public on Friday.',
-      timeLabel: '1h',
-      unread: 0,
-      messages: [
-        { id: 'm1', fromMe: false, text: 'Have you seen the new transit numbers?', timeLabel: 'Yesterday' },
-        { id: 'm2', fromMe: true, text: 'Not yet, when are they published?', timeLabel: 'Yesterday' },
-        { id: 'm3', fromMe: false, text: 'The transit report will be public on Friday.', timeLabel: 'Yesterday' },
-      ],
-    },
-    {
-      id: 'c3',
-      participants: [{ id: 'progressive', name: 'Progressive Party', role: 'Official channel', avatarUrl: AVATAR_A }],
-      isGroup: false,
-      lastMessage: 'Your affiliation request was approved 🎉',
-      timeLabel: '3h',
-      unread: 1,
-      messages: [
-        { id: 'm1', fromMe: false, text: 'Welcome! Your affiliation request was approved 🎉', timeLabel: '06:10' },
-      ],
-    },
-  ]);
+  private readonly http = inject(HttpClient);
+  private readonly session = inject(SessionService);
+  private readonly directory = inject(DirectoryService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/messaging`;
+  private readonly identityApiBase = `${environment.apiBaseUrl}/api/identity`;
+
+  private readonly participantCache = new Map<string, UserSummary>();
+
+  private readonly _conversations = signal<Conversation[]>([]);
   readonly conversations = this._conversations.asReadonly();
 
-  private readonly _activeId = signal<string>('c1');
+  private readonly _activeId = signal<string | null>(null);
   readonly activeId = this._activeId.asReadonly();
 
   readonly active = computed(() => this._conversations().find((c) => c.id === this._activeId()) ?? null);
   readonly totalUnread = computed(() => this._conversations().reduce((sum, c) => sum + c.unread, 0));
 
-  select(id: string): void {
-    this._activeId.set(id);
-    this._conversations.update((list) => list.map((c) => (c.id === id ? { ...c, unread: 0 } : c)));
+  constructor() {
+    this.reload().subscribe();
   }
 
-  /** Starts a new conversation (1:1 or group) and makes it active. Returns its id. */
-  createConversation(participants: UserSummary[], groupName?: string): string {
-    const id = `c${Date.now()}`;
-    const isGroup = participants.length > 1;
-    const conversation: Conversation = {
-      id,
-      participants,
-      isGroup,
-      groupName: isGroup ? groupName?.trim() || participants.map((p) => p.name).join(', ') : undefined,
-      lastMessage: '',
-      timeLabel: 'now',
-      unread: 0,
-      messages: [],
-    };
-    this._conversations.update((list) => [conversation, ...list]);
+  reload(): Observable<Conversation[]> {
+    if (!this.session.isAuthenticated()) {
+      return of([]);
+    }
+    return this.http.get<ConversationResponseDto[]>(`${this.apiBase}/conversations`).pipe(
+      switchMap((list) => (list.length ? forkJoin(list.map((dto) => this.toConversation(dto))) : of([]))),
+      tap((conversations) => this._conversations.set(conversations)),
+    );
+  }
+
+  select(id: string): void {
     this._activeId.set(id);
-    return id;
+    this.http.post(`${this.apiBase}/conversations/${id}/read`, {}).subscribe({
+      next: () => this._conversations.update((list) => list.map((c) => (c.id === id ? { ...c, unread: 0 } : c))),
+    });
+  }
+
+  /** Starts a new conversation (1:1 or group) and makes it active. */
+  createConversation(participants: UserSummary[], groupName?: string): void {
+    const isGroup = participants.length > 1;
+    const request$ = isGroup
+      ? this.http.post<ConversationResponseDto>(`${this.apiBase}/conversations/group`, {
+          participantAccountIds: participants.map((p) => p.id),
+          groupName: groupName?.trim() || participants.map((p) => p.name).join(', '),
+          groupAvatarUrl: null,
+        })
+      : this.http.post<ConversationResponseDto>(`${this.apiBase}/conversations/direct`, { otherAccountId: participants[0]?.id });
+
+    request$.pipe(switchMap((dto) => this.toConversation(dto))).subscribe({
+      next: (conversation) => {
+        this._conversations.update((list) => [conversation, ...list]);
+        this._activeId.set(conversation.id);
+      },
+    });
   }
 
   send(text: string): void {
     const body = text.trim();
     const id = this._activeId();
-    if (!body) {
+    if (!body || !id) {
       return;
     }
-    this._conversations.update((list) =>
-      list.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              lastMessage: body,
-              timeLabel: 'now',
-              messages: [
-                ...c.messages,
-                { id: `m${Date.now()}`, fromMe: true, text: body, timeLabel: 'now' },
-              ],
+    this.http.post<MessageResponseDto>(`${this.apiBase}/conversations/${id}/messages`, { body }).subscribe({
+      next: (dto) =>
+        this._conversations.update((list) =>
+          list.map((c): Conversation => {
+            if (c.id !== id) {
+              return c;
             }
-          : c,
+            const message: ChatMessage = { id: dto.id, fromMe: true, text: dto.body, timeLabel: relativeTime(dto.createdAt) };
+            return { ...c, lastMessage: body, timeLabel: relativeTime(dto.createdAt), messages: [...c.messages, message] };
+          }),
+        ),
+    });
+  }
+
+  private toConversation(dto: ConversationResponseDto): Observable<Conversation> {
+    const myId = this.session.isAuthenticated() ? this.session.account().id : null;
+    return forkJoin({
+      participants: this.http.get<ParticipantResponseDto[]>(`${this.apiBase}/conversations/${dto.id}/participants`),
+      messages: this.http.get<MessageResponseDto[]>(`${this.apiBase}/conversations/${dto.id}/messages`, { params: { pageSize: 50 } }),
+    }).pipe(
+      switchMap(({ participants, messages }) => {
+        const others = participants.filter((p) => p.accountId !== myId);
+        const mine = participants.find((p) => p.accountId === myId);
+        const lastReadAt = mine?.lastReadAt ? new Date(mine.lastReadAt).getTime() : 0;
+        const unread = messages.filter((m) => m.senderAccountId !== myId && new Date(m.createdAt).getTime() > lastReadAt).length;
+
+        const participants$: Observable<UserSummary[]> = others.length
+          ? forkJoin(others.map((p) => this.resolveParticipant(p.accountId)))
+          : of([]);
+
+        return participants$.pipe(
+          map((participantSummaries): Conversation => {
+            const lastMessage = messages[messages.length - 1];
+            return {
+              id: dto.id,
+              participants: participantSummaries,
+              isGroup: dto.group,
+              groupName: dto.groupName ?? undefined,
+              groupAvatarUrl: dto.groupAvatarUrl ?? undefined,
+              lastMessage: lastMessage?.body ?? '',
+              timeLabel: dto.lastMessageAt ? relativeTime(dto.lastMessageAt) : '',
+              unread,
+              messages: messages.map(
+                (m): ChatMessage => ({ id: m.id, fromMe: m.senderAccountId === myId, text: m.body, timeLabel: relativeTime(m.createdAt) }),
+              ),
+            };
+          }),
+        );
+      }),
+    );
+  }
+
+  private resolveParticipant(accountId: string): Observable<UserSummary> {
+    const cached = this.participantCache.get(accountId);
+    if (cached) {
+      return of(cached);
+    }
+    const politician = this.directory.politicians().find((p) => p.id === accountId);
+    if (politician) {
+      const summary: UserSummary = {
+        id: politician.id,
+        name: politician.name,
+        handle: politician.handle,
+        avatarUrl: politician.avatarUrl,
+        verified: politician.verified,
+        role: politician.office,
+      };
+      this.participantCache.set(accountId, summary);
+      return of(summary);
+    }
+    const party = this.directory.parties().find((p) => p.id === accountId);
+    if (party) {
+      const summary: UserSummary = { id: party.id, name: party.name, avatarUrl: party.logoUrl, verified: true, role: 'Official channel' };
+      this.participantCache.set(accountId, summary);
+      return of(summary);
+    }
+    return this.http.get<AccountResponseDto>(`${this.identityApiBase}/accounts/${accountId}`).pipe(
+      map(
+        (r): UserSummary => ({ id: r.id, name: r.name, handle: r.handle, avatarUrl: r.avatarUrl, verified: r.verified }),
       ),
+      tap((summary) => this.participantCache.set(accountId, summary)),
+      catchError(() => of({ id: accountId, name: 'Unknown', avatarUrl: '', verified: false })),
     );
   }
 }

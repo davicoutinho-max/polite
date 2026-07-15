@@ -1,7 +1,9 @@
 package dev.civicpulse.membershipaffiliation.application.port.in;
 
 import dev.civicpulse.membershipaffiliation.domain.model.Affiliation;
+import dev.civicpulse.membershipaffiliation.domain.model.MembershipCard;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ManageAffiliationUseCase {
@@ -29,4 +31,7 @@ public interface ManageAffiliationUseCase {
   Affiliation getById(UUID id);
 
   List<Affiliation> listByCitizen(UUID citizenAccountId);
+
+  /** The digital membership card issued alongside {@link #confirmAffiliation}, if any. */
+  Optional<MembershipCard> getCard(UUID affiliationId);
 }

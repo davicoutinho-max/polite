@@ -47,6 +47,12 @@ export class PlatformPage {
   protected readonly number = signal<number | null>(null);
   protected readonly president = signal('');
   protected readonly ideology = signal('');
+  protected readonly handle = signal('');
+  protected readonly email = signal('');
+  protected readonly password = signal('');
+  protected readonly documentNumber = signal('');
+  protected readonly createSubmitting = signal(false);
+  protected readonly createError = signal('');
 
   protected partyName(id: string | null): string {
     return this.platform.partyName(id);
@@ -58,21 +64,45 @@ export class PlatformPage {
 
   protected createParty(): void {
     const number = this.number();
-    if (!this.name().trim() || !this.acronym().trim() || !number) {
+    if (
+      !this.name().trim() ||
+      !this.acronym().trim() ||
+      !number ||
+      !this.handle().trim() ||
+      !this.email().trim() ||
+      !this.password().trim() ||
+      !this.documentNumber().trim()
+    ) {
       return;
     }
-    this.platform.createParty({
-      name: this.name().trim(),
-      acronym: this.acronym().trim().toUpperCase(),
-      number,
-      president: this.president().trim() || '—',
-      ideology: this.ideology().trim() || '—',
-    });
-    this.resetForm();
+    this.createSubmitting.set(true);
+    this.createError.set('');
+    this.platform
+      .createParty({
+        name: this.name().trim(),
+        acronym: this.acronym().trim().toUpperCase(),
+        number,
+        president: this.president().trim() || '—',
+        ideology: this.ideology().trim() || '—',
+        handle: this.handle().trim(),
+        email: this.email().trim(),
+        password: this.password(),
+        documentNumber: this.documentNumber().trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.createSubmitting.set(false);
+          this.resetForm();
+        },
+        error: () => {
+          this.createSubmitting.set(false);
+          this.createError.set('Could not create the party. Check the fields and try again.');
+        },
+      });
   }
 
   protected assign(politicianId: string, value: string): void {
-    this.platform.assignPolitician(politicianId, value === '' ? null : value);
+    this.platform.assignPolitician(politicianId, value === '' ? null : value).subscribe();
   }
 
   private resetForm(): void {
@@ -81,6 +111,10 @@ export class PlatformPage {
     this.number.set(null);
     this.president.set('');
     this.ideology.set('');
+    this.handle.set('');
+    this.email.set('');
+    this.password.set('');
+    this.documentNumber.set('');
     this.showForm.set(false);
   }
 

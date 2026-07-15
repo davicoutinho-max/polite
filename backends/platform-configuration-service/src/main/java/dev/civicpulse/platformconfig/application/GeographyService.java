@@ -57,6 +57,12 @@ public class GeographyService implements ManageGeographyUseCase {
   }
 
   @Override
+  @Transactional
+  public void removeState(UUID id) {
+    stateRepository.delete(id);
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public List<State> listStates(UUID countryId) {
     return stateRepository.findByCountryId(countryId);

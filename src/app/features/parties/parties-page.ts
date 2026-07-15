@@ -66,14 +66,13 @@ export class PartiesPage {
   protected readonly spectrum = signal('all');
   protected readonly sort = signal<SortKey>('members');
 
-  private readonly following = signal<ReadonlySet<string>>(new Set());
   protected readonly visibleCount = signal(PAGE_SIZE);
 
   protected readonly filtered = computed<PartySummary[]>(() => {
     const q = this.search().trim().toLowerCase();
     const spectrum = this.spectrum();
 
-    const list = this.directory.parties.filter((p) => {
+    const list = this.directory.parties().filter((p) => {
       if (spectrum !== 'all' && p.spectrum !== spectrum) return false;
       if (q && !p.name.toLowerCase().includes(q) && !p.acronym.toLowerCase().includes(q) && !p.ideology.toLowerCase().includes(q)) {
         return false;
@@ -116,15 +115,12 @@ export class PartiesPage {
   }
 
   protected isFollowing(id: string): boolean {
-    return this.following().has(id);
+    return this.directory.isFollowing('party', id);
   }
 
   protected toggleFollow(id: string): void {
-    this.following.update((set) => {
-      const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    const action$ = this.isFollowing(id) ? this.directory.unfollow('party', id) : this.directory.follow('party', id);
+    action$.subscribe({ error: () => undefined });
   }
 
   protected clearFilters(): void {

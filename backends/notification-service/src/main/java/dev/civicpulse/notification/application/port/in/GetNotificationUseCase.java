@@ -11,4 +11,6 @@ public interface GetNotificationUseCase {
   long countUnread(UUID recipientAccountId);
 
   void markRead(UUID notificationId);
+
+  void markAllRead(UUID recipientAccountId);
 }

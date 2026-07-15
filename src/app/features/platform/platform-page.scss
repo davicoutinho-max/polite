@@ -60,6 +60,15 @@
   }
 }
 
+.platform__form-error {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cp-error);
+}
+
 .platform__parties {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

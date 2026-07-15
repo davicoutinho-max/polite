@@ -9,4 +9,6 @@ public interface GetPetitionUseCase {
   Petition getById(UUID id);
 
   List<Petition> list(int page, int pageSize);
+
+  boolean hasSigned(UUID petitionId, UUID citizenAccountId);
 }

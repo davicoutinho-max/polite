@@ -15,5 +15,7 @@ public interface ManageGeographyUseCase {
 
   State addState(UUID countryId, String name, String code);
 
+  void removeState(UUID id);
+
   List<State> listStates(UUID countryId);
 }

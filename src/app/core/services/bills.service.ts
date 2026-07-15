@@ -1,57 +1,52 @@
-import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { Observable, map, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Bill } from '../models';
+import { DirectoryService } from './directory.service';
+import { STATUS_TAGS } from './politician.service';
 
+interface LegislativeItemResponseDto {
+  readonly id: string;
+  readonly politicianAccountId: string;
+  readonly reference: string;
+  readonly title: string;
+  readonly summary: string | null;
+  readonly category: string;
+  readonly status: string;
+}
+
+/** Bills shown in the feed sidebar, sourced from legislative-service's global recent-items feed. */
 @Injectable({ providedIn: 'root' })
 export class BillsService {
-  /** Compact bills shown in the feed sidebar. */
-  readonly relevantBills = signal<Bill[]>([
-    {
-      id: 'b1',
-      reference: 'S.Res. 105',
-      title: 'Urban Housing Development Act',
-      sponsor: 'Sponsored by Sen. Williams',
-      status: { label: 'Vetoed', severity: 'danger', uppercase: true },
-    },
-    {
-      id: 'b2',
-      reference: 'H.R. 201',
-      title: 'Public Transit Expansion',
-      sponsor: 'Sponsored by Rep. Chen',
-      status: { label: 'Passed', severity: 'success', uppercase: true },
-    },
-  ]).asReadonly();
+  private readonly http = inject(HttpClient);
+  private readonly directory = inject(DirectoryService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/legislative`;
 
-  /** Rich legislation cards shown on a politician profile. */
-  readonly politicianBills = signal<Bill[]>([
-    {
-      id: 'pb1',
-      reference: 'Bill H.R. 452',
-      title: 'Clean Water Infrastructure Act',
-      summary:
-        'A comprehensive proposal to modernize municipal water treatment facilities and reduce lead pipe usage in urban districts over the next decade.',
-      kind: { label: 'Bill H.R. 452', severity: 'neutral' },
-      status: { label: 'Committee', severity: 'warning' },
-      progress: 45,
-      progressLabel: 'Legislative Progress',
-      progressColor: 'secondary',
-      metaIcon: 'group',
-      metaLabel: '12 Co-sponsors',
-      linkLabel: 'Read Full Text',
-    },
-    {
-      id: 'pb2',
-      reference: 'Local Initiative',
-      title: 'Downtown Small Business Grant Program',
-      summary:
-        'Establishing a $5M fund to support local merchants recovering from economic downturns, focusing on minority-owned enterprises.',
-      kind: { label: 'Local Initiative', severity: 'neutral' },
-      status: { label: 'Active', severity: 'secondary' },
-      progress: 75,
-      progressLabel: 'Funding Distributed',
-      progressColor: 'tertiary',
-      metaIcon: 'payments',
-      metaLabel: '$3.75M Allocated',
-      linkLabel: 'View Ledger',
-    },
-  ]).asReadonly();
+  private readonly _relevantBills = signal<Bill[]>([]);
+  readonly relevantBills = this._relevantBills.asReadonly();
+
+  constructor() {
+    this.reloadRelevantBills().subscribe();
+  }
+
+  reloadRelevantBills(limit = 5): Observable<Bill[]> {
+    return this.http.get<LegislativeItemResponseDto[]>(`${this.apiBase}/legislative-items`, { params: { recent: true, limit } }).pipe(
+      map((items) =>
+        items.map((i): Bill => {
+          const sponsor = this.directory.politicians().find((p) => p.id === i.politicianAccountId);
+          return {
+            id: i.id,
+            reference: i.reference,
+            title: i.title,
+            summary: i.summary ?? undefined,
+            sponsor: sponsor ? `Sponsored by ${sponsor.name}` : undefined,
+            politicianId: i.politicianAccountId,
+            status: STATUS_TAGS[i.status] ?? { label: i.status, severity: 'neutral' as const },
+          };
+        }),
+      ),
+      tap((bills) => this._relevantBills.set(bills)),
+    );
+  }
 }

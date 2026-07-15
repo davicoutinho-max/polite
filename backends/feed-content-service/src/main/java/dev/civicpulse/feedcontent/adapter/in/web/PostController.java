@@ -8,6 +8,8 @@ import dev.civicpulse.feedcontent.adapter.in.web.dto.PublishLivePostRequest;
 import dev.civicpulse.feedcontent.adapter.in.web.dto.PublishTextPostRequest;
 import dev.civicpulse.feedcontent.application.port.in.GetFeedUseCase;
 import dev.civicpulse.feedcontent.application.port.in.PublishPostUseCase;
+import dev.civicpulse.feedcontent.application.port.out.PostAgendaDetailsRepository;
+import dev.civicpulse.feedcontent.application.port.out.PostTagRepository;
 import dev.civicpulse.feedcontent.domain.model.Post;
 import dev.civicpulse.feedcontent.domain.model.PostVisibility;
 import dev.civicpulse.feedcontent.domain.model.TagSeverity;
@@ -31,10 +33,18 @@ public class PostController {
 
   private final PublishPostUseCase publishPostUseCase;
   private final GetFeedUseCase getFeedUseCase;
+  private final PostTagRepository postTagRepository;
+  private final PostAgendaDetailsRepository postAgendaDetailsRepository;
 
-  public PostController(PublishPostUseCase publishPostUseCase, GetFeedUseCase getFeedUseCase) {
+  public PostController(
+      PublishPostUseCase publishPostUseCase,
+      GetFeedUseCase getFeedUseCase,
+      PostTagRepository postTagRepository,
+      PostAgendaDetailsRepository postAgendaDetailsRepository) {
     this.publishPostUseCase = publishPostUseCase;
     this.getFeedUseCase = getFeedUseCase;
+    this.postTagRepository = postTagRepository;
+    this.postAgendaDetailsRepository = postAgendaDetailsRepository;
   }
 
   @PostMapping("/text")
@@ -78,7 +88,7 @@ public class PostController {
 
   @GetMapping("/{postId}")
   public PostResponse getById(@PathVariable UUID postId) {
-    return PostResponse.from(getFeedUseCase.getById(postId));
+    return toResponse(getFeedUseCase.getById(postId));
   }
 
   @GetMapping("/{postId}/metrics")
@@ -89,21 +99,25 @@ public class PostController {
   @GetMapping
   public List<PostResponse> getPublicFeed(
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int pageSize) {
-    return getFeedUseCase.getPublicFeed(page, pageSize).stream().map(PostResponse::from).toList();
+    return getFeedUseCase.getPublicFeed(page, pageSize).stream().map(this::toResponse).toList();
   }
 
   @GetMapping("/by-author/{authorAccountId}")
   public List<PostResponse> getByAuthor(
       @PathVariable UUID authorAccountId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int pageSize) {
-    return getFeedUseCase.getByAuthor(authorAccountId, page, pageSize).stream().map(PostResponse::from).toList();
+    return getFeedUseCase.getByAuthor(authorAccountId, page, pageSize).stream().map(this::toResponse).toList();
   }
 
   private static PostVisibility visibilityOrDefault(String visibility) {
     return visibility == null ? PostVisibility.PUBLIC : PostVisibility.fromCode(visibility);
   }
 
-  private static ResponseEntity<PostResponse> created(Post post) {
-    PostResponse body = PostResponse.from(post);
+  private PostResponse toResponse(Post post) {
+    return PostResponse.from(post, postTagRepository.findByPostId(post.id()), postAgendaDetailsRepository.findByPostId(post.id()).orElse(null));
+  }
+
+  private ResponseEntity<PostResponse> created(Post post) {
+    PostResponse body = toResponse(post);
     return ResponseEntity.created(URI.create("/posts/" + body.id())).body(body);
   }
 }

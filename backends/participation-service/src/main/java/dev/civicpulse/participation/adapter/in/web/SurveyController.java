@@ -58,4 +58,9 @@ public class SurveyController {
     manageSurveyUseCase.vote(id, request.citizenAccountId(), request.optionId());
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/{id}/votes/{citizenAccountId}")
+  public ResponseEntity<UUID> getMyVote(@PathVariable UUID id, @PathVariable UUID citizenAccountId) {
+    return getSurveyUseCase.getMyVote(id, citizenAccountId).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+  }
 }

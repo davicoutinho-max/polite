@@ -67,4 +67,10 @@ public class PetitionService implements ManagePetitionUseCase, GetPetitionUseCas
   public List<Petition> list(int page, int pageSize) {
     return petitionRepository.findAll(page, pageSize);
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean hasSigned(UUID petitionId, UUID citizenAccountId) {
+    return petitionSignatureRepository.exists(petitionId, citizenAccountId);
+  }
 }

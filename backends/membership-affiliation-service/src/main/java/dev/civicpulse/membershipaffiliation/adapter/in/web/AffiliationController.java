@@ -1,6 +1,7 @@
 package dev.civicpulse.membershipaffiliation.adapter.in.web;
 
 import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.AffiliationResponse;
+import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.MembershipCardResponse;
 import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.RequestAffiliationRequest;
 import dev.civicpulse.membershipaffiliation.application.port.in.ManageAffiliationUseCase;
 import jakarta.validation.Valid;
@@ -57,5 +58,10 @@ public class AffiliationController {
   @PostMapping("/{id}/confirm")
   public AffiliationResponse confirm(@PathVariable UUID id) {
     return AffiliationResponse.from(manageAffiliationUseCase.confirmAffiliation(id));
+  }
+
+  @GetMapping("/{id}/card")
+  public ResponseEntity<MembershipCardResponse> getCard(@PathVariable UUID id) {
+    return manageAffiliationUseCase.getCard(id).map(card -> ResponseEntity.ok(MembershipCardResponse.from(card))).orElseGet(() -> ResponseEntity.notFound().build());
   }
 }

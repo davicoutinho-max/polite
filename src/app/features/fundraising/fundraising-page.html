@@ -49,12 +49,12 @@
           </select>
         </label>
         <label class="fund__field">
-          <span>{{ 'field.goal-usd' | translate: 'Goal (USD)' }}</span>
+          <span>{{ 'field.goal-usd' | translate: 'Goal (R$)' }}</span>
           <input type="number" min="1" [value]="goal() ?? ''" (input)="goal.set(+$any($event.target).value)" placeholder="5000" />
         </label>
         <label class="fund__field">
           <span>{{ 'field.deadline' | translate: 'Deadline' }}</span>
-          <input type="text" [value]="deadline()" (input)="deadline.set($any($event.target).value)" placeholder="Aug 30, 2026" />
+          <input type="date" [value]="deadline()" (input)="deadline.set($any($event.target).value)" />
         </label>
       </div>
       <ui-button [label]="'button.publish-action' | translate: 'Publish action'" icon="check" variant="filled" type="submit" />

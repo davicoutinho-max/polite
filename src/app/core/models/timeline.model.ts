@@ -5,17 +5,19 @@ export interface CareerMilestone {
   readonly detail?: string;
 }
 
-/** Category of a feed event on the activity timeline. */
+/** Category of a feed event on the activity timeline — mirrors activity-feed-service's
+ * timeline_event_type_options; only types with a real upstream event producer exist. */
 export type TimelineEventType =
   | 'vote'
   | 'project'
+  | 'pec'
+  | 'cpi'
+  | 'status_change'
   | 'committee'
   | 'video'
-  | 'event'
-  | 'honor'
-  | 'party-change'
-  | 'campaign'
-  | 'accounts';
+  | 'post'
+  | 'party_change'
+  | 'campaign';
 
 /** A single entry in the activity timeline feed. */
 export interface TimelineEvent {

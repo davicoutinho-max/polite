@@ -26,6 +26,11 @@ class StateRepositoryAdapter implements StateRepository {
     return jpaRepository.findByCountryId(countryId).stream().map(StateRepositoryAdapter::toDomain).toList();
   }
 
+  @Override
+  public void delete(UUID id) {
+    jpaRepository.deleteById(id);
+  }
+
   private static State toDomain(StateJpaEntity entity) {
     return State.reconstitute(entity.getId(), entity.getCountryId(), entity.getName(), entity.getCode());
   }

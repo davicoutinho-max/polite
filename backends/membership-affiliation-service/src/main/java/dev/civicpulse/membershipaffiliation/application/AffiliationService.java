@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -135,6 +136,12 @@ public class AffiliationService implements ManageAffiliationUseCase {
   @Transactional(readOnly = true)
   public List<Affiliation> listByCitizen(UUID citizenAccountId) {
     return affiliationRepository.findByCitizenAccountId(citizenAccountId);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<MembershipCard> getCard(UUID affiliationId) {
+    return membershipCardRepository.findByAffiliationId(affiliationId);
   }
 
   private void recordHistory(UUID affiliationId, AffiliationStatus from, AffiliationStatus to, ChangedBy changedBy, Instant now) {

@@ -21,5 +21,5 @@ export class AnalyticsPage {
   protected readonly kpis = this.analytics.kpis;
   protected readonly engagement = this.analytics.engagement;
   protected readonly byContentType = this.analytics.byContentType;
-  protected readonly byDistrict = this.analytics.byDistrict;
+  protected readonly byAccountType = this.analytics.byAccountType;
 }

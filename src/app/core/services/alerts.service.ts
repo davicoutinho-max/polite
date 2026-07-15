@@ -1,72 +1,79 @@
-import { computed, Injectable, signal } from '@angular/core';
-import { Alert } from '../models';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Observable, map, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Alert, AlertCategory } from '../models';
+import { relativeTime } from '../utils/relative-time';
+import { SessionService } from './session.service';
 
+interface NotificationResponseDto {
+  readonly id: string;
+  readonly category: string;
+  readonly icon: string | null;
+  readonly title: string;
+  readonly message: string;
+  readonly link: string | null;
+  readonly read: boolean;
+  readonly createdAt: string;
+}
+
+/**
+ * Server-driven alerts come from notification-service (real, persisted, read/unread tracked).
+ * `push()` stays a purely local, ephemeral toast for the current user's own just-taken action
+ * (e.g. "affiliation request sent") — it was never meant to be a persisted notification row.
+ */
 @Injectable({ providedIn: 'root' })
 export class AlertsService {
-  private readonly _alerts = signal<Alert[]>([
-    {
-      id: 'a1',
-      category: 'project',
-      icon: 'description',
-      title: 'New bill introduced',
-      message: 'Jane Doe, who you follow, introduced PL 452/2024 — Clean Water Infrastructure Act.',
-      timeLabel: '10 min ago',
-      link: '/profile/jane-doe',
-      read: false,
-    },
-    {
-      id: 'a2',
-      category: 'pec',
-      icon: 'account_balance',
-      title: 'New PEC',
-      message: 'PEC 33/2024 — Fiscal Transparency Amendment reached the voting floor.',
-      timeLabel: '1 hour ago',
-      link: '/participation',
-      read: false,
-    },
-    {
-      id: 'a3',
-      category: 'party',
-      icon: 'groups',
-      title: 'Party leadership changed',
-      message: 'The Progressive Party elected a new president at the national convention.',
-      timeLabel: '3 hours ago',
-      read: false,
-    },
-    {
-      id: 'a4',
-      category: 'vote',
-      icon: 'how_to_vote',
-      title: 'New vote registered',
-      message: 'A politician you follow voted YES on the Fiscal Transparency Amendment.',
-      timeLabel: 'Yesterday',
-      read: true,
-    },
-    {
-      id: 'a5',
-      category: 'cpi',
-      icon: 'policy',
-      title: 'New CPI',
-      message: 'CPI 05/2023 — Public Contracts Inquiry opened a new investigation line.',
-      timeLabel: '2 days ago',
-      read: true,
-    },
-  ]);
+  private readonly http = inject(HttpClient);
+  private readonly session = inject(SessionService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/notifications`;
 
+  private readonly _alerts = signal<Alert[]>([]);
   readonly alerts = this._alerts.asReadonly();
   readonly unreadCount = computed(() => this._alerts().filter((a) => !a.read).length);
 
+  constructor() {
+    this.reload().subscribe();
+  }
+
+  reload(page = 0, pageSize = 50): Observable<Alert[]> {
+    if (!this.session.isAuthenticated()) {
+      return of([]);
+    }
+    return this.http.get<NotificationResponseDto[]>(this.apiBase, { params: { page, pageSize } }).pipe(
+      map((list) =>
+        list.map(
+          (dto): Alert => ({
+            id: dto.id,
+            category: dto.category as AlertCategory,
+            icon: dto.icon ?? 'notifications',
+            title: dto.title,
+            message: dto.message,
+            timeLabel: relativeTime(dto.createdAt),
+            link: dto.link ?? undefined,
+            read: dto.read,
+          }),
+        ),
+      ),
+      tap((alerts) => this._alerts.set(alerts)),
+    );
+  }
+
   markRead(id: string): void {
-    this._alerts.update((list) => list.map((a) => (a.id === id ? { ...a, read: true } : a)));
+    this.http.post(`${this.apiBase}/${id}/read`, {}).subscribe({
+      next: () => this._alerts.update((list) => list.map((a) => (a.id === id ? { ...a, read: true } : a))),
+    });
   }
 
   markAllRead(): void {
-    this._alerts.update((list) => list.map((a) => ({ ...a, read: true })));
+    this.http.post(`${this.apiBase}/read-all`, {}).subscribe({
+      next: () => this._alerts.update((list) => list.map((a) => ({ ...a, read: true }))),
+    });
   }
 
-  /** Emit a brand-new, unread notification at the top of the feed. */
+  /** Emit a brand-new, unread LOCAL toast at the top of the feed — not persisted server-side. */
   push(alert: Omit<Alert, 'id' | 'read'>): void {
-    const entry: Alert = { ...alert, id: `a${Date.now()}`, read: false };
+    const entry: Alert = { ...alert, id: `local-${Date.now()}`, read: false };
     this._alerts.update((list) => [entry, ...list]);
   }
 }

@@ -1,29 +1,32 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FeedService } from '../../../../core/services/feed.service';
 import { UiYoutube } from '../../../../shared/ui/ui-youtube/ui-youtube';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
-// TODO: replace with the real political broadcast that is live right now.
-// A YouTube live video id, or use [channelId] on <ui-youtube> for a channel's live_stream.
-const LIVE_VIDEO_ID = 'jfKfPfyJRdk';
-
-/** Sidebar widget featuring a real-time live broadcast. */
+/** Sidebar widget featuring whatever live-streaming-service session is currently live, if any. */
 @Component({
   selector: 'app-live-now',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [UiYoutube, UiIcon, TranslatePipe],
   template: `
-    <div class="live">
-      <header class="live__head">
-        <span class="live__badge"><span class="live__dot"></span> {{ 'label.live' | translate: 'LIVE' }}</span>
-        <span class="live__viewers">
-          <ui-icon name="visibility" [size]="16" />
-          3.2k {{ 'label.watching' | translate: 'watching' }}
-        </span>
-      </header>
-      <ui-youtube [live]="true" [videoId]="liveVideoId" [title]="'label.plenary-live' | translate: 'Plenary session — live now'" />
-      <div class="live__caption">{{ 'label.plenary-caption' | translate: 'Plenary session · State Legislature' }}</div>
-    </div>
+    @if (liveNow(); as live) {
+      <div class="live">
+        <header class="live__head">
+          <span class="live__badge"><span class="live__dot"></span> {{ 'label.live' | translate: 'LIVE' }}</span>
+          <span class="live__viewers">
+            <ui-icon name="visibility" [size]="16" />
+            {{ live.watching }} {{ 'label.watching' | translate: 'watching' }}
+          </span>
+        </header>
+        <ui-youtube
+          [live]="true"
+          [videoId]="live.videoId ?? undefined"
+          [channelId]="live.channelId ?? undefined"
+          [title]="'label.plenary-live' | translate: 'Plenary session — live now'"
+        />
+      </div>
+    }
   `,
   styles: `
     :host { display: block; }
@@ -53,9 +56,9 @@ const LIVE_VIDEO_ID = 'jfKfPfyJRdk';
       display: inline-flex; align-items: center; gap: var(--cp-space-xs);
       font-size: 13px; color: var(--cp-on-surface-variant); font-weight: 600;
     }
-    .live__caption { margin-top: var(--cp-space-sm); font-size: 13px; color: var(--cp-on-surface-variant); }
   `,
 })
 export class LiveNow {
-  protected readonly liveVideoId = LIVE_VIDEO_ID;
+  private readonly feedService = inject(FeedService);
+  protected readonly liveNow = this.feedService.liveNow;
 }

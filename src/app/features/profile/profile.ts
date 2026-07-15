@@ -1,4 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { PoliticianService } from '../../core/services/politician.service';
 import { FeedService } from '../../core/services/feed.service';
 import { SessionService } from '../../core/services/session.service';
@@ -35,6 +38,7 @@ export class Profile {
   private readonly politicianService = inject(PoliticianService);
   private readonly feedService = inject(FeedService);
   private readonly session = inject(SessionService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly politician = this.politicianService.politician;
   protected readonly tabs = this.politicianService.tabs;
@@ -42,11 +46,27 @@ export class Profile {
   protected readonly transparency = this.politicianService.transparency;
   protected readonly career = this.politicianService.career;
 
-  protected readonly activityPosts = this.feedService.postsByAuthor(this.politician().id);
+  protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.politician().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
 
   protected readonly activeTab = signal('activity');
+
+  constructor() {
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const rawId = params.get('id');
+      const id = !rawId || rawId === 'me' ? this.session.account().id : rawId;
+      if (!id) {
+        return;
+      }
+      forkJoin([
+        this.politicianService.load(id),
+        this.politicianService.loadActivity(id),
+        this.politicianService.loadTransparency(id),
+        this.politicianService.loadCareer(id),
+      ]).subscribe();
+    });
+  }
 
   protected onTabChange(id: string): void {
     this.activeTab.set(id);

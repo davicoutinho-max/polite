@@ -14,6 +14,7 @@ import dev.civicpulse.notification.domain.model.NotificationCategory;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,5 +80,22 @@ class NotificationServiceTest {
 
     assertThat(notification.read()).isTrue();
     verify(notificationRepository).save(notification);
+  }
+
+  @Test
+  void markAllReadOnlyUpdatesUnreadOnes() {
+    UUID recipientId = UUID.randomUUID();
+    Notification unread =
+        Notification.create(UUID.randomUUID(), recipientId, NotificationCategory.PARTY, null, "title", "message", null, "src-1", NOW);
+    Notification alreadyRead =
+        Notification.create(UUID.randomUUID(), recipientId, NotificationCategory.PARTY, null, "title2", "message2", null, "src-2", NOW);
+    alreadyRead.markRead();
+    when(notificationRepository.findByRecipient(recipientId, 0, 1000)).thenReturn(List.of(unread, alreadyRead));
+
+    service.markAllRead(recipientId);
+
+    assertThat(unread.read()).isTrue();
+    verify(notificationRepository).save(unread);
+    verify(notificationRepository, never()).save(alreadyRead);
   }
 }

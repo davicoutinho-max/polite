@@ -47,7 +47,7 @@ export class NewConversationPicker {
       verified: p.verified,
       role: `${p.office} · ${p.partyAcronym}`,
     }));
-    const parties: UserSummary[] = this.directory.parties.map((p) => ({
+    const parties: UserSummary[] = this.directory.parties().map((p) => ({
       id: p.id,
       name: p.name,
       handle: p.acronym,

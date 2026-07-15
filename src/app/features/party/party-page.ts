@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PartyService } from '../../core/services/party.service';
+import { DirectoryService } from '../../core/services/directory.service';
 import { FeedService } from '../../core/services/feed.service';
 import { SessionService } from '../../core/services/session.service';
 import { ProfileTab } from '../../core/models';
@@ -45,26 +47,42 @@ const TABS: ProfileTab[] = [
 })
 export class PartyPage {
   private readonly partyService = inject(PartyService);
+  private readonly directory = inject(DirectoryService);
   private readonly feedService = inject(FeedService);
   private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly party = this.partyService.party;
-  protected readonly following = signal(false);
+  protected readonly following = computed(() => this.directory.isFollowing('party', this.party().id));
 
   protected readonly tabs = TABS;
   protected readonly activeTab = signal('activity');
 
-  protected readonly activityPosts = this.feedService.postsByAuthor(this.party().id);
+  protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.party().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
+
+  constructor() {
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.partyService.load(id).subscribe();
+      }
+    });
+  }
 
   protected setActiveTab(id: string): void {
     this.activeTab.set(id);
   }
 
   protected toggleFollow(): void {
-    this.following.update((v) => !v);
+    const id = this.party().id;
+    if (this.following()) {
+      this.directory.unfollow('party', id).subscribe();
+    } else {
+      this.directory.follow('party', id).subscribe();
+    }
   }
 
   protected onLike(postId: string): void {

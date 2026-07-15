@@ -99,4 +99,13 @@ class LikeServiceTest {
     verify(likeRepository).delete(postId, accountId);
     assertThat(metrics.likesCount()).isZero();
   }
+
+  @Test
+  void isLikedDelegatesToRepository() {
+    UUID postId = UUID.randomUUID();
+    UUID accountId = UUID.randomUUID();
+    when(likeRepository.exists(postId, accountId)).thenReturn(true);
+
+    assertThat(service.isLiked(postId, accountId)).isTrue();
+  }
 }

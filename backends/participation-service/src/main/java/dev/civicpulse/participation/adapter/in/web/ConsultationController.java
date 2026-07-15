@@ -53,4 +53,12 @@ public class ConsultationController {
     manageConsultationUseCase.respond(id, request.citizenAccountId(), ConsultationStance.fromCode(request.stance()));
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/{id}/responses/{citizenAccountId}")
+  public ResponseEntity<String> getStance(@PathVariable UUID id, @PathVariable UUID citizenAccountId) {
+    return getConsultationUseCase
+        .getStance(id, citizenAccountId)
+        .map(stance -> ResponseEntity.ok(stance.code()))
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
 }

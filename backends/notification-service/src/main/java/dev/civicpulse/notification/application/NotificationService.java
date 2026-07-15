@@ -53,4 +53,15 @@ public class NotificationService implements IngestNotificationUseCase, GetNotifi
     notification.markRead();
     notificationRepository.save(notification);
   }
+
+  @Override
+  @Transactional
+  public void markAllRead(UUID recipientAccountId) {
+    for (Notification notification : notificationRepository.findByRecipient(recipientAccountId, 0, 1000)) {
+      if (!notification.read()) {
+        notification.markRead();
+        notificationRepository.save(notification);
+      }
+    }
+  }
 }

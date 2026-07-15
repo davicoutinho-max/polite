@@ -16,3 +16,13 @@ export interface ElectionCandidate {
   readonly electionId: string;
   readonly politicianId: string;
 }
+
+/** Compact candidate view for an election's candidacy list — elections-service resolves these
+ * fields itself, so this is intentionally narrower than the full directory PoliticianSummary. */
+export interface ElectionCandidateSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly avatarUrl: string;
+  readonly office: string;
+  readonly partyAcronym: string;
+}

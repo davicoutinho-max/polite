@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,5 +74,11 @@ public class ConsultationService implements ManageConsultationUseCase, GetConsul
   @Transactional(readOnly = true)
   public List<Consultation> list(int page, int pageSize) {
     return consultationRepository.findAll(page, pageSize);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<ConsultationStance> getStance(UUID consultationId, UUID citizenAccountId) {
+    return consultationResponseRepository.findByConsultationAndCitizen(consultationId, citizenAccountId).map(ConsultationResponse::stance);
   }
 }

@@ -30,5 +30,6 @@ export interface NewFundraiser {
   readonly description: string;
   readonly category: FundraiserCategory;
   readonly goal: number;
+  /** ISO date (yyyy-mm-dd), or empty for open-ended. */
   readonly deadline: string;
 }

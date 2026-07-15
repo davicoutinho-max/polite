@@ -37,7 +37,7 @@ export class Feed {
   protected readonly bills = this.billsService.relevantBills;
 
   protected onPublish(draft: PostDraft): void {
-    this.feedService.publish(draft);
+    this.feedService.publish(draft).subscribe();
   }
 
   protected onLike(postId: string): void {

@@ -1,4 +1,8 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { Observable, forkJoin, map, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { DirectoryService } from './directory.service';
 import {
   NewParty,
   PartyRegistryEntry,
@@ -9,46 +13,90 @@ import {
   TranslationEntry,
 } from '../models';
 
+export interface NewPartyInput extends NewParty {
+  readonly handle: string;
+  readonly email: string;
+  readonly password: string;
+  readonly documentNumber: string;
+}
+
+interface PartyRegistryResponse {
+  readonly id: string;
+  readonly name: string;
+  readonly acronym: string;
+  readonly number: number;
+  readonly president: string | null;
+  readonly ideology: string | null;
+  readonly memberCount: number;
+}
+
+interface CountryResponse {
+  readonly id: string;
+  readonly name: string;
+  readonly code: string;
+}
+
+interface StateResponse {
+  readonly id: string;
+  readonly countryId: string;
+  readonly name: string;
+  readonly code: string;
+}
+
+function toPartyRegistryEntry(response: PartyRegistryResponse): PartyRegistryEntry {
+  return {
+    id: response.id,
+    name: response.name,
+    acronym: response.acronym,
+    number: response.number,
+    president: response.president ?? '—',
+    ideology: response.ideology ?? '—',
+    memberCount: response.memberCount,
+  };
+}
+
+function toPlatformCountry(response: CountryResponse): PlatformCountry {
+  return { id: response.id, name: response.name, code: response.code };
+}
+
+function toPlatformState(response: StateResponse): PlatformState {
+  return { id: response.id, name: response.name, code: response.code, countryId: response.countryId };
+}
+
 /**
- * Platform-administration state: the party registry and the politician
- * directory. Creating/editing parties and assigning politicians to them are
- * exclusive platform-admin actions, per the described flow.
+ * Platform-administration state: the party registry, politician assignment and geography
+ * parameters — all real reads/writes against platform-configuration-service (politicians
+ * themselves come from DirectoryService, since platform-configuration-service only owns the
+ * party-assignment relationship, not the politician roster). Languages/translation-tag
+ * management (below) stays client-side — the app's own `| translate` pipe rendering is
+ * out of scope for this pass (see docs/architecture/system-architecture.html's Phase 3 note).
  */
 @Injectable({ providedIn: 'root' })
 export class PlatformService {
-  private readonly _parties = signal<PartyRegistryEntry[]>([
-    {
-      id: 'progressive',
-      name: 'Progressive Party',
-      acronym: 'PP',
-      number: 45,
-      president: 'Sen. Laura Prado',
-      ideology: 'Social democracy · Progressivism',
-      memberCount: 148230,
-    },
-    {
-      id: 'liberty',
-      name: 'Liberty Alliance',
-      acronym: 'LA',
-      number: 22,
-      president: 'Rep. Otto Braun',
-      ideology: 'Classical liberalism',
-      memberCount: 91540,
-    },
-  ]);
+  private readonly http = inject(HttpClient);
+  private readonly directoryService = inject(DirectoryService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/platform`;
 
-  private readonly _politicians = signal<PoliticianDirectoryEntry[]>([
-    { id: 'jane-doe', name: 'Jane Doe', office: 'Federal Deputy', partyId: 'progressive' },
-    { id: 'laura-prado', name: 'Laura Prado', office: 'Senator', partyId: 'progressive' },
-    { id: 'marcus-chen', name: 'Marcus Chen', office: 'City Councilor', partyId: 'liberty' },
-    { id: 'rita-sa', name: 'Rita Sá', office: 'Mayor', partyId: null },
-    { id: 'diego-faria', name: 'Diego Faria', office: 'State Representative', partyId: null },
-  ]);
-
+  private readonly _parties = signal<PartyRegistryEntry[]>([]);
   readonly parties = this._parties.asReadonly();
-  readonly politicians = this._politicians.asReadonly();
 
-  readonly unassigned = computed(() => this._politicians().filter((p) => p.partyId === null));
+  readonly politicians = computed<PoliticianDirectoryEntry[]>(() =>
+    this.directoryService.politicians().map((p) => ({ id: p.id, name: p.name, office: p.office, partyId: p.partyId || null })),
+  );
+
+  readonly unassigned = computed(() => this.politicians().filter((p) => p.partyId === null));
+
+  constructor() {
+    this.reloadParties().subscribe();
+    this.reloadCountries().subscribe();
+  }
+
+  reloadParties(): Observable<PartyRegistryEntry[]> {
+    return this.http.get<PartyRegistryResponse[]>(`${this.apiBase}/parties`).pipe(
+      map((list) => list.map(toPartyRegistryEntry)),
+      tap((list) => this._parties.set(list)),
+    );
+  }
 
   partyName(id: string | null): string {
     if (!id) {
@@ -58,51 +106,53 @@ export class PlatformService {
   }
 
   politiciansOf(partyId: string): PoliticianDirectoryEntry[] {
-    return this._politicians().filter((p) => p.partyId === partyId);
+    return this.politicians().filter((p) => p.partyId === partyId);
   }
 
-  createParty(input: NewParty): void {
-    const id = input.acronym.toLowerCase().replace(/[^a-z0-9]+/g, '-') || `party-${Date.now()}`;
-    const entry: PartyRegistryEntry = {
-      id: this._parties().some((p) => p.id === id) ? `${id}-${Date.now()}` : id,
-      name: input.name,
-      acronym: input.acronym,
-      number: input.number,
-      president: input.president,
-      ideology: input.ideology,
-      memberCount: 0,
-    };
-    this._parties.update((list) => [...list, entry]);
+  createParty(input: NewPartyInput): Observable<PartyRegistryEntry> {
+    return this.http
+      .post<PartyRegistryResponse>(`${this.apiBase}/parties`, {
+        name: input.name,
+        acronym: input.acronym,
+        number: input.number,
+        president: input.president,
+        ideology: input.ideology,
+        handle: input.handle,
+        email: input.email,
+        password: input.password,
+        documentType: 'cnpj',
+        documentNumber: input.documentNumber,
+      })
+      .pipe(
+        map(toPartyRegistryEntry),
+        tap((entry) => this._parties.update((list) => [...list, entry])),
+      );
   }
 
-  updatePresident(partyId: string, president: string): void {
-    this._parties.update((list) =>
-      list.map((p) => (p.id === partyId ? { ...p, president } : p)),
-    );
-  }
-
-  assignPolitician(politicianId: string, partyId: string | null): void {
-    this._politicians.update((list) =>
-      list.map((p) => (p.id === politicianId ? { ...p, partyId } : p)),
-    );
+  assignPolitician(politicianId: string, partyId: string | null): Observable<void> {
+    return this.http
+      .put<void>(`${this.apiBase}/politician-assignments/${politicianId}`, { partyId })
+      .pipe(tap(() => this.directoryService.reloadPoliticians().subscribe()));
   }
 
   // ---- Platform parameters: countries & states ----
-  private readonly _countries = signal<PlatformCountry[]>([
-    { id: 'br', name: 'Brazil', code: 'BR' },
-    { id: 'pt', name: 'Portugal', code: 'PT' },
-    { id: 'us', name: 'United States', code: 'US' },
-  ]);
+  private readonly _countries = signal<PlatformCountry[]>([]);
   readonly countries = this._countries.asReadonly();
 
-  private readonly _states = signal<PlatformState[]>([
-    { id: 'sp', name: 'São Paulo', code: 'SP', countryId: 'br' },
-    { id: 'rj', name: 'Rio de Janeiro', code: 'RJ', countryId: 'br' },
-    { id: 'mg', name: 'Minas Gerais', code: 'MG', countryId: 'br' },
-    { id: 'rs', name: 'Rio Grande do Sul', code: 'RS', countryId: 'br' },
-    { id: 'df', name: 'Distrito Federal', code: 'DF', countryId: 'br' },
-  ]);
+  private readonly _states = signal<PlatformState[]>([]);
   readonly states = this._states.asReadonly();
+
+  reloadCountries(): Observable<PlatformCountry[]> {
+    return this.http.get<CountryResponse[]>(`${this.apiBase}/countries`).pipe(
+      map((list) => list.map(toPlatformCountry)),
+      tap((countries) => {
+        this._countries.set(countries);
+        forkJoin(countries.map((c) => this.http.get<StateResponse[]>(`${this.apiBase}/countries/${c.id}/states`))).subscribe((results) => {
+          this._states.set(results.flat().map(toPlatformState));
+        });
+      }),
+    );
+  }
 
   countryName(id: string): string {
     return this._countries().find((c) => c.id === id)?.name ?? '—';
@@ -113,24 +163,30 @@ export class PlatformService {
   }
 
   addCountry(name: string, code: string): void {
-    const id = this.slugify(code || name);
-    if (this._countries().some((c) => c.id === id)) return;
-    this._countries.update((list) => [...list, { id, name, code: code.toUpperCase() }]);
+    this.http.post<CountryResponse>(`${this.apiBase}/countries`, { name, code: code.toUpperCase() }).subscribe((response) => {
+      this._countries.update((list) => [...list, toPlatformCountry(response)]);
+    });
   }
 
   removeCountry(id: string): void {
-    this._countries.update((list) => list.filter((c) => c.id !== id));
-    this._states.update((list) => list.filter((s) => s.countryId !== id));
+    this.http.delete<void>(`${this.apiBase}/countries/${id}`).subscribe(() => {
+      this._countries.update((list) => list.filter((c) => c.id !== id));
+      this._states.update((list) => list.filter((s) => s.countryId !== id));
+    });
   }
 
   addState(name: string, code: string, countryId: string): void {
-    const id = this.slugify(code || name);
-    if (this._states().some((s) => s.id === id)) return;
-    this._states.update((list) => [...list, { id, name, code: code.toUpperCase(), countryId }]);
+    this.http.post<StateResponse>(`${this.apiBase}/countries/${countryId}/states`, { name, code: code.toUpperCase() }).subscribe((response) => {
+      this._states.update((list) => [...list, toPlatformState(response)]);
+    });
   }
 
   removeState(id: string): void {
-    this._states.update((list) => list.filter((s) => s.id !== id));
+    const state = this._states().find((s) => s.id === id);
+    if (!state) return;
+    this.http.delete<void>(`${this.apiBase}/countries/${state.countryId}/states/${id}`).subscribe(() => {
+      this._states.update((list) => list.filter((s) => s.id !== id));
+    });
   }
 
   // ---- Platform parameters: languages ----
@@ -336,7 +392,7 @@ export class PlatformService {
     { id: 't-field-description', key: 'field.description', values: { 'pt-br': 'Descrição', 'en-us': 'Description' } },
     { id: 't-field-email', key: 'field.email', values: { 'pt-br': 'Email', 'en-us': 'Email' } },
     { id: 't-field-full-name', key: 'field.full-name', values: { 'pt-br': 'Nome completo', 'en-us': 'Full name' } },
-    { id: 't-field-goal-usd', key: 'field.goal-usd', values: { 'pt-br': 'Meta (R$)', 'en-us': 'Goal (USD)' } },
+    { id: 't-field-goal-usd', key: 'field.goal-usd', values: { 'pt-br': 'Meta (R$)', 'en-us': 'Goal (R$)' } },
     { id: 't-field-group-name', key: 'field.group-name', values: { 'pt-br': 'Nome do grupo', 'en-us': 'Group name' } },
     { id: 't-field-handle', key: 'field.handle', values: { 'pt-br': 'Usuário', 'en-us': 'Handle' } },
     { id: 't-field-level', key: 'field.level', values: { 'pt-br': 'Nível', 'en-us': 'Level' } },

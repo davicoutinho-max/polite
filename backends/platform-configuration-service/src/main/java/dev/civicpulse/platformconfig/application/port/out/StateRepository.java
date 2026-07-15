@@ -9,4 +9,6 @@ public interface StateRepository {
   State save(State state);
 
   List<State> findByCountryId(UUID countryId);
+
+  void delete(UUID id);
 }

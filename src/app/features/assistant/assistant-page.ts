@@ -21,9 +21,9 @@ export class AssistantPage {
   protected readonly conversation = this.assistant.conversation;
   protected readonly thinking = this.assistant.thinking;
 
-  protected readonly activeTopicId = signal(this.topics[0]?.id ?? '');
+  protected readonly activeTopicId = signal('');
   protected readonly activeTopic = computed(
-    () => this.topics.find((t) => t.id === this.activeTopicId()) ?? this.topics[0],
+    () => this.topics().find((t) => t.id === this.activeTopicId()) ?? this.topics()[0],
   );
 
   protected selectTopic(id: string): void {

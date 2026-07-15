@@ -7,6 +7,8 @@ export interface Bill {
   readonly title: string;
   readonly summary?: string;
   readonly sponsor?: string;
+  /** Sponsoring politician's account id, for linking to their profile. */
+  readonly politicianId?: string;
   readonly status: StatusTag;
   /** Optional badge such as "Local Initiative" or "Bill". */
   readonly kind?: StatusTag;

@@ -12,16 +12,16 @@
   </div>
 
   <div class="grid">
-    <ui-section [title]="'section.engagement-rate-week' | translate: 'Engagement rate — this week'" icon="show_chart">
-      <ui-area-chart [points]="engagement()" suffix="%" />
+    <ui-section [title]="'section.engagement-last-7-days' | translate: 'Engagement — last 7 days'" icon="show_chart">
+      <ui-area-chart [points]="engagement()" />
     </ui-section>
 
     <ui-section [title]="'section.interactions-by-content-type' | translate: 'Interactions by content type'" icon="bar_chart">
       <ui-bar-chart [data]="byContentType()" />
     </ui-section>
 
-    <ui-section [title]="'section.reach-by-district' | translate: 'Reach by district'" icon="map">
-      <ui-bar-chart [data]="byDistrict()" />
+    <ui-section [title]="'section.reach-by-account-type' | translate: 'Reach by account type'" icon="map">
+      <ui-bar-chart [data]="byAccountType()" />
     </ui-section>
   </div>
 </div>

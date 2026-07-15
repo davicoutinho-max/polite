@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import dev.civicpulse.platformconfig.application.port.out.CountryRepository;
 import dev.civicpulse.platformconfig.application.port.out.LanguageRepository;
 import dev.civicpulse.platformconfig.application.port.out.PartyRegistryRepository;
+import dev.civicpulse.platformconfig.application.port.out.StateRepository;
 import dev.civicpulse.platformconfig.domain.model.Country;
 import dev.civicpulse.platformconfig.domain.model.Language;
 import dev.civicpulse.platformconfig.domain.model.PartyRegistryEntry;
+import dev.civicpulse.platformconfig.domain.model.State;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.Instant;
@@ -44,6 +46,7 @@ class PlatformConfigRepositoryIntegrationTest {
   @Autowired private PartyRegistryRepository partyRegistryRepository;
   @Autowired private CountryRepository countryRepository;
   @Autowired private LanguageRepository languageRepository;
+  @Autowired private StateRepository stateRepository;
 
   @Test
   void savesAndRetrievesPartyRegistryEntry() {
@@ -69,6 +72,20 @@ class PlatformConfigRepositoryIntegrationTest {
     countryRepository.delete(id);
 
     assertThat(countryRepository.findById(id)).isEmpty();
+  }
+
+  @Test
+  void savesFindsAndDeletesState() {
+    UUID countryId = UUID.randomUUID();
+    countryRepository.save(Country.create(countryId, "Test Country For States", "Y" + (char) ('A' + (System.nanoTime() % 26))));
+    UUID stateId = UUID.randomUUID();
+    stateRepository.save(State.create(stateId, countryId, "Test State", "TS"));
+
+    assertThat(stateRepository.findByCountryId(countryId)).anySatisfy(s -> assertThat(s.id()).isEqualTo(stateId));
+
+    stateRepository.delete(stateId);
+
+    assertThat(stateRepository.findByCountryId(countryId)).noneSatisfy(s -> assertThat(s.id()).isEqualTo(stateId));
   }
 
   @Test

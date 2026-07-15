@@ -45,4 +45,10 @@ public class NotificationController {
     getNotificationUseCase.markRead(id);
     return ResponseEntity.noContent().build();
   }
+
+  @PostMapping("/read-all")
+  public ResponseEntity<Void> markAllRead(@RequestHeader("X-Account-Id") UUID accountId) {
+    getNotificationUseCase.markAllRead(accountId);
+    return ResponseEntity.noContent().build();
+  }
 }

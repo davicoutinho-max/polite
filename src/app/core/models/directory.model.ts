@@ -31,6 +31,7 @@ export interface PartySummary {
   readonly ideology: string;
   readonly members: number;
   readonly founded: number;
+  readonly president: string;
 }
 
 /** Fields a party fills in to register a new politician under itself. */

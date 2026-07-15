@@ -15,7 +15,7 @@
   <section class="assistant__controls">
     <span class="assistant__label">{{ 'label.choose-topic' | translate: 'Choose a topic' }}</span>
     <div class="assistant__topics">
-      @for (topic of topics; track topic.id) {
+      @for (topic of topics(); track topic.id) {
         <button
           type="button"
           class="assistant__chip"

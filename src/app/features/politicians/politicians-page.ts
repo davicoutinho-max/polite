@@ -55,10 +55,10 @@ export class PoliticiansPage {
     { value: 'all', label: this.translate.t('label.all-levels', 'All levels') },
     ...LEVEL_OPTIONS.map((o) => ({ value: o.value, label: this.translate.t(`level.${o.value}`, o.label) })),
   ];
-  protected readonly partySelect: FilterOption[] = [
+  protected readonly partySelect = computed<FilterOption[]>(() => [
     { value: 'all', label: this.translate.t('label.all-parties', 'All parties') },
-    ...this.directory.partyOptions,
-  ];
+    ...this.directory.partyOptions(),
+  ]);
   protected readonly stateSelect = computed<FilterOption[]>(() => [
     { value: 'all', label: this.translate.t('label.all-states', 'All states') },
     ...this.directory.stateOptions(),
@@ -76,7 +76,6 @@ export class PoliticiansPage {
   protected readonly state = signal('all');
   protected readonly sort = signal<SortKey>('followers');
 
-  private readonly following = signal<ReadonlySet<string>>(new Set());
   protected readonly visibleCount = signal(PAGE_SIZE);
 
   protected readonly filtered = computed<PoliticianSummary[]>(() => {
@@ -129,15 +128,12 @@ export class PoliticiansPage {
   }
 
   protected isFollowing(id: string): boolean {
-    return this.following().has(id);
+    return this.directory.isFollowing('politician', id);
   }
 
   protected toggleFollow(id: string): void {
-    this.following.update((set) => {
-      const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    const action$ = this.isFollowing(id) ? this.directory.unfollow('politician', id) : this.directory.follow('politician', id);
+    action$.subscribe({ error: () => undefined });
   }
 
   protected clearFilters(): void {

@@ -1,7 +1,7 @@
 <ui-section [title]="'section.affiliation-status' | translate: 'Affiliation status'" icon="how_to_reg">
   <div slot="action" class="filiation__actions">
     @if (status() === 'not-started') {
-      <ui-button [label]="'button.request-affiliation' | translate: 'Request affiliation'" icon="send" variant="filled" (click)="request.emit()" />
+      <ui-button [label]="'button.request-affiliation' | translate: 'Request affiliation'" icon="send" variant="filled" (click)="onRequest()" />
     } @else if (status() !== 'affiliated') {
       <ui-button [label]="'button.simulate-next-step' | translate: 'Simulate next step'" icon="fast_forward" variant="tonal" (click)="advance.emit()" />
     } @else {
@@ -13,6 +13,20 @@
     <p class="filiation__intro">
       {{ 'hint.affiliation-intro' | translate: "Start your affiliation request below. You'll pre-register, upload documents and pay the contribution — but the official confirmation depends on the party and the Electoral Justice." }}
     </p>
+    <div class="filiation__form">
+      <label class="filiation__field">
+        <span>{{ 'label.party' | translate: 'Party' }}</span>
+        <select [ngModel]="selectedPartyId()" (ngModelChange)="selectedPartyId.set($event)">
+          @for (party of parties(); track party.id) {
+            <option [value]="party.id">{{ party.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="filiation__field">
+        <span>{{ 'label.city' | translate: 'City' }}</span>
+        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" placeholder="e.g. São Paulo — SP" />
+      </label>
+    </div>
   }
 
   <ol class="steps">

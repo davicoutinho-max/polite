@@ -16,7 +16,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
     <ui-section [title]="'section.relevant-bills' | translate: 'Relevant Bills'" icon="gavel">
       <ul class="bills">
         @for (bill of bills(); track bill.id) {
-          <li class="bill" [attr.data-severity]="bill.status.severity" routerLink="/profile/jane-doe">
+          <li class="bill" [attr.data-severity]="bill.status.severity" [routerLink]="['/profile', bill.politicianId]">
             <div class="bill__top">
               <span class="bill__ref">
                 <ui-icon name="description" [size]="14" />
@@ -36,7 +36,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
         }
       </ul>
       <div class="widget__footer">
-        <ui-button [label]="'button.view-all-active-bills' | translate: 'View All Active Bills'" variant="text" routerLink="/profile/jane-doe" />
+        <ui-button [label]="'button.view-all-active-bills' | translate: 'View All Active Bills'" variant="text" routerLink="/politicians" />
       </div>
     </ui-section>
   `,

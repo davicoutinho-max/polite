@@ -43,7 +43,36 @@
               <input type="text" [value]="ideology()" (input)="ideology.set($any($event.target).value)" placeholder="e.g. Green politics" />
             </label>
           </div>
-          <ui-button [label]="'button.create-party' | translate: 'Create party'" icon="check" variant="filled" type="submit" />
+          <div class="platform__row">
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'field.handle' | translate: 'Handle' }}</span>
+              <input type="text" [value]="handle()" (input)="handle.set($any($event.target).value)" placeholder="greenfuture" />
+            </label>
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'field.email' | translate: 'Email' }}</span>
+              <input type="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="party@example.org" />
+            </label>
+          </div>
+          <div class="platform__row">
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'field.password' | translate: 'Password' }}</span>
+              <input type="password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="Min. 8 characters" />
+            </label>
+            <label class="platform__field platform__field--grow">
+              <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>
+              <input type="text" [value]="documentNumber()" (input)="documentNumber.set($any($event.target).value)" placeholder="00000000000000" />
+            </label>
+          </div>
+          @if (createError()) {
+            <p class="platform__form-error">{{ createError() }}</p>
+          }
+          <ui-button
+            [label]="(createSubmitting() ? 'button.saving' : 'button.create-party') | translate: (createSubmitting() ? 'Saving…' : 'Create party')"
+            icon="check"
+            variant="filled"
+            type="submit"
+            [disabled]="createSubmitting()"
+          />
         </form>
       }
 

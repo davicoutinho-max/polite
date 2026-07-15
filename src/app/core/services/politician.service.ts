@@ -1,51 +1,213 @@
-import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { Observable, forkJoin, map, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import {
   CareerMilestone,
+  Mandate,
   ParliamentaryActivity,
   Politician,
   ProfileTab,
+  SocialLink,
+  StatusTag,
+  TeamMember,
   TransparencyReport,
 } from '../models';
+import { DirectoryService } from './directory.service';
 
-const AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCE0D7JPXs4LxauFS-kbprWYD0-f7RD4Ydp-sfmuPS7GeKrwOzmWLMcM8So2XYtuMo0XRoKB7SSJjtsNMISN-k8Ir3lE5sh4D9A0hBEaXTEfegcl9xBAvm-Y1HJ9KR2mu2-pRJFtTe_dLVXrLZL89YvJipXpEpEMc0Yaz6ZnDIWEpRJ8_Z4xKTl6HEZocsNuZlqHHzZi2Lnvz37jInV5Ae79N_XeulYJMqQw8VN7FXRSeKD4Uvd5UoSaA';
+const FALLBACK_AVATAR =
+  'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 40 40\'%3E%3Crect width=\'40\' height=\'40\' fill=\'%23c7ccd1\'/%3E%3Ccircle cx=\'20\' cy=\'15\' r=\'7\' fill=\'%23fff\'/%3E%3Cpath d=\'M6 38c0-8 6-13 14-13s14 5 14 13z\' fill=\'%23fff\'/%3E%3C/svg%3E';
 
+const PLATFORM_ICONS: Record<string, string> = {
+  website: 'public',
+  instagram: 'photo_camera',
+  x: 'flutter_dash',
+  facebook: 'thumb_up',
+  youtube: 'smart_display',
+  linkedin: 'work',
+  tiktok: 'music_note',
+};
+
+export const STATUS_TAGS: Record<string, StatusTag> = {
+  filed: { label: 'Filed', severity: 'neutral' },
+  in_committee: { label: 'In Committee', severity: 'warning' },
+  floor_vote: { label: 'Floor Vote', severity: 'info' },
+  passed: { label: 'Approved', severity: 'success' },
+  rejected: { label: 'Rejected', severity: 'danger' },
+};
+
+export const STATUS_PROGRESS: Record<string, number> = {
+  filed: 25,
+  in_committee: 50,
+  floor_vote: 75,
+  passed: 100,
+  rejected: 100,
+};
+
+/** Formats an integer cents amount as a Brazilian-locale currency string, e.g. "R$ 41.650". */
+export function formatCents(cents: number): string {
+  return `R$ ${Math.round(cents / 100).toLocaleString('pt-BR')}`;
+}
+
+function firstYear(period: string): number | null {
+  const match = period.match(/\d{4}/);
+  return match ? Number(match[0]) : null;
+}
+
+const EMPTY_POLITICIAN: Politician = {
+  id: '',
+  name: '',
+  handle: '',
+  avatarUrl: FALLBACK_AVATAR,
+  verified: false,
+  party: 'Independent',
+  partyId: '',
+  position: '',
+  servingSince: new Date().getFullYear(),
+  coverUrl: FALLBACK_AVATAR,
+  education: '',
+  profession: '',
+  patrimony: '',
+  email: '',
+  phone: '',
+  office: '',
+  mandates: [],
+  socialLinks: [],
+  team: [],
+};
+
+const EMPTY_ACTIVITY: ParliamentaryActivity = {
+  projects: [],
+  approvedLaws: [],
+  rejectedLaws: [],
+  pecs: [],
+  cpis: [],
+  committees: [],
+  votes: [],
+  attendance: { present: 0, absent: 0, presenceRate: 0 },
+  speeches: 0,
+  interviews: 0,
+  trips: 0,
+};
+
+const EMPTY_TRANSPARENCY: TransparencyReport = {
+  metrics: [],
+  expenses: [],
+  totalExpense: 'R$ 0',
+  lastUpdate: '',
+};
+
+interface DossierResponseDto {
+  readonly education: string | null;
+  readonly profession: string | null;
+  readonly patrimony: string | null;
+  readonly email: string | null;
+  readonly phone: string | null;
+  readonly officeDetail: string | null;
+  readonly speechesCount: number;
+  readonly interviewsCount: number;
+  readonly tripsCount: number;
+}
+
+interface MandateResponseDto {
+  readonly role: string;
+  readonly period: string;
+  readonly current: boolean;
+}
+
+interface SocialLinkResponseDto {
+  readonly platform: string;
+  readonly label: string;
+  readonly handle: string;
+  readonly url: string;
+}
+
+interface TeamMemberResponseDto {
+  readonly name: string;
+  readonly role: string;
+  readonly avatarUrl: string | null;
+}
+
+interface LegislativeItemResponseDto {
+  readonly id: string;
+  readonly reference: string;
+  readonly title: string;
+  readonly summary: string | null;
+  readonly category: string;
+  readonly status: string;
+  readonly itemDate: string;
+  readonly cosponsorAccountIds: string[];
+}
+
+interface CommitteeMembershipResponseDto {
+  readonly name: string;
+  readonly role: string;
+  readonly kind: 'committee' | 'front' | 'cpi';
+}
+
+interface VoteRecordResponseDto {
+  readonly id: string;
+  readonly matter: string;
+  readonly voteDate: string;
+  readonly choice: 'yes' | 'no' | 'abstain' | 'absent';
+}
+
+interface AttendanceResponseDto {
+  readonly present: number;
+  readonly absent: number;
+  readonly presenceRate: number;
+}
+
+interface TransparencyMetricResponseDto {
+  readonly icon: string | null;
+  readonly label: string;
+  readonly valueCents: number;
+  readonly caption: string | null;
+  readonly period: string;
+}
+
+interface ExpenseLineResponseDto {
+  readonly category: string;
+  readonly amountCents: number;
+  readonly sharePercent: number;
+}
+
+interface TransparencyResponseDto {
+  readonly totalExpenseCents: number;
+  readonly lastUpdate: string;
+  readonly metrics: TransparencyMetricResponseDto[];
+  readonly expenseLines: ExpenseLineResponseDto[];
+}
+
+interface CareerMilestoneResponseDto {
+  readonly year: number;
+  readonly title: string;
+  readonly detail: string | null;
+}
+
+/**
+ * A politician's full dossier: basic identity fields come from directory-service (already
+ * loaded by DirectoryService), everything else — dossier, mandates, social links, team,
+ * legislative activity, transparency, career — comes from legislative-service, joined
+ * client-side per {@link load}.
+ */
 @Injectable({ providedIn: 'root' })
 export class PoliticianService {
-  readonly politician = signal<Politician>({
-    id: 'jane-doe',
-    name: 'Jane Doe',
-    handle: '@janedoe',
-    verified: true,
-    party: 'Progressive Party',
-    partyId: 'progressive',
-    position: 'Federal Deputy, 4th District',
-    servingSince: 2018,
-    role: 'Federal Deputy, 4th District',
-    avatarUrl: AVATAR,
-    coverUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBfLxYlq8drGMj6_MPWgFtzX7vBUdily37sBqP2qqDgu6Pr4snpjPwswLUuRi551U0HSSeo-ATVCth_kekH52TSm63uIHxtXhYT7DKWwah7JKJdtNm87kTmzW-PkNjenweQVV7ArrkSGdD65jKJziFdFB8A0egariUvsXLjqr56Bv0nJnp2fxm29q89UChlOGvGWHP3_RXCyqhOKrgwXMNtBgKLzVVAMZBz0JEIdys087x9l4pwXTYjxQ',
-    education: 'Master in Public Administration — State University',
-    profession: 'Lawyer',
-    patrimony: 'R$ 1.240.000,00',
-    email: 'jane.doe@parliament.gov',
-    phone: '+55 (61) 3215-0400',
-    office: 'Office 402, Main Legislative Building',
-    mandates: [
-      { role: 'City Councilor', period: '2018 – 2020' },
-      { role: 'Federal Deputy — 1st term', period: '2022 – 2026', current: true },
-    ],
-    socialLinks: [
-      { icon: 'public', label: 'Website', handle: 'janedoe.gov', url: '#' },
-      { icon: 'photo_camera', label: 'Instagram', handle: '@janedoe', url: '#' },
-      { icon: 'flutter_dash', label: 'X / Twitter', handle: '@janedoe', url: '#' },
-    ],
-    team: [
-      { name: 'Carlos Nunes', role: 'Chief of Staff', avatarUrl: AVATAR },
-      { name: 'Marina Alves', role: 'Legislative Advisor', avatarUrl: AVATAR },
-      { name: 'Paulo Reis', role: 'Communications', avatarUrl: AVATAR },
-    ],
-  }).asReadonly();
+  private readonly http = inject(HttpClient);
+  private readonly directory = inject(DirectoryService);
+  private readonly apiBase = `${environment.apiBaseUrl}/api/legislative`;
+
+  private readonly _politician = signal<Politician>(EMPTY_POLITICIAN);
+  readonly politician = this._politician.asReadonly();
+
+  private readonly _activity = signal<ParliamentaryActivity>(EMPTY_ACTIVITY);
+  readonly activity = this._activity.asReadonly();
+
+  private readonly _transparency = signal<TransparencyReport>(EMPTY_TRANSPARENCY);
+  readonly transparency = this._transparency.asReadonly();
+
+  private readonly _career = signal<CareerMilestone[]>([]);
+  readonly career = this._career.asReadonly();
 
   readonly tabs = signal<ProfileTab[]>([
     { id: 'activity', label: 'Activity', key: 'tab.activity', icon: 'forum' },
@@ -55,108 +217,114 @@ export class PoliticianService {
     { id: 'timeline', label: 'Career Timeline', key: 'tab.career-timeline', icon: 'timeline' },
   ]).asReadonly();
 
-  readonly activity = signal<ParliamentaryActivity>({
-    projects: [
-      {
-        id: 'proj-1',
-        reference: 'PL 452/2024',
-        title: 'Clean Water Infrastructure Act',
-        summary: 'Modernizes municipal water treatment and phases out lead piping over a decade.',
-        status: { label: 'In Committee', severity: 'warning' },
-        date: 'Mar 2024',
-      },
-      {
-        id: 'proj-2',
-        reference: 'PL 118/2023',
-        title: 'Open Municipal Budget Ledger',
-        summary: 'Requires a public digital ledger for every public expense above R$ 10,000.',
-        status: { label: 'Active', severity: 'secondary' },
-        date: 'Nov 2023',
-      },
-    ],
-    approvedLaws: [
-      {
-        id: 'law-1',
-        reference: 'Lei 14.220/2023',
-        title: 'Public Transit Expansion',
-        summary: 'Funds three new transit lines and accessible stations across every district.',
-        status: { label: 'Approved', severity: 'success' },
-        date: 'Aug 2023',
-      },
-    ],
-    rejectedLaws: [
-      {
-        id: 'rej-1',
-        reference: 'PL 87/2022',
-        title: 'Urban Housing Development Act',
-        summary: 'Housing incentive program that did not clear the final vote.',
-        status: { label: 'Rejected', severity: 'danger' },
-        date: 'Jun 2022',
-      },
-    ],
-    pecs: [
-      {
-        id: 'pec-1',
-        reference: 'PEC 33/2024',
-        title: 'Fiscal Transparency Amendment',
-        summary: 'Constitutional guarantee of open access to public spending data.',
-        status: { label: 'Under Review', severity: 'warning' },
-        date: 'Feb 2024',
-      },
-    ],
-    cpis: [
-      {
-        id: 'cpi-1',
-        reference: 'CPI 05/2023',
-        title: 'Public Contracts Inquiry',
-        summary: 'Investigation into procurement of municipal infrastructure contracts.',
-        status: { label: 'Ongoing', severity: 'info' },
-        date: '2023',
-      },
-    ],
-    committees: [
-      { name: 'Finance & Taxation', role: 'President', kind: 'committee' },
-      { name: 'Constitution & Justice', role: 'Member', kind: 'committee' },
-      { name: 'Digital Transparency Front', role: 'Coordinator', kind: 'front' },
-      { name: 'Public Contracts Inquiry', role: 'Member', kind: 'cpi' },
-    ],
-    votes: [
-      { id: 'v1', matter: 'PEC 33/2024 — Fiscal Transparency', date: 'Today', vote: 'yes' },
-      { id: 'v2', matter: 'PL 452/2024 — Clean Water', date: '2 days ago', vote: 'yes' },
-      { id: 'v3', matter: 'PL 90/2024 — Tax Reform', date: 'Last week', vote: 'no' },
-      { id: 'v4', matter: 'MP 1.180 — Budget Adjustment', date: 'Last week', vote: 'abstain' },
-    ],
-    attendance: { present: 182, absent: 12, presenceRate: 94 },
-    speeches: 47,
-    interviews: 23,
-    trips: 9,
-  }).asReadonly();
+  /** Loads everything shown on a politician's profile page for the given account id. */
+  load(accountId: string): Observable<Politician> {
+    return forkJoin({
+      directoryEntry: this.directory.getPolitician(accountId),
+      dossier: this.http.get<DossierResponseDto>(`${this.apiBase}/politicians/${accountId}/dossier`),
+      mandates: this.http.get<MandateResponseDto[]>(`${this.apiBase}/politicians/${accountId}/mandates`),
+      socialLinks: this.http.get<SocialLinkResponseDto[]>(`${this.apiBase}/politicians/${accountId}/social-links`),
+      team: this.http.get<TeamMemberResponseDto[]>(`${this.apiBase}/politicians/${accountId}/team`),
+    }).pipe(
+      map(({ directoryEntry, dossier, mandates, socialLinks, team }): Politician => {
+        const mappedMandates: Mandate[] = mandates.map((m) => ({ role: m.role, period: m.period, current: m.current }));
+        const servingSince = mappedMandates
+          .map((m) => firstYear(m.period))
+          .filter((year): year is number => year !== null)
+          .reduce((min, year) => Math.min(min, year), new Date().getFullYear());
+        const party = this.directory.parties().find((p) => p.id === directoryEntry.partyId);
 
-  readonly transparency = signal<TransparencyReport>({
-    metrics: [
-      { id: 'm1', icon: 'payments', label: 'Salary', value: 'R$ 41.650', caption: 'Gross monthly', period: 'Jul 2026' },
-      { id: 'm2', icon: 'account_balance_wallet', label: 'Parliamentary Fund', value: 'R$ 45.612', caption: 'Monthly cap', period: 'Jul 2026' },
-      { id: 'm3', icon: 'redeem', label: 'Amendments', value: 'R$ 15.8M', caption: 'Allocated this term', period: '2022–2026' },
-      { id: 'm4', icon: 'flight', label: 'Flights', value: 'R$ 12.340', caption: 'Official trips', period: 'Q2 2026' },
-      { id: 'm5', icon: 'hotel', label: 'Per diems', value: 'R$ 8.900', caption: 'Reimbursed', period: 'Q2 2026' },
-      { id: 'm6', icon: 'groups', label: 'Staff', value: '14', caption: 'Advisors on payroll', period: 'Current' },
-    ],
-    expenses: [
-      { category: 'Office & structure', amount: 18400, share: 100 },
-      { category: 'Travel & lodging', amount: 12340, share: 67 },
-      { category: 'Communications', amount: 9800, share: 53 },
-      { category: 'Fuel & transport', amount: 6200, share: 34 },
-      { category: 'Consulting', amount: 4100, share: 22 },
-    ],
-    totalExpense: 'R$ 50.840',
-    lastUpdate: 'Updated Jul 5, 2026',
-  }).asReadonly();
+        return {
+          id: directoryEntry.id,
+          name: directoryEntry.name,
+          handle: directoryEntry.handle,
+          avatarUrl: directoryEntry.avatarUrl || FALLBACK_AVATAR,
+          verified: directoryEntry.verified,
+          role: directoryEntry.office,
+          party: party?.name ?? directoryEntry.partyAcronym ?? 'Independent',
+          partyId: directoryEntry.partyId || '',
+          position: directoryEntry.office,
+          servingSince,
+          coverUrl: directoryEntry.avatarUrl || FALLBACK_AVATAR,
+          education: dossier.education ?? '',
+          profession: dossier.profession ?? '',
+          patrimony: dossier.patrimony ?? '',
+          email: dossier.email ?? '',
+          phone: dossier.phone ?? '',
+          office: dossier.officeDetail ?? '',
+          mandates: mappedMandates,
+          socialLinks: socialLinks.map(
+            (s): SocialLink => ({ icon: PLATFORM_ICONS[s.platform] ?? 'link', label: s.label, handle: s.handle, url: s.url }),
+          ),
+          team: team.map((t): TeamMember => ({ name: t.name, role: t.role, avatarUrl: t.avatarUrl || FALLBACK_AVATAR })),
+        };
+      }),
+      tap((politician) => this._politician.set(politician)),
+    );
+  }
 
-  readonly career = signal<CareerMilestone[]>([
-    { year: 2018, title: 'Elected City Councilor', detail: 'First public mandate, 4th District.' },
-    { year: 2020, title: 'Changed party', detail: 'Joined the Progressive Party.' },
-    { year: 2022, title: 'Elected Federal Deputy', detail: '112,000 votes.' },
-    { year: 2023, title: 'Authored 18 bills', detail: 'Focus on transparency and infrastructure.' },
-    { year: 2025, title: 'Committee President', detail: 'Finance & Taxation Committee.' },
-  ]).asReadonly();
+  loadActivity(accountId: string): Observable<ParliamentaryActivity> {
+    return forkJoin({
+      items: this.http.get<LegislativeItemResponseDto[]>(`${this.apiBase}/legislative-items`, { params: { politicianAccountId: accountId } }),
+      committees: this.http.get<CommitteeMembershipResponseDto[]>(`${this.apiBase}/politicians/${accountId}/committees`),
+      votes: this.http.get<VoteRecordResponseDto[]>(`${this.apiBase}/politicians/${accountId}/votes`),
+      attendance: this.http.get<AttendanceResponseDto>(`${this.apiBase}/politicians/${accountId}/attendance`),
+      dossier: this.http.get<DossierResponseDto>(`${this.apiBase}/politicians/${accountId}/dossier`),
+    }).pipe(
+      map(({ items, committees, votes, attendance, dossier }): ParliamentaryActivity => {
+        const toItem = (i: LegislativeItemResponseDto) => ({
+          id: i.id,
+          reference: i.reference,
+          title: i.title,
+          summary: i.summary ?? '',
+          status: STATUS_TAGS[i.status] ?? { label: i.status, severity: 'neutral' as const },
+          date: i.itemDate,
+        });
+        const projectItems = items.filter((i) => i.category === 'project');
+        return {
+          projects: projectItems.filter((i) => i.status !== 'passed' && i.status !== 'rejected').map(toItem),
+          approvedLaws: projectItems.filter((i) => i.status === 'passed').map(toItem),
+          rejectedLaws: items.filter((i) => i.status === 'rejected').map(toItem),
+          pecs: items.filter((i) => i.category === 'pec').map(toItem),
+          cpis: items.filter((i) => i.category === 'cpi').map(toItem),
+          committees: committees.map((c) => ({ name: c.name, role: c.role, kind: c.kind })),
+          votes: votes.map((v) => ({ id: v.id, matter: v.matter, date: v.voteDate, vote: v.choice })),
+          attendance: { present: attendance.present, absent: attendance.absent, presenceRate: Math.round(attendance.presenceRate) },
+          speeches: dossier.speechesCount,
+          interviews: dossier.interviewsCount,
+          trips: dossier.tripsCount,
+        };
+      }),
+      tap((activity) => this._activity.set(activity)),
+    );
+  }
+
+  loadTransparency(accountId: string): Observable<TransparencyReport> {
+    return this.http.get<TransparencyResponseDto>(`${this.apiBase}/politicians/${accountId}/transparency`).pipe(
+      map(
+        (r): TransparencyReport => ({
+          metrics: r.metrics.map((m) => ({
+            id: m.label,
+            icon: m.icon ?? 'info',
+            label: m.label,
+            value: formatCents(m.valueCents),
+            caption: m.caption ?? '',
+            period: m.period,
+          })),
+          expenses: r.expenseLines.map((e) => ({ category: e.category, amount: Math.round(e.amountCents / 100), share: Math.round(e.sharePercent) })),
+          totalExpense: formatCents(r.totalExpenseCents),
+          lastUpdate: r.lastUpdate ? `Updated ${r.lastUpdate}` : '',
+        }),
+      ),
+      tap((transparency) => this._transparency.set(transparency)),
+    );
+  }
+
+  loadCareer(accountId: string): Observable<CareerMilestone[]> {
+    return this.http.get<CareerMilestoneResponseDto[]>(`${this.apiBase}/politicians/${accountId}/career`).pipe(
+      map((list) => list.map((m) => ({ year: m.year, title: m.title, detail: m.detail ?? '' }))),
+      tap((career) => this._career.set(career)),
+    );
+  }
+
 }
