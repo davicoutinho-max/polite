@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { PoliticianService } from '../../core/services/politician.service';
 import { FeedService } from '../../core/services/feed.service';
 import { SessionService } from '../../core/services/session.service';
-import { CommentEvent } from '../feed/components/post-card/post-card';
+import { DirectoryService } from '../../core/services/directory.service';
+import { MessagesService } from '../../core/services/messages.service';
+import { CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { PostCard } from '../feed/components/post-card/post-card';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { ProfileHeader } from './components/profile-header/profile-header';
@@ -39,6 +41,9 @@ export class Profile {
   private readonly feedService = inject(FeedService);
   private readonly session = inject(SessionService);
   private readonly route = inject(ActivatedRoute);
+  private readonly directory = inject(DirectoryService);
+  private readonly messages = inject(MessagesService);
+  private readonly router = inject(Router);
 
   protected readonly politician = this.politicianService.politician;
   protected readonly tabs = this.politicianService.tabs;
@@ -48,6 +53,8 @@ export class Profile {
 
   protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.politician().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
+  protected readonly canFollow = computed(() => this.session.can('follow'));
+  protected readonly isFollowing = computed(() => this.directory.isFollowing('politician', this.politician().id));
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
 
   protected readonly activeTab = signal('activity');
@@ -78,5 +85,25 @@ export class Profile {
 
   protected onComment(event: CommentEvent): void {
     this.feedService.addComment(event.postId, event.text);
+  }
+
+  protected onVote(event: VoteEvent): void {
+    this.feedService.vote(event.postId, event.optionId);
+  }
+
+  protected onDelete(postId: string): void {
+    this.feedService.deletePost(postId).subscribe({ error: () => undefined });
+  }
+
+  protected onToggleFollow(): void {
+    const action$ = this.isFollowing()
+      ? this.directory.unfollow('politician', this.politician().id)
+      : this.directory.follow('politician', this.politician().id);
+    action$.subscribe({ error: () => undefined });
+  }
+
+  protected onContact(): void {
+    this.messages.createConversation([this.politician()]);
+    this.router.navigate(['/messages']);
   }
 }

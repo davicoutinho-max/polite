@@ -56,6 +56,11 @@ EOSQL
   if [ -f "$schema_file" ]; then
     echo ">>> [$service_id] applying $schema_file"
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$db_name" -f "$schema_file"
+    # schema.sql runs as $POSTGRES_USER, so every object it creates is owned by that superuser —
+    # GRANT alone covers DML (SELECT/INSERT/UPDATE/DELETE) but not DDL (ALTER TABLE), which
+    # Postgres restricts to the object's owner. Reassign ownership to the service's own role so its
+    # future Flyway migrations can alter tables schema.sql already created, not just add new ones.
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$db_name" -c "REASSIGN OWNED BY ${POSTGRES_USER} TO ${role_name};"
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$db_name" -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${role_name};"
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$db_name" -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${role_name};"
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d "$db_name" -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${role_name};"

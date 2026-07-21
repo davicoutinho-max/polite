@@ -11,11 +11,11 @@
     <form class="auth__form" (submit)="submit(); $event.preventDefault()">
       <label class="auth__field">
         <span>{{ 'field.email' | translate: 'Email' }}</span>
-        <input type="email" autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+        <input pInputText type="email" required autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
       </label>
       <label class="auth__field">
         <span>{{ 'field.password' | translate: 'Password' }}</span>
-        <input type="password" autocomplete="current-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+        <input pInputText type="password" required autocomplete="current-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
       </label>
 
       @if (error()) {

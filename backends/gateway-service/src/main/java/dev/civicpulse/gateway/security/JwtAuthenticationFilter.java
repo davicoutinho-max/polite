@@ -67,9 +67,15 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
           headers.remove(ACCOUNT_PERMISSIONS_HEADER);
         });
 
-    String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-    if (authHeader != null && authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
-      String token = authHeader.substring(7).trim();
+    String token = bearerToken(request);
+    if (token == null && isWebSocketHandshake(path)) {
+      // Native browser WebSocket clients cannot set custom headers on the handshake request —
+      // the STOMP client falls back to a `token` query parameter for this one path only, so this
+      // fallback doesn't widen the attack surface (query params linger in access logs) for every
+      // other endpoint.
+      token = request.getQueryParams().getFirst("token");
+    }
+    if (token != null) {
       AccountClaims claims;
       try {
         claims = jwtValidator.validate(token);
@@ -88,6 +94,18 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
   private static boolean isAlwaysPublic(String path) {
     return path.startsWith("/api/identity/auth/") || path.equals("/api/identity/accounts/register");
+  }
+
+  private static boolean isWebSocketHandshake(String path) {
+    return path.equals("/api/messaging/ws") || path.startsWith("/api/messaging/ws/");
+  }
+
+  private static String bearerToken(ServerHttpRequest request) {
+    String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+    if (authHeader != null && authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
+      return authHeader.substring(7).trim();
+    }
+    return null;
   }
 
   private static Mono<Void> unauthorized(ServerWebExchange exchange, String message) {

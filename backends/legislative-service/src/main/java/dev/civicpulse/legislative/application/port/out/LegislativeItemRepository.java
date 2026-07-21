@@ -14,4 +14,6 @@ public interface LegislativeItemRepository {
   List<LegislativeItem> findByPolitician(UUID politicianAccountId);
 
   List<LegislativeItem> findRecent(int limit);
+
+  void deleteById(UUID id);
 }

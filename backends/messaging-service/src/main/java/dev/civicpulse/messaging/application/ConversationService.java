@@ -5,8 +5,10 @@ import dev.civicpulse.messaging.application.port.in.ManageConversationUseCase;
 import dev.civicpulse.messaging.application.port.out.ConversationParticipantRepository;
 import dev.civicpulse.messaging.application.port.out.ConversationRepository;
 import dev.civicpulse.messaging.application.port.out.EventPublisher;
+import dev.civicpulse.messaging.application.port.out.RealtimeMessagePublisher;
 import dev.civicpulse.messaging.domain.event.ConversationCreated;
 import dev.civicpulse.messaging.domain.exception.ConversationNotFoundException;
+import dev.civicpulse.messaging.domain.exception.NotAParticipantException;
 import dev.civicpulse.messaging.domain.model.Conversation;
 import dev.civicpulse.messaging.domain.model.ConversationParticipant;
 import java.time.Clock;
@@ -22,16 +24,19 @@ public class ConversationService implements ManageConversationUseCase, GetConver
   private final ConversationRepository conversationRepository;
   private final ConversationParticipantRepository conversationParticipantRepository;
   private final EventPublisher eventPublisher;
+  private final RealtimeMessagePublisher realtimePublisher;
   private final Clock clock;
 
   public ConversationService(
       ConversationRepository conversationRepository,
       ConversationParticipantRepository conversationParticipantRepository,
       EventPublisher eventPublisher,
+      RealtimeMessagePublisher realtimePublisher,
       Clock clock) {
     this.conversationRepository = conversationRepository;
     this.conversationParticipantRepository = conversationParticipantRepository;
     this.eventPublisher = eventPublisher;
+    this.realtimePublisher = realtimePublisher;
     this.clock = clock;
   }
 
@@ -73,8 +78,34 @@ public class ConversationService implements ManageConversationUseCase, GetConver
             .filter(p -> p.accountId().equals(accountId))
             .findFirst()
             .orElseThrow(() -> new ConversationNotFoundException(conversationId));
-    participant.markRead(clock.instant());
+    Instant now = clock.instant();
+    participant.markRead(now);
     conversationParticipantRepository.save(participant);
+    realtimePublisher.conversationRead(conversationId, accountId, now);
+  }
+
+  @Override
+  @Transactional
+  public Conversation renameGroup(UUID conversationId, UUID requesterAccountId, String newName) {
+    Conversation conversation = requireParticipant(conversationId, requesterAccountId);
+    conversation.rename(newName);
+    return conversationRepository.save(conversation);
+  }
+
+  @Override
+  @Transactional
+  public Conversation changeGroupAvatar(UUID conversationId, UUID requesterAccountId, String newAvatarUrl) {
+    Conversation conversation = requireParticipant(conversationId, requesterAccountId);
+    conversation.changeAvatar(newAvatarUrl);
+    return conversationRepository.save(conversation);
+  }
+
+  private Conversation requireParticipant(UUID conversationId, UUID accountId) {
+    Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new ConversationNotFoundException(conversationId));
+    if (!conversationParticipantRepository.exists(conversationId, accountId)) {
+      throw new NotAParticipantException();
+    }
+    return conversation;
   }
 
   @Override

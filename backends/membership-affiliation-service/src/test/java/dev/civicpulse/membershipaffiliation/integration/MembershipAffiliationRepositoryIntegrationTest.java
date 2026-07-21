@@ -43,6 +43,11 @@ class MembershipAffiliationRepositoryIntegrationTest {
   @Autowired private AffiliationRepository affiliationRepository;
   @Autowired private MembershipFeeRepository feeRepository;
 
+  // Every test below writes through the real JPA adapters into the shared local-dev Postgres —
+  // the same database the live membership-affiliation-service instance serves the real app from.
+  // Deleting the affiliation cascades to its membership_fees/affiliation_status_history rows
+  // (both ON DELETE CASCADE), so a single deleteById per test is enough cleanup.
+
   @Test
   void savesAndRetrievesAffiliationThroughAStatusTransition() {
     UUID id = UUID.randomUUID();
@@ -51,14 +56,18 @@ class MembershipAffiliationRepositoryIntegrationTest {
     Affiliation affiliation = Affiliation.request(id, citizenId, partyId, Instant.now());
     affiliationRepository.save(affiliation);
 
-    assertThat(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).isTrue();
+    try {
+      assertThat(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).isTrue();
 
-    Affiliation found = affiliationRepository.findById(id).orElseThrow();
-    found.startReview(Instant.now());
-    affiliationRepository.save(found);
+      Affiliation found = affiliationRepository.findById(id).orElseThrow();
+      found.startReview(Instant.now());
+      affiliationRepository.save(found);
 
-    Affiliation reloaded = affiliationRepository.findById(id).orElseThrow();
-    assertThat(reloaded.status().code()).isEqualTo("under_review");
+      Affiliation reloaded = affiliationRepository.findById(id).orElseThrow();
+      assertThat(reloaded.status().code()).isEqualTo("under_review");
+    } finally {
+      affiliationRepository.deleteById(id);
+    }
   }
 
   @Test
@@ -70,7 +79,11 @@ class MembershipAffiliationRepositoryIntegrationTest {
     affiliation.reject(Instant.now());
     affiliationRepository.save(affiliation);
 
-    assertThat(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).isFalse();
+    try {
+      assertThat(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).isFalse();
+    } finally {
+      affiliationRepository.deleteById(id);
+    }
   }
 
   @Test
@@ -83,6 +96,10 @@ class MembershipAffiliationRepositoryIntegrationTest {
 
     feeRepository.save(fee);
 
-    assertThat(feeRepository.findById(feeId)).isPresent().get().satisfies(found -> assertThat(found.amountCents()).isEqualTo(5000));
+    try {
+      assertThat(feeRepository.findById(feeId)).isPresent().get().satisfies(found -> assertThat(found.amountCents()).isEqualTo(5000));
+    } finally {
+      affiliationRepository.deleteById(affiliationId);
+    }
   }
 }

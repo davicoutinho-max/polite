@@ -45,25 +45,41 @@ class PartyManagementRepositoryIntegrationTest {
   @Autowired private PartyRepresentativeRepository representativeRepository;
   @Autowired private AffiliationRequestRepository requestRepository;
 
+  // Every test below writes through the real JPA adapters into the shared local-dev Postgres —
+  // the same database the live party-management-service instance serves the real app from.
+  // Random-UUID rows left behind here are exactly the kind of dangling reference (pointing at a
+  // politician/citizen account that was never actually created in identity-service) that later
+  // surfaces as a 404 in the real frontend when it tries to resolve that person's profile. Every
+  // test now deletes what it created.
+
   @Test
   void savesAndRetrievesPartyProfile() {
     UUID partyId = UUID.randomUUID();
     profileRepository.save(PartyProfile.createBlank(partyId, Instant.now()));
 
-    assertThat(profileRepository.findByPartyId(partyId)).isPresent().get().satisfies(profile -> assertThat(profile.history()).isEmpty());
+    try {
+      assertThat(profileRepository.findByPartyId(partyId)).isPresent().get().satisfies(profile -> assertThat(profile.history()).isEmpty());
+    } finally {
+      profileRepository.deleteByPartyId(partyId);
+    }
   }
 
   @Test
   void savesAndRetrievesRepresentative() {
     UUID partyId = UUID.randomUUID();
     UUID politicianId = UUID.randomUUID();
-    representativeRepository.save(PartyRepresentative.link(UUID.randomUUID(), partyId, politicianId, "Deputy", Instant.now()));
+    UUID representativeId = UUID.randomUUID();
+    representativeRepository.save(PartyRepresentative.link(representativeId, partyId, politicianId, "Deputy", Instant.now()));
 
-    assertThat(representativeRepository.existsByPartyIdAndPoliticianAccountId(partyId, politicianId)).isTrue();
-    assertThat(representativeRepository.findByPartyIdAndPoliticianAccountId(partyId, politicianId))
-        .isPresent()
-        .get()
-        .satisfies(rep -> assertThat(rep.roleTitle()).contains("Deputy"));
+    try {
+      assertThat(representativeRepository.existsByPartyIdAndPoliticianAccountId(partyId, politicianId)).isTrue();
+      assertThat(representativeRepository.findByPartyIdAndPoliticianAccountId(partyId, politicianId))
+          .isPresent()
+          .get()
+          .satisfies(rep -> assertThat(rep.roleTitle()).contains("Deputy"));
+    } finally {
+      representativeRepository.delete(representativeId);
+    }
   }
 
   @Test
@@ -73,10 +89,14 @@ class PartyManagementRepositoryIntegrationTest {
     UUID citizenId = UUID.randomUUID();
     requestRepository.save(AffiliationRequest.create(requestId, partyId, citizenId, "São Paulo", Instant.now()));
 
-    AffiliationRequest found = requestRepository.findById(requestId).orElseThrow();
-    found.approve(Instant.now());
-    requestRepository.save(found);
+    try {
+      AffiliationRequest found = requestRepository.findById(requestId).orElseThrow();
+      found.approve(Instant.now());
+      requestRepository.save(found);
 
-    assertThat(requestRepository.findById(requestId)).isPresent().get().satisfies(req -> assertThat(req.decidedAt()).isPresent());
+      assertThat(requestRepository.findById(requestId)).isPresent().get().satisfies(req -> assertThat(req.decidedAt()).isPresent());
+    } finally {
+      requestRepository.deleteById(requestId);
+    }
   }
 }

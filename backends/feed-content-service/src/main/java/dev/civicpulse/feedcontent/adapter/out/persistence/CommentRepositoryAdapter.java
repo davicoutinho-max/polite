@@ -27,6 +27,11 @@ class CommentRepositoryAdapter implements CommentRepository {
     return jpaRepository.findByPostIdOrderByCreatedAtAsc(postId).stream().map(CommentRepositoryAdapter::toDomain).toList();
   }
 
+  @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteByPostId(postId);
+  }
+
   private static Comment toDomain(CommentJpaEntity entity) {
     return Comment.reconstitute(entity.getId(), entity.getPostId(), entity.getAuthorAccountId(), entity.getBody(), entity.getCreatedAt());
   }

@@ -27,6 +27,11 @@ class PostTagRepositoryAdapter implements PostTagRepository {
     return jpaRepository.findByPostId(postId).stream().map(PostTagRepositoryAdapter::toDomain).toList();
   }
 
+  @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteByPostId(postId);
+  }
+
   private static PostTag toDomain(PostTagJpaEntity entity) {
     return PostTag.reconstitute(entity.getId(), entity.getPostId(), entity.getLabel(), entity.getSeverity(), entity.getIcon());
   }

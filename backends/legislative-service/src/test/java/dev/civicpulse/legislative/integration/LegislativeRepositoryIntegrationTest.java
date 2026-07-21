@@ -53,10 +53,19 @@ class LegislativeRepositoryIntegrationTest {
     UUID politicianAccountId = UUID.randomUUID();
     dossierRepository.save(PoliticianDossierExtension.createStub(politicianAccountId, Instant.now()));
 
-    assertThat(dossierRepository.existsById(politicianAccountId)).isTrue();
-    assertThat(dossierRepository.findById(politicianAccountId)).isPresent().get().satisfies(d -> assertThat(d.speechesCount()).isZero());
+    try {
+      assertThat(dossierRepository.existsById(politicianAccountId)).isTrue();
+      assertThat(dossierRepository.findById(politicianAccountId)).isPresent().get().satisfies(d -> assertThat(d.speechesCount()).isZero());
+    } finally {
+      dossierRepository.deleteById(politicianAccountId);
+    }
   }
 
+  // These rows land in the shared local-dev Postgres, the same database the real
+  // legislative-service instance serves `GET /legislative-items?recent=true` from — leaving them
+  // behind means every test run injects another fake "PL 99/2026"/"Title" row that the real
+  // frontend's Relevant Bills widget then shows to the user. Delete in FK order (item, then the
+  // dossier stub it points at).
   @Test
   void savesAndRetrievesLegislativeItemWithCosponsors() {
     UUID politicianAccountId = UUID.randomUUID();
@@ -68,8 +77,13 @@ class LegislativeRepositoryIntegrationTest {
             LegislativeItem.file(
                 politicianAccountId, "PL 99/2026", "Title", "Summary", LegislativeItemCategory.PROJECT, LocalDate.now(), Set.of(cosponsor), Instant.now()));
 
-    LegislativeItem found = itemRepository.findById(saved.id().orElseThrow()).orElseThrow();
-    assertThat(found.cosponsorAccountIds()).containsExactly(cosponsor);
+    try {
+      LegislativeItem found = itemRepository.findById(saved.id().orElseThrow()).orElseThrow();
+      assertThat(found.cosponsorAccountIds()).containsExactly(cosponsor);
+    } finally {
+      itemRepository.deleteById(saved.id().orElseThrow());
+      dossierRepository.deleteById(politicianAccountId);
+    }
   }
 
   @Test
@@ -81,6 +95,11 @@ class LegislativeRepositoryIntegrationTest {
     record.recordPresence(true, Instant.now());
     attendanceRepository.save(record);
 
-    assertThat(attendanceRepository.findById(politicianAccountId)).isPresent().get().satisfies(r -> assertThat(r.present()).isEqualTo(1));
+    try {
+      assertThat(attendanceRepository.findById(politicianAccountId)).isPresent().get().satisfies(r -> assertThat(r.present()).isEqualTo(1));
+    } finally {
+      attendanceRepository.deleteById(politicianAccountId);
+      dossierRepository.deleteById(politicianAccountId);
+    }
   }
 }

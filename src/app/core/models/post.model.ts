@@ -34,6 +34,18 @@ export interface PostLive {
   readonly scheduledFor?: string;
 }
 
+export interface PostPollOption {
+  readonly id: string;
+  readonly label: string;
+  readonly votes: number;
+}
+
+export interface PostPoll {
+  readonly options: PostPollOption[];
+  /** The signed-in account's own vote, if any — undefined for visitors or accounts that haven't voted. */
+  readonly myVoteOptionId?: string;
+}
+
 export interface Post {
   readonly id: string;
   readonly author: UserSummary;
@@ -43,12 +55,17 @@ export interface Post {
   readonly tags: StatusTag[];
   readonly kind?: PostKind;
   readonly imageUrl?: string;
+  /** A generic file attachment (pdf, doc, etc.), alongside/instead of an image. */
+  readonly fileUrl?: string;
+  readonly fileName?: string;
   /** Optional embedded YouTube video (on-demand clip). */
   readonly videoId?: string;
   /** Present iff kind === 'agenda'. */
   readonly agenda?: PostAgenda;
   /** Present iff kind === 'live'. */
   readonly live?: PostLive;
+  /** Present iff the post carries a poll (2+ options) — the post's own content is the question. */
+  readonly poll?: PostPoll;
   /** Whether the post is visible to everyone or kept private. */
   readonly visibility: PostVisibility;
   metrics: PostMetrics;
@@ -64,4 +81,8 @@ export interface PostDraft {
   readonly visibility: PostVisibility;
   readonly agenda?: { title: string; date: string; location: string };
   readonly live?: { videoId: string; channelId: string; isLiveNow: boolean; scheduledFor: string };
+  readonly imageFile?: File;
+  readonly attachedFile?: File;
+  /** 2+ entries attaches a poll to the post; fewer is ignored. */
+  readonly pollOptions?: string[];
 }

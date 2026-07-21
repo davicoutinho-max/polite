@@ -20,27 +20,6 @@
         </div>
       </header>
 
-      <div class="acct__section">
-        <span class="acct__section-label">{{ 'account.testing-as' | translate: 'Testing as (MVP)' }}</span>
-        @for (option of typeOptions; track option.type) {
-          <button
-            type="button"
-            class="acct__role-option"
-            [class.acct__role-option--active]="type() === option.type"
-            (click)="selectType(option.type)"
-          >
-            <span class="acct__role-icon"><ui-icon [name]="option.icon" [size]="18" /></span>
-            <span class="acct__role-text">
-              <span class="acct__role-name">{{ ('account.type.' + option.type) | translate: option.label }}</span>
-              <span class="acct__role-desc">{{ option.description }}</span>
-            </span>
-            @if (type() === option.type) {
-              <ui-icon name="check" [size]="18" />
-            }
-          </button>
-        }
-      </div>
-
       <div class="acct__links">
         @if (isAuthenticated()) {
           @if (canFollow()) {

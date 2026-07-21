@@ -3,8 +3,11 @@
 .messages {
   display: grid;
   grid-template-columns: 1fr;
-  /* Desktop: content area equals the viewport height. */
-  height: 100dvh;
+  /* Desktop: full viewport height minus the top app bar (64px) the shell already renders above
+     this page — using 100dvh here (the full viewport) instead overflowed the shell's content
+     area by exactly that 64px, so the composer at the bottom of the thread sat just past the
+     fold and the *page* scrolled to reach it instead of just the thread body. */
+  height: calc(100dvh - 64px);
   min-height: 0;
 }
 
@@ -60,7 +63,15 @@
 }
 
 /* ---- Thread ---- */
-.thread { display: flex; flex-direction: column; min-height: 0; background: var(--cp-surface); }
+.thread {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--cp-surface);
+
+  // When empty (no conversation selected), ui-empty is the thread's only child — center it.
+  &:has(> ui-empty) { align-items: center; justify-content: center; }
+}
 .thread__head {
   display: flex; align-items: center; gap: var(--cp-space-md);
   padding: var(--cp-space-md) var(--cp-space-lg);
@@ -71,10 +82,35 @@
   color: var(--cp-on-surface-variant); border-radius: var(--cp-radius-full);
 }
 .thread__back:hover { background: var(--cp-surface-container-high); }
-.thread__peer { display: flex; flex-direction: column; }
+.thread__peer { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .thread__name { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--cp-on-surface); }
 .thread__name > ui-icon { color: var(--cp-secondary); }
 .thread__role { font-size: 12px; color: var(--cp-on-surface-variant); }
+.thread__role--typing { color: var(--cp-primary); font-style: italic; }
+
+/* ---- Group rename (replaces .thread__peer while active) ---- */
+.thread__rename {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--cp-space-xs);
+
+  input { flex: 1; min-width: 0; }
+}
+
+/* ---- Group options (3-dot) menu ---- */
+.thread__menu { position: relative; flex-shrink: 0; }
+.thread__menu-backdrop { position: fixed; inset: 0; z-index: 10; }
+.thread__menu-panel {
+  position: absolute; top: 100%; right: 0; z-index: 11;
+  min-width: 200px; margin-top: var(--cp-space-xs); padding: var(--cp-space-xs);
+  border-radius: var(--cp-radius-lg); border: 1px solid var(--cp-outline-variant);
+  background: var(--cp-surface-container-lowest); box-shadow: var(--cp-shadow-card);
+}
+.thread__menu-item {
+  display: flex; align-items: center; gap: var(--cp-space-sm); width: 100%;
+  padding: var(--cp-space-sm); border: none; background: transparent; border-radius: var(--cp-radius);
+  font: inherit; font-size: 14px; color: var(--cp-on-surface); cursor: pointer; text-align: left;
+}
+.thread__menu-item:hover { background: var(--cp-surface-container-low); }
+.thread__hidden-input { display: none; }
 
 .thread__body { flex: 1; overflow-y: auto; padding: var(--cp-space-lg); display: flex; flex-direction: column; gap: var(--cp-space-sm); }
 
@@ -89,20 +125,43 @@
   background: var(--cp-primary-container); color: var(--cp-on-primary);
   border-top-left-radius: var(--cp-radius-lg); border-top-right-radius: var(--cp-radius);
 }
-.bubble__time { font-size: 10px; color: var(--cp-on-surface-variant); margin-top: 2px; padding: 0 var(--cp-space-xs); }
-.bubble--me .bubble__time { text-align: right; }
+.bubble__text--deleted {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-style: italic; color: var(--cp-on-surface-variant); background: var(--cp-surface-container-low);
+}
+.bubble--me .bubble__text--deleted { background: var(--cp-surface-container-low); color: var(--cp-on-surface-variant); }
+
+.bubble__edit {
+  display: flex; align-items: center; gap: 4px;
+  input { min-width: 160px; }
+}
+
+.bubble__meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px; padding: 0 var(--cp-space-xs);
+}
+.bubble--me .bubble__meta { justify-content: flex-end; }
+.bubble__time { font-size: 10px; color: var(--cp-on-surface-variant); }
+.bubble__edited { font-size: 10px; font-style: italic; color: var(--cp-on-surface-variant); }
+.bubble__seen { font-size: 10px; color: var(--cp-primary); }
+.bubble__action {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; background: transparent; padding: 2px; cursor: pointer;
+  color: var(--cp-on-surface-variant); border-radius: var(--cp-radius-full);
+  opacity: 0; transition: opacity 0.15s ease, background 0.15s ease;
+}
+.bubble:hover .bubble__action { opacity: 1; }
+.bubble__action:hover { background: var(--cp-surface-container-high); color: var(--cp-on-surface); }
 
 .composer {
   display: flex; gap: var(--cp-space-sm); align-items: center;
   padding: var(--cp-space-md) var(--cp-space-lg);
   border-top: 1px solid var(--cp-outline-variant); background: var(--cp-surface-container-lowest);
 }
+// Renders via PrimeNG's pInputText directive — it brings its own theming, this just makes it
+// flex to fill the composer row like the send button next to it.
 .composer__input {
-  flex: 1; min-width: 0; border: 1px solid var(--cp-outline-variant); border-radius: var(--cp-radius-full);
-  padding: var(--cp-space-sm) var(--cp-space-lg); font-family: inherit; font-size: 14px;
-  background: var(--cp-surface); color: var(--cp-on-surface);
+  flex: 1; min-width: 0; border-radius: var(--cp-radius-full);
 }
-.composer__input:focus { outline: none; border-color: var(--cp-secondary); box-shadow: 0 0 0 1px var(--cp-secondary); }
 .composer__send {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border: none; border-radius: var(--cp-radius-full);

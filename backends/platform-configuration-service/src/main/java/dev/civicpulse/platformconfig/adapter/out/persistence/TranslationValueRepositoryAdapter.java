@@ -33,6 +33,16 @@ class TranslationValueRepositoryAdapter implements TranslationValueRepository {
     return jpaRepository.findByLanguageId(languageId).stream().map(TranslationValueRepositoryAdapter::toDomain).toList();
   }
 
+  @Override
+  public void deleteByTranslationKeyId(UUID translationKeyId) {
+    jpaRepository.deleteByTranslationKeyId(translationKeyId);
+  }
+
+  @Override
+  public void deleteByLanguageId(String languageId) {
+    jpaRepository.deleteByLanguageId(languageId);
+  }
+
   private static TranslationValue toDomain(TranslationValueJpaEntity entity) {
     return TranslationValue.reconstitute(entity.getTranslationKeyId(), entity.getLanguageId(), entity.getValue());
   }

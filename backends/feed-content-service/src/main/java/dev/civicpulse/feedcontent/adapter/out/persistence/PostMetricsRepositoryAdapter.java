@@ -28,6 +28,11 @@ class PostMetricsRepositoryAdapter implements PostMetricsRepository {
     return jpaRepository.findById(postId).map(PostMetricsRepositoryAdapter::toDomain);
   }
 
+  @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteById(postId);
+  }
+
   private static PostMetrics toDomain(PostMetricsJpaEntity entity) {
     return PostMetrics.reconstitute(entity.getPostId(), entity.getLikesCount(), entity.getCommentsCount(), entity.getSharesCount(), entity.getUpdatedAt());
   }

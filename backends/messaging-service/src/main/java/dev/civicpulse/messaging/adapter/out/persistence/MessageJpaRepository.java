@@ -6,9 +6,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 interface MessageJpaRepository extends JpaRepository<MessageJpaEntity, UUID> {
 
   @Query("select m from MessageJpaEntity m where m.conversationId = :conversationId order by m.createdAt asc")
   List<MessageJpaEntity> findByConversationId(@Param("conversationId") UUID conversationId, Pageable pageable);
+
+  // Derived delete queries execute entity-by-entity via EntityManager#remove and — unlike other
+  // Spring Data repository methods — do NOT get an implicit transaction; Spring Data's own docs
+  // call this out explicitly. Without @Transactional here, calling this outside an existing
+  // transaction throws TransactionRequiredException.
+  @Transactional
+  void deleteByConversationId(UUID conversationId);
 }

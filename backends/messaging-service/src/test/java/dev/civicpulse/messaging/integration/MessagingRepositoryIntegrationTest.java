@@ -45,12 +45,22 @@ class MessagingRepositoryIntegrationTest {
   @Autowired private ConversationParticipantRepository conversationParticipantRepository;
   @Autowired private MessageRepository messageRepository;
 
+  // Every test below writes through the real JPA adapters into the shared local-dev Postgres —
+  // the same database the live messaging-service instance serves the real app from. Deleting the
+  // conversation cascades to conversation_participants (ON DELETE CASCADE), but `messages` is
+  // hash-partitioned by conversation_id with no FK to conversations, so it needs an explicit
+  // delete too.
+
   @Test
   void savesAndRetrievesDirectConversation() {
     UUID id = UUID.randomUUID();
     conversationRepository.save(Conversation.createDirect(id, Instant.now()));
 
-    assertThat(conversationRepository.findById(id)).isPresent().get().satisfies(found -> assertThat(found.group()).isFalse());
+    try {
+      assertThat(conversationRepository.findById(id)).isPresent().get().satisfies(found -> assertThat(found.group()).isFalse());
+    } finally {
+      conversationRepository.deleteById(id);
+    }
   }
 
   @Test
@@ -62,8 +72,12 @@ class MessagingRepositoryIntegrationTest {
     conversationParticipantRepository.save(ConversationParticipant.join(conversationId, a, Instant.now()));
     conversationParticipantRepository.save(ConversationParticipant.join(conversationId, b, Instant.now()));
 
-    assertThat(conversationRepository.findDirectBetween(a, b)).isPresent().get().satisfies(found -> assertThat(found.id()).isEqualTo(conversationId));
-    assertThat(conversationRepository.findDirectBetween(a, UUID.randomUUID())).isEmpty();
+    try {
+      assertThat(conversationRepository.findDirectBetween(a, b)).isPresent().get().satisfies(found -> assertThat(found.id()).isEqualTo(conversationId));
+      assertThat(conversationRepository.findDirectBetween(a, UUID.randomUUID())).isEmpty();
+    } finally {
+      conversationRepository.deleteById(conversationId);
+    }
   }
 
   @Test
@@ -73,7 +87,11 @@ class MessagingRepositoryIntegrationTest {
     conversationRepository.save(Conversation.createDirect(conversationId, Instant.now()));
     conversationParticipantRepository.save(ConversationParticipant.join(conversationId, accountId, Instant.now()));
 
-    assertThat(conversationRepository.findByParticipant(accountId)).extracting(Conversation::id).contains(conversationId);
+    try {
+      assertThat(conversationRepository.findByParticipant(accountId)).extracting(Conversation::id).contains(conversationId);
+    } finally {
+      conversationRepository.deleteById(conversationId);
+    }
   }
 
   @Test
@@ -82,11 +100,15 @@ class MessagingRepositoryIntegrationTest {
     UUID accountId = UUID.randomUUID();
     conversationRepository.save(Conversation.createDirect(conversationId, Instant.now()));
 
-    assertThat(conversationParticipantRepository.exists(conversationId, accountId)).isFalse();
+    try {
+      assertThat(conversationParticipantRepository.exists(conversationId, accountId)).isFalse();
 
-    conversationParticipantRepository.save(ConversationParticipant.join(conversationId, accountId, Instant.now()));
+      conversationParticipantRepository.save(ConversationParticipant.join(conversationId, accountId, Instant.now()));
 
-    assertThat(conversationParticipantRepository.exists(conversationId, accountId)).isTrue();
+      assertThat(conversationParticipantRepository.exists(conversationId, accountId)).isTrue();
+    } finally {
+      conversationRepository.deleteById(conversationId);
+    }
   }
 
   @Test
@@ -96,6 +118,11 @@ class MessagingRepositoryIntegrationTest {
 
     messageRepository.save(Message.send(UUID.randomUUID(), conversationId, UUID.randomUUID(), "first!", Instant.now()));
 
-    assertThat(messageRepository.findByConversationId(conversationId, 0, 20)).anySatisfy(m -> assertThat(m.body()).isEqualTo("first!"));
+    try {
+      assertThat(messageRepository.findByConversationId(conversationId, 0, 20)).anySatisfy(m -> assertThat(m.body()).isEqualTo("first!"));
+    } finally {
+      messageRepository.deleteByConversationId(conversationId);
+      conversationRepository.deleteById(conversationId);
+    }
   }
 }

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import dev.civicpulse.messaging.application.port.out.ConversationParticipantRepository;
 import dev.civicpulse.messaging.application.port.out.ConversationRepository;
 import dev.civicpulse.messaging.application.port.out.EventPublisher;
+import dev.civicpulse.messaging.application.port.out.RealtimeMessagePublisher;
 import dev.civicpulse.messaging.domain.event.ConversationCreated;
 import dev.civicpulse.messaging.domain.model.Conversation;
 import dev.civicpulse.messaging.domain.model.ConversationParticipant;
@@ -34,12 +35,15 @@ class ConversationServiceTest {
   @Mock private ConversationRepository conversationRepository;
   @Mock private ConversationParticipantRepository conversationParticipantRepository;
   @Mock private EventPublisher eventPublisher;
+  @Mock private RealtimeMessagePublisher realtimePublisher;
 
   private ConversationService service;
 
   @BeforeEach
   void setUp() {
-    service = new ConversationService(conversationRepository, conversationParticipantRepository, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
+    service =
+        new ConversationService(
+            conversationRepository, conversationParticipantRepository, eventPublisher, realtimePublisher, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test

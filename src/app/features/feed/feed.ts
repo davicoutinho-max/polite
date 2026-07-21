@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { FeedService } from '../../core/services/feed.service';
 import { TrendingService } from '../../core/services/trending.service';
 import { BillsService } from '../../core/services/bills.service';
 import { SessionService } from '../../core/services/session.service';
 import { FeedSort as FeedSortValue, PostDraft } from '../../core/models';
 import { PostComposer } from './components/post-composer/post-composer';
-import { PostCard, CommentEvent } from './components/post-card/post-card';
+import { PostCard, CommentEvent, VoteEvent } from './components/post-card/post-card';
 import { FeedSort } from './components/feed-sort/feed-sort';
 import { TrendingTopics } from './components/trending-topics/trending-topics';
 import { RelevantBills } from './components/relevant-bills/relevant-bills';
@@ -25,6 +25,7 @@ export class Feed {
   private readonly trendingService = inject(TrendingService);
   private readonly billsService = inject(BillsService);
   private readonly session = inject(SessionService);
+  private readonly composer = viewChild(PostComposer);
 
   protected readonly currentUser = this.session.currentUser;
   /** Only politicians and parties may publish content. */
@@ -37,7 +38,12 @@ export class Feed {
   protected readonly bills = this.billsService.relevantBills;
 
   protected onPublish(draft: PostDraft): void {
-    this.feedService.publish(draft).subscribe();
+    const composer = this.composer();
+    composer?.markSubmitting();
+    this.feedService.publish(draft).subscribe({
+      next: () => composer?.onPublishSucceeded(),
+      error: () => composer?.onPublishFailed('Could not publish your post. Please try again.'),
+    });
   }
 
   protected onLike(postId: string): void {
@@ -46,6 +52,14 @@ export class Feed {
 
   protected onComment(event: CommentEvent): void {
     this.feedService.addComment(event.postId, event.text);
+  }
+
+  protected onVote(event: VoteEvent): void {
+    this.feedService.vote(event.postId, event.optionId);
+  }
+
+  protected onDelete(postId: string): void {
+    this.feedService.deletePost(postId).subscribe({ error: () => undefined });
   }
 
   protected onSort(sort: FeedSortValue): void {

@@ -11,4 +11,6 @@ public interface PartyProfileRepository {
   Optional<PartyProfile> findByPartyId(UUID partyId);
 
   boolean existsByPartyId(UUID partyId);
+
+  void deleteByPartyId(UUID partyId);
 }

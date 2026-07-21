@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { FiliationStatus, FiliationStep, PartySummary } from '../../../../core/models';
 import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
@@ -18,7 +20,7 @@ export interface AffiliationRequestPayload {
 @Component({
   selector: 'app-filiation-status',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiSection, UiIcon, UiButton, TranslatePipe],
+  imports: [FormsModule, InputText, Select, UiSection, UiIcon, UiButton, TranslatePipe],
   templateUrl: './filiation-status.html',
   styleUrl: './filiation-status.scss',
 })
@@ -28,6 +30,9 @@ export class FiliationStatusComponent {
   /** Index of the current (last completed) step; -1 when not started. */
   readonly currentIndex = input.required<number>();
   readonly parties = input<readonly PartySummary[]>([]);
+  /** Arriving from a party's own "Join party" button pre-selects it here instead of the form
+   * defaulting to the first party in the list. */
+  readonly preselectedPartyId = input('');
 
   readonly request = output<AffiliationRequestPayload>();
   readonly advance = output<void>();
@@ -35,6 +40,15 @@ export class FiliationStatusComponent {
 
   protected readonly selectedPartyId = signal('');
   protected readonly city = signal('');
+
+  constructor() {
+    effect(() => {
+      const preselected = this.preselectedPartyId();
+      if (preselected) {
+        this.selectedPartyId.set(preselected);
+      }
+    });
+  }
 
   protected stepState(index: number): 'done' | 'active' | 'pending' {
     if (index < this.currentIndex()) {

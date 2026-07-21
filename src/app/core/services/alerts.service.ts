@@ -76,4 +76,12 @@ export class AlertsService {
     const entry: Alert = { ...alert, id: `local-${Date.now()}`, read: false };
     this._alerts.update((list) => [entry, ...list]);
   }
+
+  /** Broadcasts a real, persisted notification to every given recipient (e.g. "send
+   * notification to all members" from a party admin panel). */
+  broadcast(recipientAccountIds: string[], category: AlertCategory, icon: string, title: string, message: string, link?: string): Observable<void> {
+    return this.http
+      .post<void>(`${this.apiBase}/broadcast`, { recipientAccountIds, category, icon, title, message, link: link ?? null })
+      .pipe(tap(() => undefined));
+  }
 }

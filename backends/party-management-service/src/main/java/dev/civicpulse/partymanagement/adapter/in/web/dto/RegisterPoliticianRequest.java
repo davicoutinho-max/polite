@@ -11,4 +11,5 @@ public record RegisterPoliticianRequest(
     @NotBlank @Size(min = 8) String password,
     @NotBlank String documentType,
     @NotBlank String documentNumber,
-    String roleTitle) {}
+    String roleTitle,
+    String state) {}

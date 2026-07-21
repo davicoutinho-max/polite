@@ -56,15 +56,10 @@
   font-weight: 600;
   color: var(--cp-on-surface-variant);
 
-  input, textarea, select {
-    font: inherit;
-    font-weight: 400;
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
-    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  // Inputs render via PrimeNG's pInputText/pTextarea directives, selects via p-select, dates via
+  // p-datepicker — all bring their own theming, this just fills the field.
+  input, textarea, p-select, p-datepicker {
+    width: 100%;
   }
 }
 

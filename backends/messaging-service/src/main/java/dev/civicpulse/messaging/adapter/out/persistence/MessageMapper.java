@@ -7,10 +7,24 @@ import org.springframework.stereotype.Component;
 class MessageMapper {
 
   Message toDomain(MessageJpaEntity entity) {
-    return Message.reconstitute(entity.getId(), entity.getConversationId(), entity.getSenderAccountId(), entity.getBody(), entity.getCreatedAt());
+    return Message.reconstitute(
+        entity.getId(),
+        entity.getConversationId(),
+        entity.getSenderAccountId(),
+        entity.getBody(),
+        entity.getCreatedAt(),
+        entity.getEditedAt(),
+        entity.getDeletedAt());
   }
 
   MessageJpaEntity toEntity(Message message) {
-    return new MessageJpaEntity(message.id(), message.conversationId(), message.senderAccountId(), message.body(), message.createdAt());
+    return new MessageJpaEntity(
+        message.id(),
+        message.conversationId(),
+        message.senderAccountId(),
+        message.body(),
+        message.createdAt(),
+        message.editedAt().orElse(null),
+        message.deletedAt().orElse(null));
   }
 }

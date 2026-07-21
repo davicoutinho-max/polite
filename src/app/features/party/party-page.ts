@@ -93,6 +93,15 @@ export class PartyPage {
     this.feedService.addComment(event.postId, event.text);
   }
 
+  protected readonly hasStatute = computed(() => !!this.party().statuteUrl && this.party().statuteUrl !== '#');
+
+  protected openStatute(): void {
+    const url = this.party().statuteUrl;
+    if (url && url !== '#') {
+      window.open(url, '_blank', 'noopener');
+    }
+  }
+
   protected readonly overview = computed<DataListItem[]>(() => {
     const p = this.party();
     const t = (key: string, fallback: string) => this.translate.t(key, fallback);

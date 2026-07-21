@@ -1,6 +1,7 @@
 package dev.civicpulse.platformconfig.application.port.out;
 
 import dev.civicpulse.platformconfig.domain.model.TranslationKey;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +12,8 @@ public interface TranslationKeyRepository {
   Optional<TranslationKey> findById(UUID id);
 
   Optional<TranslationKey> findByKey(String key);
+
+  List<TranslationKey> findAll();
+
+  void delete(UUID id);
 }

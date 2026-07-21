@@ -31,6 +31,12 @@ public class PostJpaEntity {
   @Column(name = "image_url")
   private String imageUrl;
 
+  @Column(name = "file_url")
+  private String fileUrl;
+
+  @Column(name = "file_name")
+  private String fileName;
+
   @Column(nullable = false)
   private PostVisibility visibility;
 
@@ -50,6 +56,8 @@ public class PostJpaEntity {
       PostKind kind,
       String content,
       String imageUrl,
+      String fileUrl,
+      String fileName,
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
@@ -59,6 +67,8 @@ public class PostJpaEntity {
     this.kind = kind;
     this.content = content;
     this.imageUrl = imageUrl;
+    this.fileUrl = fileUrl;
+    this.fileName = fileName;
     this.visibility = visibility;
     this.context = context;
     this.liveSessionId = liveSessionId;
@@ -83,6 +93,14 @@ public class PostJpaEntity {
 
   public String getImageUrl() {
     return imageUrl;
+  }
+
+  public String getFileUrl() {
+    return fileUrl;
+  }
+
+  public String getFileName() {
+    return fileName;
   }
 
   public PostVisibility getVisibility() {

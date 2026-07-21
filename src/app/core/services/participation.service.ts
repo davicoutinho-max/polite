@@ -143,6 +143,15 @@ export class ParticipationService {
     });
   }
 
+  createSurvey(question: string, context: string, options: string[]): Observable<Survey> {
+    return this.http
+      .post<SurveyResponseDto>(`${this.apiBase}/surveys`, { question, context, options })
+      .pipe(
+        switchMap((dto) => this.toSurvey(dto)),
+        tap((survey) => this._surveys.update((list) => [survey, ...list])),
+      );
+  }
+
   private toPetition(dto: PetitionResponseDto): Observable<Petition> {
     const citizenId = this.citizenId;
     const signed$ = citizenId

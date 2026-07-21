@@ -2,6 +2,7 @@ package dev.civicpulse.platformconfig.adapter.out.persistence;
 
 import dev.civicpulse.platformconfig.application.port.out.TranslationKeyRepository;
 import dev.civicpulse.platformconfig.domain.model.TranslationKey;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,16 @@ class TranslationKeyRepositoryAdapter implements TranslationKeyRepository {
   @Override
   public Optional<TranslationKey> findByKey(String key) {
     return jpaRepository.findByKey(key).map(TranslationKeyRepositoryAdapter::toDomain);
+  }
+
+  @Override
+  public List<TranslationKey> findAll() {
+    return jpaRepository.findAll().stream().map(TranslationKeyRepositoryAdapter::toDomain).toList();
+  }
+
+  @Override
+  public void delete(UUID id) {
+    jpaRepository.deleteById(id);
   }
 
   private static TranslationKey toDomain(TranslationKeyJpaEntity entity) {

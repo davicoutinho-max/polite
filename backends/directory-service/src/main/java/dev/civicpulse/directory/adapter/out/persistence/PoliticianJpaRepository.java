@@ -26,8 +26,9 @@ interface PoliticianJpaRepository extends JpaRepository<PoliticianJpaEntity, UUI
   void assignParty(@Param("accountId") UUID accountId, @Param("partyId") UUID partyId, @Param("partyAcronym") String partyAcronym, @Param("now") Instant now);
 
   @Modifying
-  @Query("update PoliticianJpaEntity p set p.office = :office, p.updatedAt = :now where p.accountId = :accountId")
-  void assignOffice(@Param("accountId") UUID accountId, @Param("office") String office, @Param("now") Instant now);
+  @Query("update PoliticianJpaEntity p set p.office = :office, p.state = :state, p.updatedAt = :now where p.accountId = :accountId")
+  void assignOffice(
+      @Param("accountId") UUID accountId, @Param("office") String office, @Param("state") String state, @Param("now") Instant now);
 
   @Modifying
   @Query(

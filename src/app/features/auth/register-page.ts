@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { InputText } from 'primeng/inputtext';
 import { SessionService } from '../../core/services/session.service';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
@@ -32,7 +33,7 @@ function deriveHandle(name: string): string {
 @Component({
   selector: 'app-register-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiButton, UiIcon, TranslatePipe],
+  imports: [RouterLink, UiButton, UiIcon, InputText, TranslatePipe],
   templateUrl: './register-page.html',
   styleUrl: './auth-page.scss',
 })
@@ -59,7 +60,7 @@ export class RegisterPage {
       return;
     }
     if (!isValidCpf(this.cpf())) {
-      this.error.set(this.translate.t('error.invalid-cpf', 'Enter a valid CPF (11 digits).'));
+      this.error.set(this.translate.t('error.invalid-cpf', 'Enter a valid CPF.'));
       return;
     }
 

@@ -9,4 +9,6 @@ public interface PostMetricsRepository {
   PostMetrics save(PostMetrics metrics);
 
   Optional<PostMetrics> findByPostId(UUID postId);
+
+  void deleteByPostId(UUID postId);
 }

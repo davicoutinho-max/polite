@@ -44,4 +44,9 @@ class ConversationRepositoryAdapter implements ConversationRepository {
   public Optional<Conversation> findDirectBetween(UUID accountA, UUID accountB) {
     return jpaRepository.findDirectBetween(accountA, accountB).stream().findFirst().map(mapper::toDomain);
   }
+
+  @Override
+  public void deleteById(UUID id) {
+    jpaRepository.deleteById(id);
+  }
 }

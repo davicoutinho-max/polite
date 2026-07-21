@@ -23,11 +23,13 @@
     </div>
 
     <div class="profile-header__actions">
-      <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" />
-      @if (following()) {
-        <ui-button [label]="'button.following' | translate: 'Following'" icon="how_to_reg" variant="tonal" (click)="toggleFollow()" />
-      } @else {
-        <ui-button [label]="'button.follow' | translate: 'Follow'" icon="person_add" variant="outlined" (click)="toggleFollow()" />
+      <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" (click)="contact.emit()" />
+      @if (canFollow()) {
+        @if (following()) {
+          <ui-button [label]="'button.following' | translate: 'Following'" icon="how_to_reg" variant="tonal" (click)="toggleFollow.emit()" />
+        } @else {
+          <ui-button [label]="'button.follow' | translate: 'Follow'" icon="person_add" variant="outlined" (click)="toggleFollow.emit()" />
+        }
       }
     </div>
   </div>

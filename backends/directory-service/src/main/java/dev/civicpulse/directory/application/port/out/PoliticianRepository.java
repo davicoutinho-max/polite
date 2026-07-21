@@ -23,8 +23,10 @@ public interface PoliticianRepository {
    * update sidesteps that entirely — no in-memory snapshot to go stale. */
   void assignParty(UUID accountId, UUID partyId, String partyAcronym, Instant now);
 
-  /** Targeted partial update — see {@link #assignParty} for why this isn't a read-modify-save. */
-  void assignOffice(UUID accountId, String office, Instant now);
+  /** Targeted partial update — see {@link #assignParty} for why this isn't a read-modify-save.
+   * Office and state are bundled here since both only ever arrive together, on
+   * {@code RepresentativeLinked}. */
+  void assignOffice(UUID accountId, String office, String state, Instant now);
 
   /** Atomic {@code INSERT ... ON CONFLICT DO NOTHING}, not {@link #save}. {@code save()} on an
    * entity with a manually-assigned (non-generated) {@code @Id} is treated by Spring Data JPA

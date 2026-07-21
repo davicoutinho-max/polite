@@ -14,4 +14,6 @@ public interface AffiliationRepository {
   boolean existsActiveByCitizenAndParty(UUID citizenAccountId, UUID partyId);
 
   List<Affiliation> findByCitizenAccountId(UUID citizenAccountId);
+
+  void deleteById(UUID id);
 }

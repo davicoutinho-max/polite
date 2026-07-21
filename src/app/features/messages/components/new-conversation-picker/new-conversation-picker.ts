@@ -45,7 +45,7 @@ export class NewConversationPicker {
       handle: p.handle,
       avatarUrl: p.avatarUrl,
       verified: p.verified,
-      role: `${p.office} · ${p.partyAcronym}`,
+      role: [p.office, p.partyAcronym].filter(Boolean).join(' · '),
     }));
     const parties: UserSummary[] = this.directory.parties().map((p) => ({
       id: p.id,

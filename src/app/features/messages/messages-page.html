@@ -32,6 +32,14 @@
             }
           </button>
         </li>
+      } @empty {
+        <li>
+          <ui-empty
+            icon="forum"
+            [title]="'empty.no-conversations.title' | translate: 'No conversations yet'"
+            [description]="'empty.no-conversations.desc' | translate: 'Start a new conversation to begin messaging.'"
+          />
+        </li>
       }
     </ul>
   </aside>
@@ -44,33 +52,115 @@
           <ui-icon name="arrow_back" [size]="22" />
         </button>
         <ui-avatar [src]="peerAvatar(conversation)" [alt]="peerName(conversation)" [size]="40" [ring]="true" />
-        <div class="thread__peer">
-          <span class="thread__name">
-            {{ peerName(conversation) }}
-            @if (peerVerified(conversation)) {
-              <ui-icon name="verified" [size]="14" [fill]="true" />
+
+        @if (renamingGroup()) {
+          <form class="thread__rename" (submit)="$event.preventDefault(); saveRenameGroup(conversation.id)">
+            <input
+              pInputText
+              type="text"
+              name="groupNameDraft"
+              [ngModel]="groupNameDraft()"
+              (ngModelChange)="groupNameDraft.set($event)"
+              autocomplete="off"
+            />
+            <ui-icon-button icon="check" ariaLabel="Save group name" [iconSize]="18" (click)="saveRenameGroup(conversation.id)" />
+            <ui-icon-button icon="close" ariaLabel="Cancel" [iconSize]="18" (click)="cancelRenameGroup()" />
+          </form>
+        } @else {
+          <div class="thread__peer">
+            <span class="thread__name">
+              {{ peerName(conversation) }}
+              @if (peerVerified(conversation)) {
+                <ui-icon name="verified" [size]="14" [fill]="true" />
+              }
+            </span>
+            @if (isPeerTyping(conversation)) {
+              <span class="thread__role thread__role--typing">{{ 'label.typing' | translate: 'typing…' }}</span>
+            } @else {
+              <span class="thread__role">{{ peerRole(conversation) }}</span>
             }
-          </span>
-          <span class="thread__role">{{ peerRole(conversation) }}</span>
-        </div>
+          </div>
+        }
+
+        @if (conversation.isGroup && !renamingGroup()) {
+          <div class="thread__menu">
+            <ui-icon-button icon="more_vert" ariaLabel="Group options" [iconSize]="20" (click)="toggleGroupMenu()" />
+            @if (showGroupMenu()) {
+              <div class="thread__menu-backdrop" (click)="closeGroupMenu()"></div>
+              <div class="thread__menu-panel" role="menu">
+                <button type="button" class="thread__menu-item" (click)="startRenameGroup(peerName(conversation))">
+                  <ui-icon name="edit" [size]="18" /><span>{{ 'button.rename-group' | translate: 'Rename group' }}</span>
+                </button>
+                <button type="button" class="thread__menu-item" (click)="groupAvatarInput.click()">
+                  <ui-icon name="photo_camera" [size]="18" /><span>{{ 'button.change-group-photo' | translate: 'Change group photo' }}</span>
+                </button>
+              </div>
+            }
+            <input
+              #groupAvatarInput
+              type="file"
+              accept="image/*"
+              class="thread__hidden-input"
+              (change)="onGroupAvatarSelected(conversation.id, $event)"
+            />
+          </div>
+        }
       </header>
 
       <div class="thread__body">
         @for (message of conversation.messages; track message.id) {
           <div class="bubble" [class.bubble--me]="message.fromMe">
-            <div class="bubble__text">{{ message.text }}</div>
-            <div class="bubble__time">{{ message.timeLabel }}</div>
+            @if (editingMessageId() === message.id) {
+              <form class="bubble__edit" (submit)="$event.preventDefault(); saveEditMessage(conversation.id)">
+                <input
+                  pInputText
+                  type="text"
+                  name="editDraft"
+                  [ngModel]="editDraft()"
+                  (ngModelChange)="editDraft.set($event)"
+                  autocomplete="off"
+                />
+                <ui-icon-button icon="check" ariaLabel="Save edit" [iconSize]="16" (click)="saveEditMessage(conversation.id)" />
+                <ui-icon-button icon="close" ariaLabel="Cancel edit" [iconSize]="16" (click)="cancelEditMessage()" />
+              </form>
+            } @else if (message.deleted) {
+              <div class="bubble__text bubble__text--deleted">
+                <ui-icon name="block" [size]="14" />
+                {{ 'label.message-deleted' | translate: 'This message was deleted' }}
+              </div>
+            } @else {
+              <div class="bubble__text">{{ message.text }}</div>
+            }
+            <div class="bubble__meta">
+              @if (message.edited && !message.deleted) {
+                <span class="bubble__edited">{{ 'label.edited' | translate: 'edited' }}</span>
+              }
+              <span class="bubble__time">{{ message.timeLabel }}</span>
+              @if (isSeen(conversation, message)) {
+                <span class="bubble__seen">{{ 'label.seen' | translate: 'Seen' }}</span>
+              }
+              @if (message.fromMe && !message.deleted && editingMessageId() !== message.id) {
+                <button type="button" class="bubble__action" (click)="startEditMessage(message)" [attr.aria-label]="'button.edit-message' | translate: 'Edit message'">
+                  <ui-icon name="edit" [size]="13" />
+                </button>
+                <button type="button" class="bubble__action" (click)="deleteMessage(conversation.id, message.id)" [attr.aria-label]="'button.delete-message' | translate: 'Delete message'">
+                  <ui-icon name="delete" [size]="13" />
+                </button>
+              }
+            </div>
           </div>
         }
       </div>
 
       <form class="composer" (submit)="$event.preventDefault(); onSend()">
         <input
+          pInputText
           class="composer__input"
           type="text"
           [placeholder]="'placeholder.write-message' | translate: 'Write a message…'"
           [ngModel]="draft()"
           (ngModelChange)="draft.set($event)"
+          (input)="onComposerInput(conversation.id)"
           name="draft"
           autocomplete="off"
         />
@@ -78,6 +168,12 @@
           <ui-icon name="send" [size]="20" [fill]="true" />
         </button>
       </form>
+    } @else {
+      <ui-empty
+        icon="chat"
+        [title]="'empty.no-conversation-selected.title' | translate: 'Select a conversation'"
+        [description]="'empty.no-conversation-selected.desc' | translate: 'Choose a conversation from the list to see the messages.'"
+      />
     }
   </section>
 </div>

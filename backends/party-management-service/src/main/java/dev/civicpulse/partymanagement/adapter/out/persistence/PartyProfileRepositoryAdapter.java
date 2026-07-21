@@ -31,4 +31,9 @@ class PartyProfileRepositoryAdapter implements PartyProfileRepository {
   public boolean existsByPartyId(UUID partyId) {
     return jpaRepository.existsById(partyId);
   }
+
+  @Override
+  public void deleteByPartyId(UUID partyId) {
+    jpaRepository.deleteById(partyId);
+  }
 }

@@ -38,4 +38,9 @@ class LegislativeItemRepositoryAdapter implements LegislativeItemRepository {
   public List<LegislativeItem> findRecent(int limit) {
     return jpaRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit)).stream().map(mapper::toDomain).toList();
   }
+
+  @Override
+  public void deleteById(UUID id) {
+    jpaRepository.deleteById(id);
+  }
 }

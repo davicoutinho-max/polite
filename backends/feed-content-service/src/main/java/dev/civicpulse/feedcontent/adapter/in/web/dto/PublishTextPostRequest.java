@@ -1,5 +1,13 @@
 package dev.civicpulse.feedcontent.adapter.in.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 
-public record PublishTextPostRequest(@NotBlank String content, String imageUrl, String visibility, String context) {}
+public record PublishTextPostRequest(
+    @NotBlank String content,
+    String imageUrl,
+    String fileUrl,
+    String fileName,
+    List<String> pollOptions,
+    String visibility,
+    String context) {}

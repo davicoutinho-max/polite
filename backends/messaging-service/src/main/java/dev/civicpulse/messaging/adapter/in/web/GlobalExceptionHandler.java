@@ -1,7 +1,9 @@
 package dev.civicpulse.messaging.adapter.in.web;
 
 import dev.civicpulse.messaging.domain.exception.ConversationNotFoundException;
+import dev.civicpulse.messaging.domain.exception.MessageNotFoundException;
 import dev.civicpulse.messaging.domain.exception.NotAParticipantException;
+import dev.civicpulse.messaging.domain.exception.NotMessageSenderException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -22,6 +24,16 @@ public class GlobalExceptionHandler {
     return problem(HttpStatus.FORBIDDEN, "Not a participant", ex.getMessage());
   }
 
+  @ExceptionHandler(MessageNotFoundException.class)
+  public ProblemDetail handleMessageNotFound(MessageNotFoundException ex) {
+    return problem(HttpStatus.NOT_FOUND, "Message not found", ex.getMessage());
+  }
+
+  @ExceptionHandler(NotMessageSenderException.class)
+  public ProblemDetail handleNotMessageSender(NotMessageSenderException ex) {
+    return problem(HttpStatus.FORBIDDEN, "Not the sender", ex.getMessage());
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
     String detail =
@@ -33,6 +45,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(IllegalArgumentException.class)
   public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+    return problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.getMessage());
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ProblemDetail handleIllegalState(IllegalStateException ex) {
     return problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.getMessage());
   }
 

@@ -9,4 +9,6 @@ public interface CommentRepository {
   Comment save(Comment comment);
 
   List<Comment> findByPostId(UUID postId);
+
+  void deleteByPostId(UUID postId);
 }

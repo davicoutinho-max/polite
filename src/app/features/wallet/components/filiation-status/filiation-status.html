@@ -16,15 +16,20 @@
     <div class="filiation__form">
       <label class="filiation__field">
         <span>{{ 'label.party' | translate: 'Party' }}</span>
-        <select [ngModel]="selectedPartyId()" (ngModelChange)="selectedPartyId.set($event)">
-          @for (party of parties(); track party.id) {
-            <option [value]="party.id">{{ party.name }}</option>
-          }
-        </select>
+        <p-select
+          [options]="$any(parties())"
+          optionLabel="name"
+          optionValue="id"
+          [filter]="true"
+          filterBy="name"
+          [ngModel]="selectedPartyId()"
+          (ngModelChange)="selectedPartyId.set($event)"
+          appendTo="body"
+        />
       </label>
       <label class="filiation__field">
         <span>{{ 'label.city' | translate: 'City' }}</span>
-        <input type="text" [value]="city()" (input)="city.set($any($event.target).value)" placeholder="e.g. São Paulo — SP" />
+        <input pInputText type="text" [value]="city()" (input)="city.set($any($event.target).value)" placeholder="e.g. São Paulo — SP" />
       </label>
     </div>
   }

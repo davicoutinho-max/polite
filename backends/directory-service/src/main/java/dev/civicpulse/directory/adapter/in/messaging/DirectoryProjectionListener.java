@@ -29,7 +29,7 @@ class DirectoryProjectionListener {
   @KafkaListener(topics = "representative-linked", groupId = "directory-service")
   void onRepresentativeLinked(RepresentativeLinkedMessage message) {
     projectDirectoryUseCase.onRepresentativeLinked(
-        message.politicianAccountId(), message.partyId(), message.roleTitle(), message.occurredAt());
+        message.politicianAccountId(), message.partyId(), message.roleTitle(), message.state(), message.occurredAt());
   }
 
   @KafkaListener(topics = "politician-registered", groupId = "directory-service")

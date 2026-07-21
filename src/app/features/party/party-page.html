@@ -14,7 +14,13 @@
         <p class="hero__ideology">{{ party().ideology }}</p>
       </div>
       <div class="hero__actions">
-        <ui-button [label]="'button.join-party' | translate: 'Join party'" icon="how_to_reg" variant="filled" routerLink="/wallet" />
+        <ui-button
+          [label]="'button.join-party' | translate: 'Join party'"
+          icon="how_to_reg"
+          variant="filled"
+          routerLink="/wallet"
+          [queryParams]="{ partyId: party().id }"
+        />
         @if (following()) {
           <ui-button [label]="'button.following' | translate: 'Following'" icon="check" variant="tonal" (click)="toggleFollow()" />
         } @else {
@@ -101,9 +107,17 @@
           <div class="grid__side">
             <ui-section [title]="'tab.overview' | translate: 'Overview'" icon="info">
               <ui-data-list [items]="overview()" />
-              <div class="statute">
-                <ui-button [label]="'button.read-statute' | translate: 'Read the statute'" icon="description" variant="tonal" [block]="true" />
-              </div>
+              @if (hasStatute()) {
+                <div class="statute">
+                  <ui-button
+                    [label]="'button.read-statute' | translate: 'Read the statute'"
+                    icon="description"
+                    variant="tonal"
+                    [block]="true"
+                    (click)="openStatute()"
+                  />
+                </div>
+              }
             </ui-section>
 
             <ui-section [title]="'section.representatives' | translate: 'Representatives'" icon="badge">

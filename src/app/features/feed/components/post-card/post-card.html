@@ -12,7 +12,23 @@
         <p class="post__meta">{{ post().createdAt }} • {{ post().context }}</p>
       </div>
     </a>
-    <ui-icon-button icon="more_horiz" ariaLabel="Post options" [iconSize]="22" />
+    <div class="post__menu">
+      <ui-icon-button icon="more_horiz" ariaLabel="Post options" [iconSize]="22" (click)="toggleMenu()" />
+      @if (showMenu()) {
+        <div class="post__menu-backdrop" (click)="toggleMenu()"></div>
+        <div class="post__menu-panel" role="menu">
+          @if (canDelete()) {
+            <button type="button" class="post__menu-item post__menu-item--danger" (click)="onDelete()">
+              <ui-icon name="delete" [size]="18" /><span>Delete post</span>
+            </button>
+          } @else {
+            <button type="button" class="post__menu-item" disabled>
+              <ui-icon name="flag" [size]="18" /><span>Report (coming soon)</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
   </header>
 
   @if (post().content) {
@@ -50,9 +66,39 @@
     <div class="post__video">
       <ui-youtube [videoId]="vid" [title]="post().author.name + ' — ' + post().context" />
     </div>
-  } @else if (post().imageUrl; as img) {
+  }
+
+  @if (post().imageUrl; as img) {
     <div class="post__media">
       <img [src]="img" alt="" loading="lazy" referrerpolicy="no-referrer" />
+    </div>
+  }
+
+  @if (post().fileUrl; as fileUrl) {
+    <a class="post__file" [href]="fileUrl" target="_blank" rel="noopener noreferrer" download>
+      <ui-icon name="description" [size]="20" />
+      <span class="post__file-name">{{ post().fileName || 'Download attachment' }}</span>
+      <ui-icon name="download" [size]="18" />
+    </a>
+  }
+
+  @if (post().poll; as poll) {
+    <div class="post__poll">
+      @for (option of poll.options; track option.id) {
+        <button
+          type="button"
+          class="post__poll-option"
+          [class.post__poll-option--voted]="poll.myVoteOptionId === option.id"
+          [disabled]="!canReact()"
+          [style.--pct.%]="pollPercentage(option, poll)"
+          (click)="vote.emit({ postId: post().id, optionId: option.id })"
+        >
+          <span class="post__poll-option-fill"></span>
+          <span class="post__poll-option-label">{{ option.label }}</span>
+          <span class="post__poll-option-pct">{{ pollPercentage(option, poll) }}%</span>
+        </button>
+      }
+      <p class="post__poll-total">{{ pollTotalVotes(poll) | compactNumber }} votes</p>
     </div>
   }
 
@@ -78,7 +124,7 @@
       <span>{{ post().metrics.comments | compactNumber }}</span>
     </button>
 
-    <button type="button" class="post__action">
+    <button type="button" class="post__action" (click)="share()">
       <ui-icon name="share" [size]="20" />
       <span>Share</span>
     </button>
@@ -92,6 +138,7 @@
             <ui-avatar [src]="currentUserAvatar()" alt="You" [size]="32" />
           }
           <input
+            pInputText
             class="comments__input"
             type="text"
             placeholder="Add a comment…"

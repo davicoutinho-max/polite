@@ -4,6 +4,7 @@ import dev.civicpulse.feedcontent.application.port.out.PostHashtagRepository;
 import dev.civicpulse.feedcontent.domain.model.PostHashtag;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
@@ -29,5 +30,10 @@ class PostHashtagRepositoryAdapter implements PostHashtagRepository {
     return jpaRepository.countByHashtagSince(since, PageRequest.of(0, limit)).stream()
         .map(projection -> new HashtagCount(projection.getHashtag(), projection.getCount()))
         .toList();
+  }
+
+  @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteByPostId(postId);
   }
 }

@@ -17,6 +17,8 @@ public final class Post {
   private final PostKind kind;
   private final String content;
   private final String imageUrl;
+  private final String fileUrl;
+  private final String fileName;
   private final PostVisibility visibility;
   private final String context;
   private final UUID liveSessionId;
@@ -28,6 +30,8 @@ public final class Post {
       PostKind kind,
       String content,
       String imageUrl,
+      String fileUrl,
+      String fileName,
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
@@ -37,6 +41,8 @@ public final class Post {
     this.kind = Objects.requireNonNull(kind);
     this.content = content;
     this.imageUrl = imageUrl;
+    this.fileUrl = fileUrl;
+    this.fileName = fileName;
     this.visibility = Objects.requireNonNull(visibility);
     this.context = context;
     this.liveSessionId = liveSessionId;
@@ -49,11 +55,13 @@ public final class Post {
       PostKind kind,
       String content,
       String imageUrl,
+      String fileUrl,
+      String fileName,
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
       Instant now) {
-    return new Post(id, authorAccountId, kind, content, imageUrl, visibility, context, liveSessionId, now);
+    return new Post(id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, now);
   }
 
   public static Post reconstitute(
@@ -62,11 +70,13 @@ public final class Post {
       PostKind kind,
       String content,
       String imageUrl,
+      String fileUrl,
+      String fileName,
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
       Instant createdAt) {
-    return new Post(id, authorAccountId, kind, content, imageUrl, visibility, context, liveSessionId, createdAt);
+    return new Post(id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, createdAt);
   }
 
   public UUID id() {
@@ -87,6 +97,14 @@ public final class Post {
 
   public Optional<String> imageUrl() {
     return Optional.ofNullable(imageUrl);
+  }
+
+  public Optional<String> fileUrl() {
+    return Optional.ofNullable(fileUrl);
+  }
+
+  public Optional<String> fileName() {
+    return Optional.ofNullable(fileName);
   }
 
   public PostVisibility visibility() {

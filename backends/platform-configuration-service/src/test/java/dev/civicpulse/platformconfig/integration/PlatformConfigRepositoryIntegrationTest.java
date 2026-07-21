@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import dev.civicpulse.platformconfig.application.port.out.CountryRepository;
 import dev.civicpulse.platformconfig.application.port.out.LanguageRepository;
 import dev.civicpulse.platformconfig.application.port.out.PartyRegistryRepository;
+import dev.civicpulse.platformconfig.application.port.out.PoliticalPositionRepository;
 import dev.civicpulse.platformconfig.application.port.out.StateRepository;
 import dev.civicpulse.platformconfig.domain.model.Country;
 import dev.civicpulse.platformconfig.domain.model.Language;
 import dev.civicpulse.platformconfig.domain.model.PartyRegistryEntry;
+import dev.civicpulse.platformconfig.domain.model.PoliticalPosition;
 import dev.civicpulse.platformconfig.domain.model.State;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -47,6 +49,7 @@ class PlatformConfigRepositoryIntegrationTest {
   @Autowired private CountryRepository countryRepository;
   @Autowired private LanguageRepository languageRepository;
   @Autowired private StateRepository stateRepository;
+  @Autowired private PoliticalPositionRepository politicalPositionRepository;
 
   @Test
   void savesAndRetrievesPartyRegistryEntry() {
@@ -86,14 +89,19 @@ class PlatformConfigRepositoryIntegrationTest {
     stateRepository.delete(stateId);
 
     assertThat(stateRepository.findByCountryId(countryId)).noneSatisfy(s -> assertThat(s.id()).isEqualTo(stateId));
+
+    countryRepository.delete(countryId);
   }
 
   @Test
   void languageDefaultFlagInvariantHoldsAcrossTwoRows() {
+    // This test borrows the table's single "is_default = true" slot for its own two rows, so it
+    // must hand it back afterward — otherwise it silently strips whatever the platform's real
+    // default language was (there's no per-row scoping on clearDefaultFlag()).
+    String originalDefaultId = languageRepository.findDefault().map(Language::id).orElse(null);
+
     String firstId = "test-lang-a-" + System.nanoTime();
     String secondId = "test-lang-b-" + System.nanoTime();
-    // Clear any pre-existing default first — the partial unique index allows at most one
-    // is_default=true row across the whole table, not just this test's rows.
     languageRepository.clearDefaultFlag();
     languageRepository.save(Language.create(firstId, "Test Language A", "ta", true));
     languageRepository.save(Language.create(secondId, "Test Language B", "tb", false));
@@ -105,5 +113,26 @@ class PlatformConfigRepositoryIntegrationTest {
 
     assertThat(languageRepository.findById(firstId)).isPresent().get().satisfies(l -> assertThat(l.isDefault()).isFalse());
     assertThat(languageRepository.findById(secondId)).isPresent().get().satisfies(l -> assertThat(l.isDefault()).isTrue());
+
+    // secondId is still flagged default — must be un-defaulted before it can be deleted (the
+    // repository's own invariant, same one this test exercises above).
+    languageRepository.clearDefaultFlag();
+    languageRepository.delete(firstId);
+    languageRepository.delete(secondId);
+    if (originalDefaultId != null) {
+      languageRepository.markAsDefault(originalDefaultId);
+    }
+  }
+
+  @Test
+  void savesFindsAndDeletesPoliticalPosition() {
+    UUID id = UUID.randomUUID();
+    politicalPositionRepository.save(PoliticalPosition.create(id, "Test Position " + System.nanoTime(), 99));
+
+    assertThat(politicalPositionRepository.findAllOrderBySortOrder()).anySatisfy(p -> assertThat(p.id()).isEqualTo(id));
+
+    politicalPositionRepository.delete(id);
+
+    assertThat(politicalPositionRepository.findAllOrderBySortOrder()).noneSatisfy(p -> assertThat(p.id()).isEqualTo(id));
   }
 }

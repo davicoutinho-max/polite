@@ -22,45 +22,45 @@
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.name' | translate: 'Name' }}</span>
-              <input type="text" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Green Future" />
+              <input pInputText type="text" required [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Green Future" />
             </label>
             <label class="platform__field">
               <span>{{ 'field.acronym' | translate: 'Acronym' }}</span>
-              <input type="text" [value]="acronym()" (input)="acronym.set($any($event.target).value)" placeholder="GF" />
+              <input pInputText type="text" required [value]="acronym()" (input)="acronym.set($any($event.target).value)" placeholder="GF" />
             </label>
             <label class="platform__field">
               <span>{{ 'field.number' | translate: 'Number' }}</span>
-              <input type="number" min="10" max="99" [value]="number() ?? ''" (input)="number.set(+$any($event.target).value)" placeholder="30" />
+              <input pInputText type="number" min="10" max="99" required [value]="number() ?? ''" (input)="number.set(+$any($event.target).value)" placeholder="30" />
             </label>
           </div>
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'label.president' | translate: 'President' }}</span>
-              <input type="text" [value]="president()" (input)="president.set($any($event.target).value)" placeholder="Full name" />
+              <input pInputText type="text" [value]="president()" (input)="president.set($any($event.target).value)" placeholder="Full name" />
             </label>
             <label class="platform__field platform__field--grow">
               <span>{{ 'label.ideology' | translate: 'Ideology' }}</span>
-              <input type="text" [value]="ideology()" (input)="ideology.set($any($event.target).value)" placeholder="e.g. Green politics" />
+              <input pInputText type="text" [value]="ideology()" (input)="ideology.set($any($event.target).value)" placeholder="e.g. Green politics" />
             </label>
           </div>
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.handle' | translate: 'Handle' }}</span>
-              <input type="text" [value]="handle()" (input)="handle.set($any($event.target).value)" placeholder="greenfuture" />
+              <input pInputText type="text" required [value]="handle()" (input)="handle.set($any($event.target).value)" placeholder="greenfuture" />
             </label>
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.email' | translate: 'Email' }}</span>
-              <input type="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="party@example.org" />
+              <input pInputText type="email" required [value]="email()" (input)="email.set($any($event.target).value)" placeholder="party@example.org" />
             </label>
           </div>
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.password' | translate: 'Password' }}</span>
-              <input type="password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="Min. 8 characters" />
+              <input pInputText type="password" required [value]="password()" (input)="password.set($any($event.target).value)" placeholder="Min. 8 characters" />
             </label>
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>
-              <input type="text" [value]="documentNumber()" (input)="documentNumber.set($any($event.target).value)" placeholder="00000000000000" />
+              <input pInputText type="text" required [value]="documentNumber()" (input)="documentNumber.set($any($event.target).value)" placeholder="00000000000000" />
             </label>
           </div>
           @if (createError()) {
@@ -115,16 +115,16 @@
                 <span class="platform__politician-name">{{ pol.name }}</span>
                 <span class="platform__politician-office">{{ pol.office }} · {{ partyName(pol.partyId) }}</span>
               </div>
-              <select
-                class="platform__select"
-                [value]="pol.partyId ?? ''"
-                (change)="assign(pol.id, $any($event.target).value)"
-              >
-                <option value="">{{ 'label.independent' | translate: 'Independent' }}</option>
-                @for (party of parties(); track party.id) {
-                  <option [value]="party.id">{{ party.name }}</option>
-                }
-              </select>
+              <p-select
+                [options]="partyAssignOptions()"
+                optionLabel="label"
+                optionValue="value"
+                [filter]="true"
+                filterBy="label"
+                [ngModel]="pol.partyId ?? ''"
+                (ngModelChange)="assign(pol.id, $event)"
+                appendTo="body"
+              />
             </li>
           }
         </ul>
@@ -137,11 +137,11 @@
         <form class="platform__inline-form" (submit)="addCountry(); $event.preventDefault()">
           <label class="platform__field platform__field--grow">
             <span>{{ 'field.name' | translate: 'Name' }}</span>
-            <input type="text" [value]="countryName()" (input)="countryName.set($any($event.target).value)" placeholder="e.g. Argentina" />
+            <input pInputText type="text" required [value]="countryName()" (input)="countryName.set($any($event.target).value)" placeholder="e.g. Argentina" />
           </label>
           <label class="platform__field">
             <span>{{ 'field.code' | translate: 'Code' }}</span>
-            <input type="text" maxlength="3" [value]="countryCode()" (input)="countryCode.set($any($event.target).value)" placeholder="AR" />
+            <input pInputText type="text" maxlength="3" required [value]="countryCode()" (input)="countryCode.set($any($event.target).value)" placeholder="AR" />
           </label>
           <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" />
         </form>
@@ -166,19 +166,25 @@
         <form class="platform__inline-form" (submit)="addState(); $event.preventDefault()">
           <label class="platform__field platform__field--grow">
             <span>{{ 'field.name' | translate: 'Name' }}</span>
-            <input type="text" [value]="stateName()" (input)="stateName.set($any($event.target).value)" placeholder="e.g. Bahia" />
+            <input pInputText type="text" required [value]="stateName()" (input)="stateName.set($any($event.target).value)" placeholder="e.g. Bahia" />
           </label>
           <label class="platform__field">
             <span>{{ 'field.code' | translate: 'Code' }}</span>
-            <input type="text" maxlength="3" [value]="stateCode()" (input)="stateCode.set($any($event.target).value)" placeholder="BA" />
+            <input pInputText type="text" maxlength="3" required [value]="stateCode()" (input)="stateCode.set($any($event.target).value)" placeholder="BA" />
           </label>
           <label class="platform__field">
             <span>{{ 'label.country' | translate: 'Country' }}</span>
-            <select class="platform__select" [value]="stateCountryId()" (change)="stateCountryId.set($any($event.target).value)">
-              @for (country of countries(); track country.id) {
-                <option [value]="country.id">{{ country.name }}</option>
-              }
-            </select>
+            <p-select
+              [options]="countryOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [filter]="true"
+              filterBy="label"
+              [ngModel]="stateCountryId()"
+              (ngModelChange)="stateCountryId.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              appendTo="body"
+            />
           </label>
           <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="!countries().length" />
         </form>
@@ -200,6 +206,35 @@
       </ui-section>
     }
 
+    @case ('positions') {
+      <ui-section [title]="'section.political-positions' | translate: 'Political positions'" icon="badge">
+        <span slot="action" class="platform__count">{{ politicalPositions().length }} {{ 'label.registered' | translate: 'registered' }}</span>
+        <p class="platform__hint">
+          {{ 'hint.political-positions' | translate: 'The elected offices (cargos) available when registering a politician.' }}
+        </p>
+        <form class="platform__inline-form" (submit)="addPosition(); $event.preventDefault()">
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'field.name' | translate: 'Name' }}</span>
+            <input pInputText type="text" required [value]="positionName()" (input)="positionName.set($any($event.target).value)" placeholder="e.g. Deputado Federal" />
+          </label>
+          <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" />
+        </form>
+
+        @if (politicalPositions().length) {
+          <ul class="platform__params">
+            @for (position of politicalPositions(); track position.id) {
+              <li class="platform__param">
+                <span class="platform__param-name">{{ position.name }}</span>
+                <ui-button [label]="'button.remove' | translate: 'Remove'" icon="delete" variant="outlined" (click)="removePosition(position.id)" />
+              </li>
+            }
+          </ul>
+        } @else {
+          <ui-empty icon="badge" [title]="'empty.no-positions.title' | translate: 'No positions'" [description]="'empty.no-positions.desc' | translate: 'Positions you add will appear here.'" />
+        }
+      </ui-section>
+    }
+
     @case ('languages') {
       <ui-section [title]="'section.internationalization' | translate: 'Internationalization'" icon="translate">
         <span slot="action" class="platform__count">{{ languages().length }} {{ 'tab.languages' | translate: 'languages' }}</span>
@@ -207,11 +242,11 @@
         <form class="platform__inline-form" (submit)="addLanguage(); $event.preventDefault()">
           <label class="platform__field platform__field--grow">
             <span>{{ 'field.name' | translate: 'Name' }}</span>
-            <input type="text" [value]="languageName()" (input)="languageName.set($any($event.target).value)" placeholder="e.g. Español" />
+            <input pInputText type="text" required [value]="languageName()" (input)="languageName.set($any($event.target).value)" placeholder="e.g. Español" />
           </label>
           <label class="platform__field">
             <span>{{ 'field.code' | translate: 'Code' }}</span>
-            <input type="text" [value]="languageCode()" (input)="languageCode.set($any($event.target).value)" placeholder="es-ES" />
+            <input pInputText type="text" required [value]="languageCode()" (input)="languageCode.set($any($event.target).value)" placeholder="es-ES" />
           </label>
           <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" />
         </form>
@@ -241,10 +276,23 @@
           <label class="platform__field platform__field--grow">
             <span>{{ 'label.key' | translate: 'Key' }}</span>
             <input
+              pInputText
               type="text"
+              required
               [value]="newTranslationKey()"
               (input)="newTranslationKey.set($any($event.target).value)"
               placeholder="e.g. nav.wallet"
+            />
+          </label>
+          <label class="platform__field platform__field--grow">
+            <span>{{ 'label.default-value' | translate: 'Default language value' }}</span>
+            <input
+              pInputText
+              type="text"
+              required
+              [value]="newTranslationValue()"
+              (input)="newTranslationValue.set($any($event.target).value)"
+              placeholder="e.g. Wallet"
             />
           </label>
           <ui-button [label]="'button.add-key' | translate: 'Add key'" icon="add" variant="tonal" type="submit" />
@@ -269,9 +317,10 @@
                     @for (lang of languages(); track lang.id) {
                       <td>
                         <input
+                          pInputText
                           type="text"
                           [value]="entry.values[lang.id]"
-                          (input)="updateTranslationValue(entry.id, lang.id, $any($event.target).value)"
+                          (change)="updateTranslationValue(entry.id, lang.id, $any($event.target).value)"
                         />
                       </td>
                     }

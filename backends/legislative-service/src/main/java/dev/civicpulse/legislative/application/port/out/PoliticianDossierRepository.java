@@ -11,4 +11,6 @@ public interface PoliticianDossierRepository {
   Optional<PoliticianDossierExtension> findById(UUID politicianAccountId);
 
   boolean existsById(UUID politicianAccountId);
+
+  void deleteById(UUID politicianAccountId);
 }

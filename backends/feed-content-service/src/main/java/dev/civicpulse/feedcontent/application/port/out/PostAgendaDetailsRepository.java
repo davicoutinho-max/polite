@@ -9,4 +9,6 @@ public interface PostAgendaDetailsRepository {
   PostAgendaDetails save(PostAgendaDetails details);
 
   Optional<PostAgendaDetails> findByPostId(UUID postId);
+
+  void deleteByPostId(UUID postId);
 }

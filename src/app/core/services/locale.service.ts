@@ -10,14 +10,19 @@ import { PlatformService } from './platform.service';
 export class LocaleService {
   private readonly platform = inject(PlatformService);
 
-  // The interface's literal template text is authored in English, so that's
-  // the language state that actually matches what's on screen by default.
-  private readonly _currentId = signal('en-us');
+  // No explicit user choice yet — `current` falls back to whichever language the platform
+  // registry itself marks as default, rather than assuming a specific id like 'en-us' exists.
+  // A hardcoded id silently mismatching the registry is exactly how this stayed broken before:
+  // the registry only ever held stray test rows, none named 'en-us', so `current` fell back to
+  // whatever row happened to load first instead of a real language.
+  private readonly _currentId = signal<string | null>(null);
 
   readonly languages = this.platform.languages;
-  readonly current = computed(
-    () => this.languages().find((l) => l.id === this._currentId()) ?? this.languages()[0],
-  );
+  readonly current = computed(() => {
+    const chosen = this._currentId();
+    const list = this.languages();
+    return (chosen ? list.find((l) => l.id === chosen) : undefined) ?? list.find((l) => l.isDefault) ?? list.at(0);
+  });
 
   setCurrent(id: string): void {
     this._currentId.set(id);

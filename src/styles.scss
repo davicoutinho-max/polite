@@ -14,6 +14,24 @@
 :root { color-scheme: light; }
 :root.cp-dark { color-scheme: dark; }
 
+// Every form field is `<label><span>Field name</span><input required .../></label>` — mark the
+// label's leading text with an asterisk automatically instead of hand-writing it per field.
+// PrimeNG components (p-select, p-datepicker, …) don't participate in the `:required`
+// pseudo-class the way native elements do, so they're matched by the plain attribute instead —
+// carrying a literal `required` attribute is enough for this rule even though PrimeNG itself
+// ignores it.
+label:has(
+    > input:required,
+    > select:required,
+    > textarea:required,
+    > p-select[required],
+    > p-datepicker[required]
+  )
+  > span:first-child::after {
+  content: ' *';
+  color: var(--cp-error, #d32f2f);
+}
+
 html,
 body {
   margin: 0;

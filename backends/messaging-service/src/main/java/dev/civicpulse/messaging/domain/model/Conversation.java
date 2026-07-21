@@ -13,8 +13,8 @@ public final class Conversation {
 
   private final UUID id;
   private final boolean group;
-  private final String groupName;
-  private final String groupAvatarUrl;
+  private String groupName;
+  private String groupAvatarUrl;
   private final Instant createdAt;
   private Instant lastMessageAt;
 
@@ -42,6 +42,23 @@ public final class Conversation {
 
   public void recordMessageSent(Instant now) {
     this.lastMessageAt = now;
+  }
+
+  /** Only group conversations have a name/avatar to edit — direct conversations derive their
+   * display identity from the other participant instead (see the frontend's peerName/peerAvatar
+   * resolution), so there's nothing here to rename. */
+  public void rename(String newName) {
+    if (!group) {
+      throw new IllegalStateException("Only group conversations can be renamed");
+    }
+    this.groupName = requireNonBlank(newName);
+  }
+
+  public void changeAvatar(String newAvatarUrl) {
+    if (!group) {
+      throw new IllegalStateException("Only group conversations have an avatar to change");
+    }
+    this.groupAvatarUrl = newAvatarUrl;
   }
 
   private static String requireNonBlank(String value) {

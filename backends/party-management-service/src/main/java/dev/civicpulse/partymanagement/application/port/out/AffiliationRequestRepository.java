@@ -13,4 +13,6 @@ public interface AffiliationRequestRepository {
   Optional<AffiliationRequest> findById(UUID id);
 
   List<AffiliationRequest> findByPartyIdAndStatus(UUID partyId, AffiliationRequestStatus status);
+
+  void deleteById(UUID id);
 }

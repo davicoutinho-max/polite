@@ -13,6 +13,8 @@
         [canReact]="canReact()"
         (like)="onLike($event)"
         (addComment)="onComment($event)"
+        (vote)="onVote($event)"
+        (delete)="onDelete($event)"
       />
     } @empty {
       <p class="feed__empty">{{ 'empty.no-posts-filter' | translate: 'No posts to show for this filter.' }}</p>

@@ -4,29 +4,92 @@
   <div class="composer__body">
     <ui-tabs [tabs]="composerModes" [active]="mode()" (activeChange)="setMode($event)" />
 
-    <textarea
-      pTextarea
-      class="composer__input"
-      rows="2"
-      [placeholder]="mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
-      [ngModel]="draft()"
-      (ngModelChange)="draft.set($event)"
-    ></textarea>
+    @if (mode() !== 'agenda') {
+      <textarea
+        pTextarea
+        class="composer__input"
+        rows="2"
+        [placeholder]="mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+      ></textarea>
+    }
 
     @if (mode() === 'agenda') {
-      <div class="composer__fields">
-        <label class="composer__field composer__field--grow">
+      <div class="composer__fields composer__fields--agenda">
+        <label class="composer__field composer__field--title">
           <span>Title</span>
-          <input type="text" [ngModel]="agendaTitle()" (ngModelChange)="agendaTitle.set($event)" placeholder="e.g. Town hall meeting" />
+          <input pInputText type="text" [ngModel]="agendaTitle()" (ngModelChange)="agendaTitle.set($event)" placeholder="e.g. Town hall meeting" />
         </label>
-        <label class="composer__field">
+        <label class="composer__field composer__field--date">
           <span>Date</span>
-          <input type="text" [ngModel]="agendaDate()" (ngModelChange)="agendaDate.set($event)" placeholder="Aug 12, 2026 · 14:00" />
+          <p-datepicker required dateFormat="dd/mm/yy" [ngModel]="agendaDate()" (ngModelChange)="agendaDate.set($event)" appendTo="body" />
         </label>
-        <label class="composer__field composer__field--grow">
+        <label class="composer__field composer__field--time">
+          <span>Time</span>
+          <p-datepicker [timeOnly]="true" hourFormat="24" [ngModel]="agendaTime()" (ngModelChange)="agendaTime.set($event)" appendTo="body" />
+        </label>
+        <label class="composer__field composer__field--location">
           <span>Location</span>
-          <input type="text" [ngModel]="agendaLocation()" (ngModelChange)="agendaLocation.set($event)" placeholder="e.g. City Hall" />
+          <p-select
+            required
+            [options]="states()"
+            optionLabel="name"
+            optionValue="name"
+            [filter]="true"
+            filterBy="name"
+            placeholder="Select a state"
+            [ngModel]="agendaLocation()"
+            (ngModelChange)="agendaLocation.set($event)"
+            appendTo="body"
+          />
         </label>
+      </div>
+      <textarea
+        pTextarea
+        class="composer__input"
+        rows="2"
+        placeholder="Add a note (optional)..."
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+      ></textarea>
+    }
+
+    @if (imagePreviewUrl()) {
+      <div class="composer__attachment-preview">
+        <img [src]="imagePreviewUrl()" alt="" class="composer__image-preview" />
+        <ui-icon-button icon="close" ariaLabel="Remove image" [iconSize]="16" (click)="removeImage()" />
+      </div>
+    }
+
+    @if (attachedFile(); as file) {
+      <div class="composer__attachment-chip">
+        <ui-icon name="description" [size]="18" />
+        <span class="composer__attachment-name">{{ file.name }}</span>
+        <ui-icon-button icon="close" ariaLabel="Remove file" [iconSize]="16" (click)="removeAttachedFile()" />
+      </div>
+    }
+
+    @if (pollMode()) {
+      <div class="composer__poll">
+        <p class="composer__poll-hint">Your post text above is the poll question.</p>
+        @for (option of pollOptionInputs(); track $index) {
+          <label class="composer__field composer__field--grow composer__poll-option">
+            <input
+              pInputText
+              type="text"
+              [ngModel]="option"
+              (ngModelChange)="updatePollOption($index, $event)"
+              [placeholder]="'Option ' + ($index + 1)"
+            />
+            @if (pollOptionInputs().length > 2) {
+              <ui-icon-button icon="close" ariaLabel="Remove option" [iconSize]="16" (click)="removePollOption($index)" />
+            }
+          </label>
+        }
+        @if (pollOptionInputs().length < 6) {
+          <ui-button label="Add option" icon="add" variant="text" (click)="addPollOption()" />
+        }
       </div>
     }
 
@@ -34,11 +97,11 @@
       <div class="composer__fields">
         <label class="composer__field composer__field--grow">
           <span>Video ID</span>
-          <input type="text" [ngModel]="liveVideoId()" (ngModelChange)="liveVideoId.set($event)" placeholder="YouTube video id" />
+          <input pInputText type="text" [ngModel]="liveVideoId()" (ngModelChange)="liveVideoId.set($event)" placeholder="YouTube video id" />
         </label>
         <label class="composer__field composer__field--grow">
           <span>Channel ID</span>
-          <input type="text" [ngModel]="liveChannelId()" (ngModelChange)="liveChannelId.set($event)" placeholder="YouTube channel id (optional)" />
+          <input pInputText type="text" [ngModel]="liveChannelId()" (ngModelChange)="liveChannelId.set($event)" placeholder="YouTube channel id (optional)" />
         </label>
       </div>
       <label class="visibility">
@@ -61,7 +124,7 @@
       @if (!liveIsNow()) {
         <label class="composer__field composer__field--grow">
           <span>Scheduled for</span>
-          <input type="text" [ngModel]="liveScheduledFor()" (ngModelChange)="liveScheduledFor.set($event)" placeholder="Aug 12, 2026 · 20:00" />
+          <input pInputText type="text" [ngModel]="liveScheduledFor()" (ngModelChange)="liveScheduledFor.set($event)" placeholder="Aug 12, 2026 · 20:00" />
         </label>
       }
     }
@@ -88,13 +151,20 @@
       />
     </label>
 
+    <input #imageInput type="file" accept="image/*" class="composer__hidden-input" (change)="onImageSelected($event)" />
+    <input #fileInput type="file" class="composer__hidden-input" (change)="onFileSelected($event)" />
+
     <div class="composer__actions">
       <div class="composer__tools">
-        <ui-icon-button icon="image" ariaLabel="Add image" [iconSize]="20" />
-        <ui-icon-button icon="poll" ariaLabel="Add poll" [iconSize]="20" />
-        <ui-icon-button icon="attach_file" ariaLabel="Attach file" [iconSize]="20" />
+        <ui-icon-button icon="image" ariaLabel="Add image" [iconSize]="20" [fill]="!!imageFile()" (click)="imageInput.click()" />
+        <ui-icon-button icon="poll" ariaLabel="Add poll" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
+        <ui-icon-button icon="attach_file" ariaLabel="Attach file" [iconSize]="20" [fill]="!!attachedFile()" (click)="fileInput.click()" />
       </div>
-      <ui-button label="Post" variant="filled" [disabled]="!canPublish()" (click)="onPublish()" />
+      <ui-button label="Post" variant="filled" [disabled]="!canPublish() || submitting()" (click)="onPublish()" />
     </div>
+
+    @if (error()) {
+      <p class="composer__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+    }
   </div>
 </div>

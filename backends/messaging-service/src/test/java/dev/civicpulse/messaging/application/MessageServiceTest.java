@@ -10,6 +10,7 @@ import dev.civicpulse.messaging.application.port.out.ConversationParticipantRepo
 import dev.civicpulse.messaging.application.port.out.ConversationRepository;
 import dev.civicpulse.messaging.application.port.out.EventPublisher;
 import dev.civicpulse.messaging.application.port.out.MessageRepository;
+import dev.civicpulse.messaging.application.port.out.RealtimeMessagePublisher;
 import dev.civicpulse.messaging.domain.exception.ConversationNotFoundException;
 import dev.civicpulse.messaging.domain.exception.NotAParticipantException;
 import dev.civicpulse.messaging.domain.model.Conversation;
@@ -33,6 +34,7 @@ class MessageServiceTest {
   @Mock private ConversationParticipantRepository conversationParticipantRepository;
   @Mock private MessageRepository messageRepository;
   @Mock private EventPublisher eventPublisher;
+  @Mock private RealtimeMessagePublisher realtimePublisher;
 
   private MessageService service;
 
@@ -40,7 +42,12 @@ class MessageServiceTest {
   void setUp() {
     service =
         new MessageService(
-            conversationRepository, conversationParticipantRepository, messageRepository, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
+            conversationRepository,
+            conversationParticipantRepository,
+            messageRepository,
+            eventPublisher,
+            realtimePublisher,
+            Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test

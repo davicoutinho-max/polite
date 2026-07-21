@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Politician } from '../../../../core/models';
 import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
-/** Politician profile hero: cover, avatar, identity and primary actions. */
+/** Politician profile hero: cover, avatar, identity and primary actions. Presentational — the
+ * real follow state and the follow/contact actions themselves live in the parent (Profile),
+ * backed by DirectoryService/MessagesService. */
 @Component({
   selector: 'app-profile-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,10 +17,9 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 })
 export class ProfileHeader {
   readonly politician = input.required<Politician>();
+  readonly following = input(false);
+  readonly canFollow = input(true);
 
-  protected readonly following = signal(false);
-
-  protected toggleFollow(): void {
-    this.following.update((v) => !v);
-  }
+  readonly toggleFollow = output<void>();
+  readonly contact = output<void>();
 }

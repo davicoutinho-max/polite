@@ -9,4 +9,6 @@ public interface PostTagRepository {
   PostTag save(PostTag tag);
 
   List<PostTag> findByPostId(UUID postId);
+
+  void deleteByPostId(UUID postId);
 }

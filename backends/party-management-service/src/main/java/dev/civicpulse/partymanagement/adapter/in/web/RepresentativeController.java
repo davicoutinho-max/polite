@@ -39,7 +39,14 @@ public class RepresentativeController {
         registerPoliticianUseCase.registerPolitician(
             partyId,
             new RegisterPoliticianCommand(
-                request.name(), request.handle(), request.email(), request.password(), request.documentType(), request.documentNumber(), request.roleTitle()));
+                request.name(),
+                request.handle(),
+                request.email(),
+                request.password(),
+                request.documentType(),
+                request.documentNumber(),
+                request.roleTitle(),
+                request.state()));
     return created(representative);
   }
 

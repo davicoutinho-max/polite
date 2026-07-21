@@ -50,7 +50,7 @@ public class RegisterPoliticianService implements RegisterPoliticianUseCase {
     PartyRepresentative saved = representativeRepository.save(representative);
 
     eventPublisher.publish(new PoliticianRegistered(account.accountId(), partyId, null, null, now));
-    eventPublisher.publish(new RepresentativeLinked(partyId, account.accountId(), command.roleTitle(), now));
+    eventPublisher.publish(new RepresentativeLinked(partyId, account.accountId(), command.roleTitle(), command.state(), now));
 
     return saved;
   }

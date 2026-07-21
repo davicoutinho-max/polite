@@ -116,15 +116,9 @@
   font-weight: 600;
   color: var(--cp-on-surface-variant);
 
+  // Renders via PrimeNG's pInputText directive — brings its own theming, this just fills the field.
   input {
-    font: inherit;
-    font-weight: 400;
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
-    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+    width: 100%;
   }
 }
 

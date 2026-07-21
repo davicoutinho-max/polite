@@ -36,7 +36,7 @@ public class RepresentativeService implements ManageRepresentativeUseCase {
     }
     Instant now = clock.instant();
     PartyRepresentative saved = representativeRepository.save(PartyRepresentative.link(UUID.randomUUID(), partyId, politicianAccountId, roleTitle, now));
-    eventPublisher.publish(new RepresentativeLinked(partyId, politicianAccountId, roleTitle, now));
+    eventPublisher.publish(new RepresentativeLinked(partyId, politicianAccountId, roleTitle, null, now));
     return saved;
   }
 

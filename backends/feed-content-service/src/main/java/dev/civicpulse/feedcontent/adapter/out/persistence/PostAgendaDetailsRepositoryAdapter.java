@@ -27,6 +27,11 @@ class PostAgendaDetailsRepositoryAdapter implements PostAgendaDetailsRepository 
     return jpaRepository.findById(postId).map(PostAgendaDetailsRepositoryAdapter::toDomain);
   }
 
+  @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteById(postId);
+  }
+
   private static PostAgendaDetails toDomain(PostAgendaDetailsJpaEntity entity) {
     return PostAgendaDetails.reconstitute(entity.getPostId(), entity.getTitle(), entity.getEventDate(), entity.getLocation());
   }

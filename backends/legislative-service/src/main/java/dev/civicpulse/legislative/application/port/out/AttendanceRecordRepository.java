@@ -9,4 +9,6 @@ public interface AttendanceRecordRepository {
   AttendanceRecord save(AttendanceRecord record);
 
   Optional<AttendanceRecord> findById(UUID politicianAccountId);
+
+  void deleteById(UUID politicianAccountId);
 }

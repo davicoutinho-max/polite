@@ -33,4 +33,9 @@ class AffiliationRequestRepositoryAdapter implements AffiliationRequestRepositor
   public List<AffiliationRequest> findByPartyIdAndStatus(UUID partyId, AffiliationRequestStatus status) {
     return jpaRepository.findByPartyIdAndStatus(partyId, status).stream().map(mapper::toDomain).toList();
   }
+
+  @Override
+  public void deleteById(UUID id) {
+    jpaRepository.deleteById(id);
+  }
 }

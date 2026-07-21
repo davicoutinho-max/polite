@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import dev.civicpulse.platformconfig.application.port.out.EventPublisher;
 import dev.civicpulse.platformconfig.application.port.out.LanguageRepository;
+import dev.civicpulse.platformconfig.application.port.out.TranslationValueRepository;
 import dev.civicpulse.platformconfig.domain.exception.CannotRemoveDefaultLanguageException;
 import dev.civicpulse.platformconfig.domain.exception.LanguageNotFoundException;
 import dev.civicpulse.platformconfig.domain.model.Language;
@@ -30,13 +31,14 @@ class LanguageServiceTest {
   private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
 
   @Mock private LanguageRepository languageRepository;
+  @Mock private TranslationValueRepository translationValueRepository;
   @Mock private EventPublisher eventPublisher;
 
   private LanguageService service;
 
   @BeforeEach
   void setUp() {
-    service = new LanguageService(languageRepository, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
+    service = new LanguageService(languageRepository, translationValueRepository, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
@@ -96,5 +98,16 @@ class LanguageServiceTest {
     service.removeLanguage("es-es");
 
     verify(languageRepository).delete("es-es");
+  }
+
+  @Test
+  void removingALanguageCascadesItsTranslationValuesFirst() {
+    when(languageRepository.findById("es-es")).thenReturn(Optional.of(Language.reconstitute("es-es", "Spanish", "es", false)));
+
+    service.removeLanguage("es-es");
+
+    InOrder inOrder = Mockito.inOrder(translationValueRepository, languageRepository);
+    inOrder.verify(translationValueRepository).deleteByLanguageId("es-es");
+    inOrder.verify(languageRepository).delete("es-es");
   }
 }

@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { PlatformService } from '../../core/services/platform.service';
+import { TranslateService } from '../../core/services/translate.service';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
@@ -10,22 +14,25 @@ import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { UiTabs, UiTab } from '../../shared/ui/ui-tabs/ui-tabs';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
-type PlatformTab = 'directory' | 'regions' | 'languages';
+type PlatformTab = 'directory' | 'regions' | 'positions' | 'languages';
+type SelectOption = { value: string; label: string };
 
 /** Platform administration: party registry, politician assignment and platform-wide parameters. */
 @Component({
   selector: 'app-platform-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeader, UiSection, UiIcon, UiButton, UiAvatar, UiTag, UiEmpty, UiTabs, TranslatePipe],
+  imports: [PageHeader, UiSection, UiIcon, UiButton, UiAvatar, UiTag, UiEmpty, UiTabs, FormsModule, InputText, Select, TranslatePipe],
   templateUrl: './platform-page.html',
   styleUrl: './platform-page.scss',
 })
 export class PlatformPage {
   private readonly platform = inject(PlatformService);
+  private readonly translate = inject(TranslateService);
 
   protected readonly tabs: UiTab[] = [
     { id: 'directory', label: 'Parties & Politicians', key: 'tab.parties-politicians', icon: 'how_to_reg' },
     { id: 'regions', label: 'Countries & States', key: 'tab.countries-states', icon: 'public' },
+    { id: 'positions', label: 'Political Positions', key: 'tab.political-positions', icon: 'badge' },
     { id: 'languages', label: 'Languages', key: 'tab.languages', icon: 'translate' },
   ];
   protected readonly activeTab = signal<PlatformTab>('directory');
@@ -36,6 +43,11 @@ export class PlatformPage {
 
   protected readonly parties = this.platform.parties;
   protected readonly politicians = this.platform.politicians;
+
+  protected readonly partyAssignOptions = computed<SelectOption[]>(() => [
+    { value: '', label: this.translate.t('label.independent', 'Independent') },
+    ...this.parties().map((p) => ({ value: p.id, label: p.name })),
+  ]);
 
   protected readonly avatarPlaceholder =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23c7ccd1'/%3E%3Ccircle cx='20' cy='15' r='7' fill='%23fff'/%3E%3Cpath d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23fff'/%3E%3C/svg%3E";
@@ -102,7 +114,7 @@ export class PlatformPage {
   }
 
   protected assign(politicianId: string, value: string): void {
-    this.platform.assignPolitician(politicianId, value === '' ? null : value).subscribe();
+    this.platform.assignPolitician(politicianId, value === '' || value == null ? null : value).subscribe();
   }
 
   private resetForm(): void {
@@ -127,6 +139,10 @@ export class PlatformPage {
   protected readonly stateName = signal('');
   protected readonly stateCode = signal('');
   protected readonly stateCountryId = signal('');
+
+  protected readonly countryOptions = computed<SelectOption[]>(() =>
+    this.countries().map((c) => ({ value: c.id, label: c.name })),
+  );
 
   protected countryNameOf(id: string): string {
     return this.platform.countryName(id);
@@ -155,6 +171,20 @@ export class PlatformPage {
     this.platform.removeState(id);
   }
 
+  // ---- Political positions (cargos) ----
+  protected readonly politicalPositions = this.platform.politicalPositions;
+  protected readonly positionName = signal('');
+
+  protected addPosition(): void {
+    if (!this.positionName().trim()) return;
+    this.platform.addPoliticalPosition(this.positionName().trim());
+    this.positionName.set('');
+  }
+
+  protected removePosition(id: string): void {
+    this.platform.removePoliticalPosition(id);
+  }
+
   // ---- Languages ----
   protected readonly languages = this.platform.languages;
   protected readonly languageName = signal('');
@@ -178,11 +208,13 @@ export class PlatformPage {
   // ---- Translation tags ----
   protected readonly translations = this.platform.translations;
   protected readonly newTranslationKey = signal('');
+  protected readonly newTranslationValue = signal('');
 
   protected addTranslation(): void {
-    if (!this.newTranslationKey().trim()) return;
-    this.platform.addTranslation(this.newTranslationKey().trim());
+    if (!this.newTranslationKey().trim() || !this.newTranslationValue().trim()) return;
+    this.platform.addTranslation(this.newTranslationKey().trim(), this.newTranslationValue().trim());
     this.newTranslationKey.set('');
+    this.newTranslationValue.set('');
   }
 
   protected updateTranslationValue(id: string, languageId: string, value: string): void {

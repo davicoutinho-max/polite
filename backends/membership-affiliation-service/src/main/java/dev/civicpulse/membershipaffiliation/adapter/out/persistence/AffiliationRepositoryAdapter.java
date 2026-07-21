@@ -37,4 +37,9 @@ class AffiliationRepositoryAdapter implements AffiliationRepository {
   public List<Affiliation> findByCitizenAccountId(UUID citizenAccountId) {
     return jpaRepository.findByCitizenAccountId(citizenAccountId).stream().map(mapper::toDomain).toList();
   }
+
+  @Override
+  public void deleteById(UUID id) {
+    jpaRepository.deleteById(id);
+  }
 }

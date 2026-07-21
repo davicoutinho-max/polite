@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { GovLevel, PartySpectrum, PartySummary, PoliticianSummary } from '../models';
+import { SessionService } from './session.service';
 
 const DEFAULT_AVATAR =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuARrPtz8cdX-XEjmt6mzDr-yEB20GT86Vn2pwKXi-5JWa3WGOtpu2UZ53Clzs2UcsoUoRwjb6wjw4AUdOdgkX173o7MCsccQ_OhfJNR75fdsj3a5mJYH-bXhcLbpBI1-z4fVeifFnFeEQQKMdwNjq0xdG4H2KkmEDaK3ibUiLFVAb-mCXTgCg2zRPjR05v5YuxVH-JTO2o9dQN3hagJW1O1M_Tkor9T5VNVg8T-Ui3Hh1LYLnroVzxx0g';
@@ -97,6 +98,7 @@ function toPartySummary(response: PartyResponse): PartySummary {
 @Injectable({ providedIn: 'root' })
 export class DirectoryService {
   private readonly http = inject(HttpClient);
+  private readonly session = inject(SessionService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/directory`;
 
   private readonly _politicians = signal<PoliticianSummary[]>([]);
@@ -145,6 +147,9 @@ export class DirectoryService {
   }
 
   reloadFollowing(targetType: 'politician' | 'party'): Observable<string[]> {
+    if (!this.session.isAuthenticated()) {
+      return of([]);
+    }
     return this.http.get<string[]>(`${this.apiBase}/follows`, { params: { targetType } }).pipe(
       tap((ids) => {
         const set = new Set(ids);

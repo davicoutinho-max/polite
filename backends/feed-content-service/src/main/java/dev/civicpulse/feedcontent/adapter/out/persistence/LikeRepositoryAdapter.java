@@ -26,6 +26,11 @@ class LikeRepositoryAdapter implements LikeRepository {
   }
 
   @Override
+  public void deleteByPostId(UUID postId) {
+    jpaRepository.deleteByPostId(postId);
+  }
+
+  @Override
   public boolean exists(UUID postId, UUID accountId) {
     return jpaRepository.existsById(new LikeId(postId, accountId));
   }

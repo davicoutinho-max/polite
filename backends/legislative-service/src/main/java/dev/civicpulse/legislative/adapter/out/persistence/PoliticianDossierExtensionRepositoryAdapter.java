@@ -31,4 +31,9 @@ class PoliticianDossierExtensionRepositoryAdapter implements PoliticianDossierRe
   public boolean existsById(UUID politicianAccountId) {
     return jpaRepository.existsById(politicianAccountId);
   }
+
+  @Override
+  public void deleteById(UUID politicianAccountId) {
+    jpaRepository.deleteById(politicianAccountId);
+  }
 }

@@ -9,5 +9,7 @@ public interface LikeRepository {
 
   void delete(UUID postId, UUID accountId);
 
+  void deleteByPostId(UUID postId);
+
   boolean exists(UUID postId, UUID accountId);
 }

@@ -22,20 +22,29 @@ public class MessageJpaEntity {
   @Column(name = "sender_account_id", nullable = false)
   private UUID senderAccountId;
 
-  @Column(nullable = false)
+  @Column
   private String body;
 
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
+  @Column(name = "edited_at")
+  private Instant editedAt;
+
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
+
   protected MessageJpaEntity() {}
 
-  public MessageJpaEntity(UUID id, UUID conversationId, UUID senderAccountId, String body, Instant createdAt) {
+  public MessageJpaEntity(
+      UUID id, UUID conversationId, UUID senderAccountId, String body, Instant createdAt, Instant editedAt, Instant deletedAt) {
     this.id = id;
     this.conversationId = conversationId;
     this.senderAccountId = senderAccountId;
     this.body = body;
     this.createdAt = createdAt;
+    this.editedAt = editedAt;
+    this.deletedAt = deletedAt;
   }
 
   public UUID getId() {
@@ -56,5 +65,13 @@ public class MessageJpaEntity {
 
   public Instant getCreatedAt() {
     return createdAt;
+  }
+
+  public Instant getEditedAt() {
+    return editedAt;
+  }
+
+  public Instant getDeletedAt() {
+    return deletedAt;
   }
 }

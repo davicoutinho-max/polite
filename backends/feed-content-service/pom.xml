@@ -57,6 +57,13 @@
       <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
 
+    <!-- Object storage for post attachments (images and generic files) -->
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>8.5.12</version>
+    </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

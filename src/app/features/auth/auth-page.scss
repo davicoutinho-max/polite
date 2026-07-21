@@ -67,15 +67,10 @@
   font-weight: 600;
   color: var(--cp-on-surface-variant);
 
-  input, select {
-    font: inherit;
-    font-weight: 400;
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
-    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+  // Text/password fields render via PrimeNG's pInputText directive, selects via p-select — both
+  // bring their own theming, this just makes them fill the field like the rest of the form.
+  input, select, p-select {
+    width: 100%;
   }
 }
 .auth__error {

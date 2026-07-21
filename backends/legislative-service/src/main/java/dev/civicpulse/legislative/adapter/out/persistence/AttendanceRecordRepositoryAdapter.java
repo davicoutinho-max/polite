@@ -26,4 +26,9 @@ class AttendanceRecordRepositoryAdapter implements AttendanceRecordRepository {
   public Optional<AttendanceRecord> findById(UUID politicianAccountId) {
     return jpaRepository.findById(politicianAccountId).map(mapper::toDomain);
   }
+
+  @Override
+  public void deleteById(UUID politicianAccountId) {
+    jpaRepository.deleteById(politicianAccountId);
+  }
 }

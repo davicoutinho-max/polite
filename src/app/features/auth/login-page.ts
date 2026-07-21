@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { InputText } from 'primeng/inputtext';
 import { SessionService } from '../../core/services/session.service';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
@@ -10,7 +11,7 @@ import { TranslateService } from '../../core/services/translate.service';
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiButton, UiIcon, TranslatePipe],
+  imports: [RouterLink, UiButton, UiIcon, InputText, TranslatePipe],
   templateUrl: './login-page.html',
   styleUrl: './auth-page.scss',
 })

@@ -83,12 +83,16 @@
                 }
               </span>
               <span class="pcard__handle">{{ p.handle }}</span>
-              <span class="pcard__office">{{ p.office }} · {{ p.state }}</span>
+              @if (p.office || p.state) {
+                <span class="pcard__office">{{ p.office }}{{ p.office && p.state ? ' · ' : '' }}{{ p.state }}</span>
+              }
             </div>
           </a>
 
           <div class="pcard__tags">
-            <ui-tag [label]="p.partyAcronym" severity="info" />
+            @if (p.partyAcronym) {
+              <ui-tag [label]="p.partyAcronym" severity="info" />
+            }
             <ui-tag [label]="(p.followers | compactNumber) + ' ' + ('label.followers' | translate: 'followers')" severity="neutral" />
           </div>
 

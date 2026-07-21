@@ -17,4 +17,6 @@ public interface ConversationRepository {
   /** Finds an existing non-group conversation between exactly these two accounts, if any —
    * direct conversations are reused rather than duplicated. */
   Optional<Conversation> findDirectBetween(UUID accountA, UUID accountB);
+
+  void deleteById(UUID id);
 }

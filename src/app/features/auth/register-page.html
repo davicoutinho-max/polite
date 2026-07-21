@@ -11,19 +11,19 @@
     <form class="auth__form" (submit)="submit(); $event.preventDefault()">
       <label class="auth__field">
         <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
-        <input type="text" autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
+        <input pInputText type="text" required autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
       </label>
       <label class="auth__field">
         <span>{{ 'field.email' | translate: 'Email' }}</span>
-        <input type="email" autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+        <input pInputText type="email" required autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
       </label>
       <label class="auth__field">
         <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
-        <input type="text" inputmode="numeric" autocomplete="off" [value]="cpf()" (input)="cpf.set($any($event.target).value)" placeholder="000.000.000-00" />
+        <input pInputText type="text" inputmode="numeric" required autocomplete="off" [value]="cpf()" (input)="cpf.set($any($event.target).value)" placeholder="000.000.000-00" />
       </label>
       <label class="auth__field">
         <span>{{ 'field.password' | translate: 'Password' }}</span>
-        <input type="password" autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+        <input pInputText type="password" required autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
       </label>
 
       @if (error()) {

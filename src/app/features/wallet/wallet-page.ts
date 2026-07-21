@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { WalletService } from '../../core/services/wallet.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { TagSeverity } from '../../core/models';
@@ -30,6 +31,11 @@ export class WalletPage {
   private readonly wallet = inject(WalletService);
   private readonly directory = inject(DirectoryService);
   private readonly translate = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
+
+  /** Set when arriving from a party's "Join party" button (?partyId=…) so the affiliation
+   * form starts with that party already selected instead of defaulting to the first one. */
+  protected readonly preselectedPartyId = this.route.snapshot.queryParamMap.get('partyId') ?? '';
 
   protected readonly card = this.wallet.card;
   protected readonly steps = this.wallet.steps;

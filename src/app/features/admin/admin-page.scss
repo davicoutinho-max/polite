@@ -45,6 +45,8 @@
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .action:hover { background: var(--cp-surface-container-low); box-shadow: var(--cp-shadow-card); }
+.action--disabled { opacity: 0.5; cursor: not-allowed; }
+.action--disabled:hover { background: var(--cp-surface); box-shadow: none; }
 .action__icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border-radius: var(--cp-radius);
@@ -64,16 +66,44 @@
 
   &--grow { flex: 2; }
 }
-.register-field input, .register-select {
-  font: inherit; font-weight: 400;
-  padding: var(--cp-space-sm) var(--cp-space-md);
-  border: 1px solid var(--cp-outline-variant);
-  border-radius: var(--cp-radius);
-  background: var(--cp-surface-container-low);
-  color: var(--cp-on-surface);
-  &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
+// Text/password fields render via PrimeNG's pInputText directive, selects via p-select, dates
+// via p-datepicker — all bring their own theming, this just fills the field like the rest of
+// the form (matches politicians-page.scss's .dir__search/.dir__selects reference pattern).
+.register-field input, .register-field select, .register-select, .register-field p-select, .register-field p-datepicker {
+  width: 100%;
+}
+.register-field__hint {
+  font-size: 11px; font-weight: 400;
+  &--error { color: var(--cp-error); }
 }
 .register-error {
   display: flex; align-items: center; gap: var(--cp-space-xs);
   margin: 0; font-size: 13px; color: var(--cp-error);
+}
+
+.quick-form {
+  display: flex; flex-direction: column; gap: var(--cp-space-md);
+  margin-top: var(--cp-space-md); padding-top: var(--cp-space-md);
+  border-top: 1px solid var(--cp-outline-variant);
+
+  h4 { margin: 0; font-size: 14px; color: var(--cp-on-surface); }
+}
+.quick-form__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--cp-space-md); }
+.quick-form__field {
+  display: flex; flex-direction: column; gap: var(--cp-space-xs);
+  flex: 1; min-width: 120px;
+  font-size: 13px; font-weight: 600; color: var(--cp-on-surface-variant);
+
+  &--grow { flex: 2; }
+}
+.quick-form__field input, .quick-form__field select, .quick-form__field p-select, .quick-form__field p-datepicker {
+  width: 100%;
+}
+.quick-form__hint { margin: 0; font-size: 12px; color: var(--cp-on-surface-variant); }
+.quick-form__error {
+  display: flex; align-items: center; gap: var(--cp-space-xs);
+  margin: 0; font-size: 13px; color: var(--cp-error);
+}
+.quick-form__success {
+  margin: 0; font-size: 13px; font-weight: 600; color: var(--cp-on-success-container, #1b5e20);
 }

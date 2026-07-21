@@ -48,16 +48,9 @@
 
   &--grow { flex: 1; }
 
-  input {
-    font: inherit;
-    font-weight: 400;
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
-    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
-  }
+  // Inputs render via PrimeNG's pInputText directive, selects via p-select — both bring their
+  // own theming, this just fills the field like the rest of the form.
+  input, p-select, p-datepicker { width: 100%; }
 }
 
 .platform__form-error {
@@ -131,15 +124,7 @@
 .platform__politician-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .platform__politician-name { font-size: 14px; font-weight: 600; color: var(--cp-on-surface); }
 .platform__politician-office { font-size: 12px; color: var(--cp-on-surface-variant); }
-.platform__select {
-  font: inherit;
-  padding: var(--cp-space-xs) var(--cp-space-sm);
-  border: 1px solid var(--cp-outline-variant);
-  border-radius: var(--cp-radius);
-  background: var(--cp-surface-container-low);
-  color: var(--cp-on-surface);
-  &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
-}
+.platform__politician p-select { min-width: 160px; }
 
 ui-section { display: block; margin-bottom: var(--cp-space-md); }
 
@@ -201,13 +186,6 @@ ui-section { display: block; margin-bottom: var(--cp-space-md); }
   td input {
     width: 100%;
     min-width: 120px;
-    font: inherit;
-    padding: var(--cp-space-xs) var(--cp-space-sm);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
-    &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 1px; }
   }
 }
 .platform__table-key {

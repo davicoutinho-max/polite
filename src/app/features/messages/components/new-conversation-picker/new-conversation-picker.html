@@ -47,7 +47,7 @@
   @if (selectedCount() > 1) {
     <label class="picker__group-name">
       <span>{{ 'field.group-name' | translate: 'Group name' }}</span>
-      <input type="text" [ngModel]="groupName()" (ngModelChange)="groupName.set($event)" placeholder="e.g. Progressive Caucus" />
+      <input pInputText type="text" [ngModel]="groupName()" (ngModelChange)="groupName.set($event)" placeholder="e.g. Progressive Caucus" />
     </label>
   }
 

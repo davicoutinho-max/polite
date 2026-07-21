@@ -12,4 +12,8 @@ public interface TranslationValueRepository {
   Optional<TranslationValue> findByKeyAndLanguage(UUID translationKeyId, String languageId);
 
   List<TranslationValue> findByLanguage(String languageId);
+
+  void deleteByTranslationKeyId(UUID translationKeyId);
+
+  void deleteByLanguageId(String languageId);
 }

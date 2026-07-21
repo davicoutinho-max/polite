@@ -70,7 +70,10 @@ public class RouteConfig {
         .route("elections", r -> r.path("/api/elections/**").filters(f -> f.stripPrefix(2)).uri(uris.electionsUri()))
         .route("participation", r -> r.path("/api/participation/**").filters(f -> f.stripPrefix(2)).uri(uris.participationUri()))
         .route("messaging", r -> r.path("/api/messaging/**").filters(f -> f.stripPrefix(2)).uri(uris.messagingUri()))
-        .route("notification", r -> r.path("/api/notifications/**").filters(f -> f.stripPrefix(2)).uri(uris.notificationUri()))
+        // notification-service's own controller is mapped at /notifications/** (plural), which
+        // already equals the external namespace segment — same collision class as analytics and
+        // assistant below, so only "/api" is stripped here (stripPrefix(1)), not stripPrefix(2).
+        .route("notification", r -> r.path("/api/notifications/**").filters(f -> f.stripPrefix(1)).uri(uris.notificationUri()))
         .route("privacy", r -> r.path("/api/privacy/**").filters(f -> f.stripPrefix(2)).uri(uris.privacyUri()))
         // --- Phase 1 additions: legislative-service, activity-feed-service, analytics-service, assistant-service ---
         .route("legislative", r -> r.path("/api/legislative/**").filters(f -> f.stripPrefix(2)).uri(uris.legislativeUri()))

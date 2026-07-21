@@ -53,4 +53,17 @@ public class TranslationService implements ManageTranslationUseCase {
   public List<TranslationValue> getTranslationsForLanguage(String languageId) {
     return valueRepository.findByLanguage(languageId);
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<TranslationKey> listKeys() {
+    return keyRepository.findAll();
+  }
+
+  @Override
+  @Transactional
+  public void deleteKey(UUID keyId) {
+    valueRepository.deleteByTranslationKeyId(keyId);
+    keyRepository.delete(keyId);
+  }
 }

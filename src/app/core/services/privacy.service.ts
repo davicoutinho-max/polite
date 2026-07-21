@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { Observable, map, switchMap, tap } from 'rxjs';
+import { Observable, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
 
@@ -85,6 +85,9 @@ export class PrivacyService {
   }
 
   reload(): Observable<ConsentSetting[]> {
+    if (!this.session.isAuthenticated()) {
+      return of(this._consents());
+    }
     return this.http.get<ConsentRecordResponseDto[]>(`${this.apiBase}/consents`).pipe(
       map((records) => {
         const granted = new Map(records.map((r) => [r.purpose, r.granted]));

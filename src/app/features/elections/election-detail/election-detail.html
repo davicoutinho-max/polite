@@ -31,7 +31,9 @@
                 <span class="candidate-card__name">{{ candidate.name }}</span>
                 <span class="candidate-card__office">{{ candidate.office }}</span>
               </div>
-              <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+              @if (candidate.partyAcronym) {
+                <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+              }
             </a>
           }
         </div>

@@ -65,76 +65,111 @@ class FeedContentRepositoryIntegrationTest {
   @Autowired private PostHashtagRepository postHashtagRepository;
   @Autowired private TrendingTopicCacheRepository trendingTopicCacheRepository;
 
+  // Every test below writes through the real JPA adapters into the shared local-dev Postgres —
+  // the same database the live feed-content-service instance serves the real app from. Posts
+  // created here without cleanup used to sit in `posts` forever with no matching `post_metrics`
+  // row (the app's own metrics-creation step lives in PostService, never exercised by these
+  // repository-level tests), which the real frontend then hit as a false "post not found" 404 on
+  // GET /posts/{id}/metrics. Every test now deletes everything it created, in FK-safe order.
+
   @Test
   void savesAndRetrievesTextPost() {
     UUID id = UUID.randomUUID();
-    Post post = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "hello world", null, PostVisibility.PUBLIC, "ctx", null, Instant.now());
+    Post post = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "hello world", null, null, null, PostVisibility.PUBLIC, "ctx", null, Instant.now());
 
     postRepository.save(post);
 
-    assertThat(postRepository.findById(id)).isPresent().get().satisfies(found -> assertThat(found.content()).contains("hello world"));
+    try {
+      assertThat(postRepository.findById(id)).isPresent().get().satisfies(found -> assertThat(found.content()).contains("hello world"));
+    } finally {
+      postRepository.deleteById(id);
+    }
   }
 
   @Test
   void agendaDetailsRoundTrip() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.AGENDA, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.AGENDA, null, null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
 
     postAgendaDetailsRepository.save(PostAgendaDetails.create(postId, "Town hall", "Aug 12, 2026 - 14:00", "City Hall"));
 
-    assertThat(postAgendaDetailsRepository.findByPostId(postId))
-        .isPresent()
-        .get()
-        .satisfies(found -> assertThat(found.title()).isEqualTo("Town hall"));
+    try {
+      assertThat(postAgendaDetailsRepository.findByPostId(postId))
+          .isPresent()
+          .get()
+          .satisfies(found -> assertThat(found.title()).isEqualTo("Town hall"));
+    } finally {
+      postAgendaDetailsRepository.deleteByPostId(postId);
+      postRepository.deleteById(postId);
+    }
   }
 
   @Test
   void postTagPersistsAndListsByPost() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "tagged", null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "tagged", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
 
     postTagRepository.save(PostTag.add(postId, "#Agenda", TagSeverity.INFO, "event"));
 
-    assertThat(postTagRepository.findByPostId(postId)).anySatisfy(tag -> assertThat(tag.label()).isEqualTo("#Agenda"));
+    try {
+      assertThat(postTagRepository.findByPostId(postId)).anySatisfy(tag -> assertThat(tag.label()).isEqualTo("#Agenda"));
+    } finally {
+      postTagRepository.deleteByPostId(postId);
+      postRepository.deleteById(postId);
+    }
   }
 
   @Test
   void likeExistsReflectsSavedState() {
     UUID postId = UUID.randomUUID();
     UUID accountId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "likeme", null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "likeme", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
 
-    assertThat(likeRepository.exists(postId, accountId)).isFalse();
+    try {
+      assertThat(likeRepository.exists(postId, accountId)).isFalse();
 
-    likeRepository.save(Like.create(postId, accountId, Instant.now()));
+      likeRepository.save(Like.create(postId, accountId, Instant.now()));
 
-    assertThat(likeRepository.exists(postId, accountId)).isTrue();
+      assertThat(likeRepository.exists(postId, accountId)).isTrue();
 
-    likeRepository.delete(postId, accountId);
+      likeRepository.delete(postId, accountId);
 
-    assertThat(likeRepository.exists(postId, accountId)).isFalse();
+      assertThat(likeRepository.exists(postId, accountId)).isFalse();
+    } finally {
+      postRepository.deleteById(postId);
+    }
   }
 
   @Test
   void commentPersistsAndListsInCreationOrder() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "commented", null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "commented", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
 
     commentRepository.save(Comment.add(UUID.randomUUID(), postId, UUID.randomUUID(), "first!", Instant.now()));
 
-    assertThat(commentRepository.findByPostId(postId)).anySatisfy(c -> assertThat(c.body()).isEqualTo("first!"));
+    try {
+      assertThat(commentRepository.findByPostId(postId)).anySatisfy(c -> assertThat(c.body()).isEqualTo("first!"));
+    } finally {
+      commentRepository.deleteByPostId(postId);
+      postRepository.deleteById(postId);
+    }
   }
 
   @Test
   void postMetricsPersistsCounters() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "counted", null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "counted", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
     PostMetrics metrics = PostMetrics.initial(postId, Instant.now());
     metrics.incrementLikes(Instant.now());
 
     postMetricsRepository.save(metrics);
 
-    assertThat(postMetricsRepository.findByPostId(postId)).isPresent().get().satisfies(found -> assertThat(found.likesCount()).isEqualTo(1));
+    try {
+      assertThat(postMetricsRepository.findByPostId(postId)).isPresent().get().satisfies(found -> assertThat(found.likesCount()).isEqualTo(1));
+    } finally {
+      postMetricsRepository.deleteByPostId(postId);
+      postRepository.deleteById(postId);
+    }
   }
 
   @Test
@@ -144,19 +179,33 @@ class FeedContentRepositoryIntegrationTest {
     String hashtag = "civic" + System.nanoTime();
     postHashtagRepository.save(PostHashtag.add(postId, hashtag, now));
 
-    List<PostHashtagRepository.HashtagCount> counts = postHashtagRepository.countByHashtagSince(now.minus(Duration.ofHours(24)), 10);
-
-    assertThat(counts).anySatisfy(c -> assertThat(c.hashtag()).isEqualTo(hashtag));
+    try {
+      List<PostHashtagRepository.HashtagCount> counts = postHashtagRepository.countByHashtagSince(now.minus(Duration.ofHours(24)), 10);
+      assertThat(counts).anySatisfy(c -> assertThat(c.hashtag()).isEqualTo(hashtag));
+    } finally {
+      postHashtagRepository.deleteByPostId(postId);
+    }
   }
 
+  // `replaceAll` wipes the entire cache table (there's no per-row scoping), so this test borrows
+  // real production state rather than just adding to it — capture whatever the live cache held
+  // before the test and hand it back afterward, instead of permanently leaving the fake
+  // "secondtag" row as the last thing ever written to a table the real GET /trending endpoint
+  // serves from.
   @Test
   void trendingTopicCacheReplaceAllOverwritesPreviousContents() {
+    List<TrendingTopic> original = trendingTopicCacheRepository.findTopRanked(1000);
     Instant now = Instant.now();
-    trendingTopicCacheRepository.replaceAll(List.of(new TrendingTopic("firsttag", 5, (short) 1, now)));
-    assertThat(trendingTopicCacheRepository.findTopRanked(10)).extracting(TrendingTopic::hashtag).contains("firsttag");
 
-    trendingTopicCacheRepository.replaceAll(List.of(new TrendingTopic("secondtag", 9, (short) 1, now)));
+    try {
+      trendingTopicCacheRepository.replaceAll(List.of(new TrendingTopic("firsttag", 5, (short) 1, now)));
+      assertThat(trendingTopicCacheRepository.findTopRanked(10)).extracting(TrendingTopic::hashtag).contains("firsttag");
 
-    assertThat(trendingTopicCacheRepository.findTopRanked(10)).extracting(TrendingTopic::hashtag).containsExactly("secondtag");
+      trendingTopicCacheRepository.replaceAll(List.of(new TrendingTopic("secondtag", 9, (short) 1, now)));
+
+      assertThat(trendingTopicCacheRepository.findTopRanked(10)).extracting(TrendingTopic::hashtag).containsExactly("secondtag");
+    } finally {
+      trendingTopicCacheRepository.replaceAll(original);
+    }
   }
 }

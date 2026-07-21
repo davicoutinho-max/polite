@@ -22,6 +22,7 @@ export interface RegisterPoliticianInput {
   readonly password: string;
   readonly documentNumber: string;
   readonly roleTitle: string;
+  readonly state: string;
 }
 
 interface RepresentativeResponseDto {
@@ -125,13 +126,22 @@ export class PartyService {
   private readonly _members = signal<PartyMemberSummary[]>([]);
   readonly members = this._members.asReadonly();
 
-  /** Loads the party's public profile, offices, events and representatives. */
+  /** Loads the party's public profile, offices, events and representatives.
+   *
+   * Also re-fetches directory-service's politicians/parties caches (rather than trusting
+   * whatever DirectoryService's own constructor-time load happened to have loaded by now) —
+   * `toRepresentative`/the party summary lookup below read those signals synchronously, and
+   * DirectoryService's initial fetch races this one on first navigation. Without this, arriving
+   * here before that fetch resolves permanently baked "Unknown" into every representative's name,
+   * since the mapping runs once and never re-resolves. */
   load(partyId: string): Observable<Party> {
     return forkJoin({
       profile: this.http.get<PartyProfileResponseDto>(`${this.apiBase}/parties/${partyId}/profile`),
       offices: this.http.get<OfficeResponseDto[]>(`${this.apiBase}/parties/${partyId}/offices`),
       events: this.http.get<EventResponseDto[]>(`${this.apiBase}/parties/${partyId}/events`),
       representatives: this.http.get<RepresentativeResponseDto[]>(`${this.apiBase}/parties/${partyId}/representatives`),
+      directoryPoliticians: this.directory.reloadPoliticians(),
+      directoryParties: this.directory.reloadParties(),
     }).pipe(
       map(({ profile, offices, events, representatives }): Party => {
         const summary = this.directory.parties().find((p) => p.id === partyId);
@@ -273,6 +283,24 @@ export class PartyService {
     });
   }
 
+  createEvent(title: string, eventDate: string, location: string, tagLabel: string, tagSeverity: TagSeverity): Observable<PartyEvent> {
+    const partyId = this._party().id;
+    return this.http
+      .post<EventResponseDto>(`${this.apiBase}/parties/${partyId}/events`, { title, eventDate, location, tagLabel, tagSeverity })
+      .pipe(
+        map(
+          (e): PartyEvent => ({
+            id: e.id,
+            title: e.title,
+            date: e.eventDate,
+            location: e.location ?? '',
+            tag: { label: e.tagLabel ?? '', severity: (e.tagSeverity as TagSeverity) ?? 'neutral' },
+          }),
+        ),
+        tap((event) => this._party.update((party) => ({ ...party, events: [...party.events, event] }))),
+      );
+  }
+
   /** Real registration against party-management-service — creates the politician's
    * authenticatable identity AND links it to this party in one call (see
    * RegisterPoliticianService.registerPolitician's javadoc). On success the new representative
@@ -288,6 +316,7 @@ export class PartyService {
         documentType: 'cpf',
         documentNumber: input.documentNumber,
         roleTitle: input.roleTitle,
+        state: input.state,
       })
       .pipe(
         tap((response) => {

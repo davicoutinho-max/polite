@@ -49,6 +49,13 @@ export interface PlatformLanguage {
   isDefault: boolean;
 }
 
+/** A parametrized elected office (cargo) offered when registering a politician — e.g.
+ * "Vereador", "Deputado Federal". Managed by platform admins, not hardcoded. */
+export interface PoliticalPosition {
+  readonly id: string;
+  readonly name: string;
+}
+
 /** A translation key and its value in every registered language, keyed by language id. */
 export interface TranslationEntry {
   readonly id: string;

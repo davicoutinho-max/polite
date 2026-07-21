@@ -1,6 +1,8 @@
 package dev.civicpulse.feedcontent.adapter.in.web;
 
 import dev.civicpulse.feedcontent.domain.exception.AlreadyLikedException;
+import dev.civicpulse.feedcontent.domain.exception.MediaUploadFailedException;
+import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
 import dev.civicpulse.feedcontent.domain.exception.PostNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,11 @@ public class GlobalExceptionHandler {
     return problem(HttpStatus.CONFLICT, "Already liked", ex.getMessage());
   }
 
+  @ExceptionHandler(NotPostOwnerException.class)
+  public ProblemDetail handleNotPostOwner(NotPostOwnerException ex) {
+    return problem(HttpStatus.FORBIDDEN, "Not the post owner", ex.getMessage());
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
     String detail =
@@ -34,6 +41,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
     return problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.getMessage());
+  }
+
+  @ExceptionHandler(MediaUploadFailedException.class)
+  public ProblemDetail handleMediaUploadFailed(MediaUploadFailedException ex) {
+    return problem(HttpStatus.BAD_GATEWAY, "Media upload failed", ex.getMessage());
   }
 
   private static ProblemDetail problem(HttpStatus status, String title, String detail) {

@@ -4,7 +4,10 @@ export interface ChatMessage {
   readonly id: string;
   readonly fromMe: boolean;
   readonly text: string;
+  readonly createdAt: string;
   readonly timeLabel: string;
+  readonly edited: boolean;
+  readonly deleted: boolean;
 }
 
 export interface Conversation {
@@ -16,7 +19,11 @@ export interface Conversation {
   readonly groupName?: string;
   readonly groupAvatarUrl?: string;
   lastMessage: string;
+  readonly lastMessageDeleted: boolean;
   timeLabel: string;
   unread: number;
   readonly messages: ChatMessage[];
+  /** Latest timestamp (ISO) at which any peer is known to have read this conversation — drives
+   * the "Seen" label under my own last message, WhatsApp-style. Undefined = never confirmed read. */
+  readonly peerReadAt?: string;
 }

@@ -17,5 +17,6 @@ public interface RegisterPoliticianUseCase {
       String rawPassword,
       String documentType,
       String rawDocumentNumber,
-      String roleTitle) {}
+      String roleTitle,
+      String state) {}
 }

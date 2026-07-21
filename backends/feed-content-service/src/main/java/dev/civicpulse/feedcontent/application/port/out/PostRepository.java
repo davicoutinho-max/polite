@@ -9,6 +9,8 @@ public interface PostRepository {
 
   Post save(Post post);
 
+  void deleteById(UUID id);
+
   Optional<Post> findById(UUID id);
 
   List<Post> findByAuthorAccountId(UUID authorAccountId, int page, int pageSize);

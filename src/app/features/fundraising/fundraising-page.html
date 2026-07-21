@@ -33,28 +33,38 @@
       <h3>{{ 'section.new-fundraising-action' | translate: 'New fundraising action' }}</h3>
       <label class="fund__field">
         <span>{{ 'field.title' | translate: 'Title' }}</span>
-        <input type="text" [value]="title()" (input)="title.set($any($event.target).value)" placeholder="e.g. Community food drive" />
+        <input pInputText type="text" required [value]="title()" (input)="title.set($any($event.target).value)" placeholder="e.g. Community food drive" />
       </label>
       <label class="fund__field">
         <span>{{ 'field.description' | translate: 'Description' }}</span>
-        <textarea rows="3" [value]="description()" (input)="description.set($any($event.target).value)" placeholder="What is this for?"></textarea>
+        <textarea pTextarea rows="3" [value]="description()" (input)="description.set($any($event.target).value)" placeholder="What is this for?"></textarea>
       </label>
       <div class="fund__row">
         <label class="fund__field">
           <span>{{ 'field.category' | translate: 'Category' }}</span>
-          <select [value]="category()" (change)="category.set($any($event.target).value)">
-            @for (cat of categories; track cat.category) {
-              <option [value]="cat.category">{{ ('category.' + cat.category) | translate: cat.label }}</option>
-            }
-          </select>
+          <p-select
+            [options]="categoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="category()"
+            (ngModelChange)="category.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            appendTo="body"
+          />
         </label>
         <label class="fund__field">
           <span>{{ 'field.goal-usd' | translate: 'Goal (R$)' }}</span>
-          <input type="number" min="1" [value]="goal() ?? ''" (input)="goal.set(+$any($event.target).value)" placeholder="5000" />
+          <input pInputText type="number" min="1" required [value]="goal() ?? ''" (input)="goal.set(+$any($event.target).value)" placeholder="5000" />
         </label>
         <label class="fund__field">
           <span>{{ 'field.deadline' | translate: 'Deadline' }}</span>
-          <input type="date" [value]="deadline()" (input)="deadline.set($any($event.target).value)" />
+          <p-datepicker
+            dateFormat="dd/mm/yy"
+            [ngModel]="deadline()"
+            (ngModelChange)="deadline.set($event)"
+            [ngModelOptions]="{ standalone: true }"
+            appendTo="body"
+          />
         </label>
       </div>
       <ui-button [label]="'button.publish-action' | translate: 'Publish action'" icon="check" variant="filled" type="submit" />

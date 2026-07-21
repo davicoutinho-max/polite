@@ -41,7 +41,9 @@
                 <a class="candidate" [routerLink]="['/profile', candidate.id]">
                   <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="28" [ring]="true" />
                   <span class="candidate__name">{{ candidate.name }}</span>
-                  <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+                  @if (candidate.partyAcronym) {
+                    <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+                  }
                 </a>
               }
             </div>

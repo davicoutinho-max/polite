@@ -3,6 +3,7 @@ package dev.civicpulse.platformconfig.application;
 import dev.civicpulse.platformconfig.application.port.in.ManageLanguageUseCase;
 import dev.civicpulse.platformconfig.application.port.out.EventPublisher;
 import dev.civicpulse.platformconfig.application.port.out.LanguageRepository;
+import dev.civicpulse.platformconfig.application.port.out.TranslationValueRepository;
 import dev.civicpulse.platformconfig.domain.event.DefaultLanguageChanged;
 import dev.civicpulse.platformconfig.domain.event.LanguageAdded;
 import dev.civicpulse.platformconfig.domain.event.LanguageRemoved;
@@ -18,11 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class LanguageService implements ManageLanguageUseCase {
 
   private final LanguageRepository languageRepository;
+  private final TranslationValueRepository translationValueRepository;
   private final EventPublisher eventPublisher;
   private final Clock clock;
 
-  public LanguageService(LanguageRepository languageRepository, EventPublisher eventPublisher, Clock clock) {
+  public LanguageService(
+      LanguageRepository languageRepository,
+      TranslationValueRepository translationValueRepository,
+      EventPublisher eventPublisher,
+      Clock clock) {
     this.languageRepository = languageRepository;
+    this.translationValueRepository = translationValueRepository;
     this.eventPublisher = eventPublisher;
     this.clock = clock;
   }
@@ -48,6 +55,7 @@ public class LanguageService implements ManageLanguageUseCase {
     if (language.isDefault()) {
       throw new CannotRemoveDefaultLanguageException(id);
     }
+    translationValueRepository.deleteByLanguageId(id);
     languageRepository.delete(id);
     eventPublisher.publish(new LanguageRemoved(id, clock.instant()));
   }

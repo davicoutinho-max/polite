@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ACCOUNT_TYPE_OPTIONS, Account, AccountType, Permission, TYPE_PERMISSIONS, UserSummary } from '../models';
 
@@ -17,16 +17,6 @@ const VISITOR_ACCOUNT: Account = {
   role: 'Not signed in',
   accountType: 'visitor',
   avatarUrl: GUEST_AVATAR,
-};
-
-/** One real seeded account per non-visitor type, for the "quick demo login" buttons — see
- * docs/architecture/system-architecture.html's demo-account seeding note. Real credentials
- * against real backends, not a client-side fake. */
-const DEMO_CREDENTIALS: Partial<Record<AccountType, { readonly email: string; readonly password: string }>> = {
-  citizen: { email: 'alex.morgan@demo.civicpulse.dev', password: 'Demo1234!' },
-  politician: { email: 'jane.doe@demo.civicpulse.dev', password: 'Demo1234!' },
-  party: { email: 'party@demo.civicpulse.dev', password: 'Demo1234!' },
-  admin: { email: 'admin@demo.civicpulse.dev', password: 'Demo1234!' },
 };
 
 interface AuthResponse {
@@ -96,13 +86,39 @@ export class SessionService {
 
   readonly permissions = computed<ReadonlySet<Permission>>(() => new Set<Permission>(TYPE_PERMISSIONS[this.type()]));
 
+  /** Flips to true once the initial token-restore attempt below has fully settled (account
+   * loaded, or confirmed absent/invalid) — permission.guard.ts waits on this so a hard refresh
+   * on a permission-gated route can't evaluate `can()` against the placeholder visitor account
+   * while the real one is still loading and get bounced to /feed by mistake. */
+  private readonly _ready = signal(false);
+  readonly ready = this._ready.asReadonly();
+
   constructor() {
     const token = this._accessToken();
     const payload = token ? decodeJwtPayload(token) : null;
     if (payload) {
-      this.loadAccount(payload.sub).subscribe({ error: () => this.forceLogout() });
-    } else if (token) {
-      this.forceLogout();
+      // Deferred to a microtask so this constructor has fully returned — and SessionService is
+      // registered as a completed singleton — before the HTTP call reaches authInterceptor/
+      // errorInterceptor, both of which `inject(SessionService)`. Firing it synchronously here
+      // (the previous behavior) made Angular's DI see a request for SessionService while
+      // SessionService's own constructor was still on the stack, which it correctly reports as a
+      // circular dependency (NG0200) — that threw synchronously into this subscribe's `error`
+      // callback below, which force-logged-out the user on every hard refresh before the restore
+      // ever got a chance to run.
+      queueMicrotask(() => {
+        this.loadAccount(payload.sub).subscribe({
+          next: () => this._ready.set(true),
+          error: () => {
+            this.forceLogout();
+            this._ready.set(true);
+          },
+        });
+      });
+    } else {
+      if (token) {
+        this.forceLogout();
+      }
+      this._ready.set(true);
     }
   }
 
@@ -125,18 +141,6 @@ export class SessionService {
 
   /** Quick demo login — same real `login()` call, just against one of the seeded demo accounts
    * (see DEMO_CREDENTIALS). Preserves the old demo-switcher UX without faking the session. */
-  loginAsDemo(type: AccountType): Observable<Account> {
-    if (type === 'visitor') {
-      this.forceLogout();
-      return of(VISITOR_ACCOUNT);
-    }
-    const credentials = DEMO_CREDENTIALS[type];
-    if (!credentials) {
-      return of(this._account());
-    }
-    return this.login(credentials.email, credentials.password);
-  }
-
   /** Citizen self-registration, then an immediate real login (register itself doesn't return
    * tokens — see identity-service's AccountController). */
   register(name: string, handle: string, email: string, password: string, cpf: string): Observable<Account> {
@@ -145,19 +149,34 @@ export class SessionService {
       .pipe(switchMap(() => this.login(email, password)));
   }
 
+  private refreshInFlight: Observable<boolean> | null = null;
+
   /** Attempts exactly one silent token refresh. Used by error.interceptor.ts on a 401 — never
-   * called directly by feature code. */
+   * called directly by feature code. The refresh token rotates server-side on every use (the old
+   * one is revoked), so if several requests 401 around the same moment — the normal case, since
+   * they all share one access-token expiry deadline — each call here must reuse a single in-flight
+   * refresh rather than firing its own: a second concurrent call with the same (already-consumed)
+   * refresh token would otherwise legitimately fail server-side and force-logout a session that the
+   * first call had just successfully renewed. */
   refreshSession(): Observable<boolean> {
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
     if (!this.refreshTokenValue) {
       return of(false);
     }
-    return this.http.post<AuthResponse>(`${this.apiBase}/auth/refresh`, { refreshToken: this.refreshTokenValue }).pipe(
-      switchMap((auth) => {
-        this.storeTokens(auth);
-        return this.loadAccount(auth.accountId).pipe(map(() => true));
-      }),
-      catchError(() => of(false)),
-    );
+    this.refreshInFlight = this.http
+      .post<AuthResponse>(`${this.apiBase}/auth/refresh`, { refreshToken: this.refreshTokenValue })
+      .pipe(
+        switchMap((auth) => {
+          this.storeTokens(auth);
+          return this.loadAccount(auth.accountId).pipe(map(() => true));
+        }),
+        catchError(() => of(false)),
+        finalize(() => (this.refreshInFlight = null)),
+        shareReplay(1),
+      );
+    return this.refreshInFlight;
   }
 
   /** Immediate, synchronous local sign-out — no network call. Used by the error interceptor when

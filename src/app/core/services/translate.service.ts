@@ -13,8 +13,9 @@ export class TranslateService {
   private readonly locale = inject(LocaleService);
 
   t(key: string, fallback: string): string {
+    const currentId = this.locale.current()?.id;
     const entry = this.platform.translations().find((e) => e.key === key);
-    const value = entry?.values[this.locale.current().id];
+    const value = currentId ? entry?.values[currentId] : undefined;
     return value ? value : fallback;
   }
 }

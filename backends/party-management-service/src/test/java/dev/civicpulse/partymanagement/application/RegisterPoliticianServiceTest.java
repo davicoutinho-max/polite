@@ -46,7 +46,7 @@ class RegisterPoliticianServiceTest {
     UUID partyId = UUID.randomUUID();
     UUID accountId = UUID.randomUUID();
     RegisterPoliticianCommand command =
-        new RegisterPoliticianCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901", "Deputy");
+        new RegisterPoliticianCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901", "Deputy", "São Paulo");
 
     when(identityProvisioningGateway.provisionPoliticianAccount("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901"))
         .thenReturn(new ProvisionedAccount(accountId, "Jane Doe", "janedoe"));
@@ -63,5 +63,6 @@ class RegisterPoliticianServiceTest {
     assertThat(eventCaptor.getAllValues()).hasSize(2);
     assertThat(eventCaptor.getAllValues().get(0)).isInstanceOf(PoliticianRegistered.class);
     assertThat(eventCaptor.getAllValues().get(1)).isInstanceOf(RepresentativeLinked.class);
+    assertThat(((RepresentativeLinked) eventCaptor.getAllValues().get(1)).state()).isEqualTo("São Paulo");
   }
 }

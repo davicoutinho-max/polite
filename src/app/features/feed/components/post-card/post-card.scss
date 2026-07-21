@@ -26,6 +26,47 @@
   }
   &__author:hover .post__name { color: var(--cp-secondary); text-decoration: underline; }
 
+  &__menu {
+    position: relative;
+  }
+  &__menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+  }
+  &__menu-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 11;
+    min-width: 200px;
+    margin-top: var(--cp-space-xs);
+    padding: var(--cp-space-xs);
+    border-radius: var(--cp-radius-lg);
+    border: 1px solid var(--cp-outline-variant);
+    background: var(--cp-surface-container-lowest);
+    box-shadow: var(--cp-shadow-card);
+  }
+  &__menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+    width: 100%;
+    padding: var(--cp-space-sm);
+    border: none;
+    background: transparent;
+    border-radius: var(--cp-radius);
+    font: inherit;
+    font-size: 14px;
+    color: var(--cp-on-surface);
+    cursor: pointer;
+    text-align: left;
+
+    &:hover:not(:disabled) { background: var(--cp-surface-container-low); }
+    &:disabled { color: var(--cp-on-surface-variant); cursor: default; }
+    &--danger { color: var(--cp-error); }
+  }
+
   &__name-row {
     display: flex;
     align-items: center;
@@ -100,6 +141,7 @@
     overflow: hidden;
     border: 1px solid var(--cp-outline-variant);
     background: var(--cp-surface-variant);
+    margin-bottom: var(--cp-space-sm);
 
     img {
       width: 100%;
@@ -107,6 +149,83 @@
       object-fit: cover;
       display: block;
     }
+  }
+
+  &__file {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+    padding: var(--cp-space-sm) var(--cp-space-md);
+    margin-bottom: var(--cp-space-sm);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius-lg);
+    background: var(--cp-surface-container-low);
+    color: var(--cp-on-surface);
+    text-decoration: none;
+    transition: background 0.15s ease;
+
+    &:hover { background: var(--cp-surface-container-high); }
+  }
+  &__file-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__poll {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-xs);
+    margin-bottom: var(--cp-space-sm);
+  }
+
+  &__poll-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+    padding: var(--cp-space-sm) var(--cp-space-md);
+    border: 1px solid var(--cp-outline-variant);
+    border-radius: var(--cp-radius-lg);
+    background: var(--cp-surface-container-low);
+    font: inherit;
+    color: var(--cp-on-surface);
+    cursor: pointer;
+    overflow: hidden;
+    text-align: left;
+
+    &:disabled { cursor: default; }
+
+    &--voted {
+      border-color: var(--cp-secondary);
+      font-weight: 700;
+    }
+  }
+  &__poll-option-fill {
+    position: absolute;
+    inset: 0;
+    width: var(--pct, 0%);
+    background: color-mix(in srgb, var(--cp-secondary) 16%, transparent);
+    transition: width 0.3s ease;
+  }
+  &__poll-option-label {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+  &__poll-option-pct {
+    position: relative;
+    font-size: 13px;
+    color: var(--cp-on-surface-variant);
+  }
+  &__poll-total {
+    margin: 0;
+    font-size: 12px;
+    color: var(--cp-on-surface-variant);
   }
 
   &__actions {
@@ -145,17 +264,12 @@
   gap: var(--cp-space-md);
 
   &__composer { display: flex; align-items: center; gap: var(--cp-space-sm); }
+  // Renders via PrimeNG's pInputText directive — brings its own theming, this just makes it
+  // flex to fill the composer row like the send button next to it.
   &__input {
     flex: 1;
-    border: 1px solid var(--cp-outline-variant);
     border-radius: var(--cp-radius-full);
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    font-family: inherit;
-    font-size: 14px;
-    background: var(--cp-surface);
-    color: var(--cp-on-surface);
   }
-  &__input:focus { outline: none; border-color: var(--cp-secondary); box-shadow: 0 0 0 1px var(--cp-secondary); }
   &__send {
     display: inline-flex; align-items: center; justify-content: center;
     width: 36px; height: 36px; flex-shrink: 0;

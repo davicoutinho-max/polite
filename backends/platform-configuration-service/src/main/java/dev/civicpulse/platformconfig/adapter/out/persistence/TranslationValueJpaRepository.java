@@ -10,4 +10,8 @@ interface TranslationValueJpaRepository extends JpaRepository<TranslationValueJp
   Optional<TranslationValueJpaEntity> findByTranslationKeyIdAndLanguageId(UUID translationKeyId, String languageId);
 
   List<TranslationValueJpaEntity> findByLanguageId(String languageId);
+
+  void deleteByTranslationKeyId(UUID translationKeyId);
+
+  void deleteByLanguageId(String languageId);
 }

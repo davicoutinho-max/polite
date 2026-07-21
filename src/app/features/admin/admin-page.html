@@ -138,31 +138,109 @@
               <div class="register-row">
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
-                  <input type="text" [value]="registerName()" (input)="registerName.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
+                  <input
+                    pInputText
+                    type="text"
+                    required
+                    maxlength="120"
+                    [value]="registerName()"
+                    (input)="registerName.set($any($event.target).value)"
+                    placeholder="e.g. Jane Doe"
+                  />
                 </label>
                 <label class="register-field">
                   <span>{{ 'field.handle' | translate: 'Handle' }}</span>
-                  <input type="text" [value]="registerHandle()" (input)="registerHandle.set($any($event.target).value)" placeholder="@jane.doe" />
+                  <input
+                    pInputText
+                    type="text"
+                    maxlength="30"
+                    [value]="registerHandle()"
+                    (input)="onHandleInput($any($event.target).value)"
+                    placeholder="jane.doe"
+                  />
+                  @if (registerHandle() && !registerHandleValid()) {
+                    <span class="register-field__hint register-field__hint--error">{{ 'hint.handle-format' | translate: 'Lowercase letters, numbers, dots and underscores only.' }}</span>
+                  }
                 </label>
               </div>
               <div class="register-row">
                 <label class="register-field">
                   <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
-                  <input type="text" inputmode="numeric" [value]="registerCpf()" (input)="registerCpf.set($any($event.target).value)" placeholder="000.000.000-00" />
+                  <input
+                    pInputText
+                    type="text"
+                    inputmode="numeric"
+                    required
+                    maxlength="14"
+                    [value]="registerCpf()"
+                    (input)="onCpfInput($any($event.target).value)"
+                    placeholder="000.000.000-00"
+                  />
+                  @if (registerCpf() && !registerCpfValid()) {
+                    <span class="register-field__hint register-field__hint--error">{{ 'hint.cpf-invalid' | translate: 'Enter a valid CPF.' }}</span>
+                  }
                 </label>
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.position' | translate: 'Position' }}</span>
-                  <input type="text" [value]="registerPosition()" (input)="registerPosition.set($any($event.target).value)" placeholder="e.g. Federal Deputy" />
+                  <p-select
+                    required
+                    [options]="politicalPositions()"
+                    optionLabel="name"
+                    optionValue="name"
+                    [placeholder]="'hint.select-position' | translate: 'Select a position'"
+                    [ngModel]="registerPosition()"
+                    (ngModelChange)="registerPosition.set($event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    appendTo="body"
+                  />
+                </label>
+                <label class="register-field register-field--grow">
+                  <span>{{ 'field.state' | translate: 'State' }}</span>
+                  <p-select
+                    required
+                    [options]="states()"
+                    optionLabel="name"
+                    optionValue="name"
+                    [filter]="true"
+                    filterBy="name"
+                    [placeholder]="'hint.select-state' | translate: 'Select a state'"
+                    [ngModel]="registerState()"
+                    (ngModelChange)="registerState.set($event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    appendTo="body"
+                  />
                 </label>
               </div>
               <div class="register-row">
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.email' | translate: 'Email' }}</span>
-                  <input type="email" [value]="registerEmail()" (input)="registerEmail.set($any($event.target).value)" placeholder="jane.doe@example.com" />
+                  <input
+                    pInputText
+                    type="email"
+                    required
+                    maxlength="180"
+                    [value]="registerEmail()"
+                    (input)="registerEmail.set($any($event.target).value)"
+                    placeholder="jane.doe@example.com"
+                  />
+                  @if (registerEmail() && !registerEmailValid()) {
+                    <span class="register-field__hint register-field__hint--error">{{ 'hint.email-invalid' | translate: 'Enter a valid email address.' }}</span>
+                  }
                 </label>
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.password' | translate: 'Password' }}</span>
-                  <input type="password" [value]="registerPassword()" (input)="registerPassword.set($any($event.target).value)" placeholder="••••••••" />
+                  <input
+                    pInputText
+                    type="password"
+                    required
+                    minlength="8"
+                    [value]="registerPassword()"
+                    (input)="registerPassword.set($any($event.target).value)"
+                    placeholder="••••••••"
+                  />
+                  @if (registerPassword() && !registerPasswordValid()) {
+                    <span class="register-field__hint register-field__hint--error">{{ 'hint.password-length' | translate: 'At least 8 characters.' }}</span>
+                  }
                 </label>
               </div>
 
@@ -175,7 +253,7 @@
                 icon="person_add_alt"
                 variant="filled"
                 type="submit"
-                [disabled]="registerSubmitting()"
+                [disabled]="registerSubmitting() || !registerFormValid()"
               />
             </form>
           </ui-section>
@@ -186,9 +264,9 @@
     <div class="grid__side">
       <ui-section [title]="'section.quick-actions' | translate: 'Quick actions'" icon="bolt">
         <ul class="actions">
-          @for (action of quickActions; track action.label) {
+          @for (action of quickActions; track action.key) {
             <li>
-              <button type="button" class="action">
+              <button type="button" class="action" [routerLink]="action.route" (click)="onQuickAction(action)">
                 <span class="action__icon"><ui-icon [name]="action.icon" [size]="22" /></span>
                 <span class="action__text">
                   <span class="action__label">{{ action.labelKey | translate: action.label }}</span>
@@ -199,6 +277,133 @@
             </li>
           }
         </ul>
+
+        @if (showEventForm()) {
+          <form class="quick-form" (submit)="submitEvent(); $event.preventDefault()">
+            <h4>{{ 'action.create-event' | translate: 'Create event' }}</h4>
+            <label class="quick-form__field">
+              <span>{{ 'field.title' | translate: 'Title' }}</span>
+              <input pInputText type="text" [value]="eventTitle()" (input)="eventTitle.set($any($event.target).value)" placeholder="e.g. Regional Convention" />
+            </label>
+            <div class="quick-form__row">
+              <label class="quick-form__field">
+                <span>{{ 'field.deadline' | translate: 'Deadline' }}</span>
+                <p-datepicker
+                  required
+                  dateFormat="dd/mm/yy"
+                  [ngModel]="eventDate()"
+                  (ngModelChange)="eventDate.set($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  appendTo="body"
+                />
+              </label>
+              <label class="quick-form__field quick-form__field--grow">
+                <span>{{ 'label.location' | translate: 'Location' }}</span>
+                <p-select
+                  required
+                  [options]="states()"
+                  optionLabel="name"
+                  optionValue="name"
+                  [filter]="true"
+                  filterBy="name"
+                  [placeholder]="'hint.select-state' | translate: 'Select a state'"
+                  [ngModel]="eventLocation()"
+                  (ngModelChange)="eventLocation.set($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  appendTo="body"
+                />
+              </label>
+            </div>
+            <div class="quick-form__row">
+              <label class="quick-form__field quick-form__field--grow">
+                <span>{{ 'label.tag' | translate: 'Tag label' }}</span>
+                <input pInputText type="text" [value]="eventTagLabel()" (input)="eventTagLabel.set($any($event.target).value)" placeholder="Upcoming" />
+              </label>
+              <label class="quick-form__field">
+                <span>{{ 'label.severity' | translate: 'Severity' }}</span>
+                <p-select
+                  [options]="eventSeverityOptions"
+                  [ngModel]="eventTagSeverity()"
+                  (ngModelChange)="eventTagSeverity.set($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  appendTo="body"
+                />
+              </label>
+            </div>
+            @if (eventError()) {
+              <p class="quick-form__error">{{ eventError() }}</p>
+            }
+            <ui-button [label]="'button.create-one' | translate: 'Create'" icon="check" variant="filled" type="submit" [disabled]="eventSubmitting()" />
+          </form>
+        }
+
+        @if (showSurveyForm()) {
+          <form class="quick-form" (submit)="submitSurvey(); $event.preventDefault()">
+            <h4>{{ 'action.create-survey' | translate: 'Create survey' }}</h4>
+            <label class="quick-form__field">
+              <span>{{ 'label.question' | translate: 'Question' }}</span>
+              <input pInputText type="text" [value]="surveyQuestion()" (input)="surveyQuestion.set($any($event.target).value)" placeholder="e.g. What should be our next priority?" />
+            </label>
+            <label class="quick-form__field">
+              <span>{{ 'label.context' | translate: 'Context' }}</span>
+              <input pInputText type="text" [value]="surveyContext()" (input)="surveyContext.set($any($event.target).value)" placeholder="e.g. Member survey" />
+            </label>
+            @for (option of surveyOptions(); track $index) {
+              <div class="quick-form__row">
+                <label class="quick-form__field quick-form__field--grow">
+                  <span>{{ 'label.option' | translate: 'Option' }} {{ $index + 1 }}</span>
+                  <input pInputText type="text" [value]="option" (input)="setSurveyOption($index, $any($event.target).value)" />
+                </label>
+                @if (surveyOptions().length > 2) {
+                  <ui-button label="" icon="close" variant="text" type="button" (click)="removeSurveyOption($index)" />
+                }
+              </div>
+            }
+            <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="text" type="button" (click)="addSurveyOption()" />
+            @if (surveyError()) {
+              <p class="quick-form__error">{{ surveyError() }}</p>
+            }
+            <ui-button [label]="'button.create-one' | translate: 'Create'" icon="check" variant="filled" type="submit" [disabled]="surveySubmitting()" />
+          </form>
+        }
+
+        @if (showBroadcastForm()) {
+          <form class="quick-form" (submit)="submitBroadcast(); $event.preventDefault()">
+            <h4>{{ 'action.send-notification' | translate: 'Send notification' }}</h4>
+            <p class="quick-form__hint">{{ members().length }} {{ 'label.affiliated-lower' | translate: 'affiliated' }}</p>
+            <label class="quick-form__field">
+              <span>{{ 'field.title' | translate: 'Title' }}</span>
+              <input pInputText type="text" [value]="broadcastTitle()" (input)="broadcastTitle.set($any($event.target).value)" placeholder="e.g. New party initiative" />
+            </label>
+            <label class="quick-form__field">
+              <span>{{ 'field.description' | translate: 'Description' }}</span>
+              <input pInputText type="text" [value]="broadcastMessage()" (input)="broadcastMessage.set($any($event.target).value)" placeholder="Message shown to every member" />
+            </label>
+            <label class="quick-form__field">
+              <span>{{ 'field.category' | translate: 'Category' }}</span>
+              <p-select
+                [options]="notificationCategoryOptions"
+                [ngModel]="broadcastCategory()"
+                (ngModelChange)="broadcastCategory.set($event)"
+                [ngModelOptions]="{ standalone: true }"
+                appendTo="body"
+              />
+            </label>
+            @if (broadcastError()) {
+              <p class="quick-form__error">{{ broadcastError() }}</p>
+            }
+            @if (broadcastSent()) {
+              <p class="quick-form__success">{{ 'label.sent' | translate: 'Sent!' }}</p>
+            }
+            <ui-button
+              [label]="'button.send-notification' | translate: 'Send'"
+              icon="send"
+              variant="filled"
+              type="submit"
+              [disabled]="broadcastSubmitting()"
+            />
+          </form>
+        }
       </ui-section>
     </div>
   </div>

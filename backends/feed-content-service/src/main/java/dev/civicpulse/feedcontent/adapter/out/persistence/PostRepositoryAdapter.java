@@ -26,6 +26,11 @@ class PostRepositoryAdapter implements PostRepository {
   }
 
   @Override
+  public void deleteById(UUID id) {
+    jpaRepository.deleteById(id);
+  }
+
+  @Override
   public Optional<Post> findById(UUID id) {
     return jpaRepository.findById(id).map(mapper::toDomain);
   }

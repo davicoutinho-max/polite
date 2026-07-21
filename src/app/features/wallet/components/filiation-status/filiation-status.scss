@@ -27,14 +27,10 @@
   font-weight: 600;
   color: var(--cp-on-surface-variant);
 
-  select, input {
-    font: inherit;
-    font-weight: 400;
-    padding: var(--cp-space-sm) var(--cp-space-md);
-    border: 1px solid var(--cp-outline-variant);
-    border-radius: var(--cp-radius);
-    background: var(--cp-surface-container-low);
-    color: var(--cp-on-surface);
+  // Text fields render via PrimeNG's pInputText directive, selects via p-select — both bring
+  // their own theming, this just fills the field.
+  input, p-select {
+    width: 100%;
   }
 }
 
