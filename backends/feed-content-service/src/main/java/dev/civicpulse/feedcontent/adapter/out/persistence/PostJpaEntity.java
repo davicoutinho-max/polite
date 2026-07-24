@@ -48,6 +48,9 @@ public class PostJpaEntity {
   @Column(name = "created_at")
   private Instant createdAt;
 
+  @Column(name = "poll_closes_at")
+  private Instant pollClosesAt;
+
   protected PostJpaEntity() {}
 
   public PostJpaEntity(
@@ -61,7 +64,8 @@ public class PostJpaEntity {
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
-      Instant createdAt) {
+      Instant createdAt,
+      Instant pollClosesAt) {
     this.id = id;
     this.authorAccountId = authorAccountId;
     this.kind = kind;
@@ -73,6 +77,7 @@ public class PostJpaEntity {
     this.context = context;
     this.liveSessionId = liveSessionId;
     this.createdAt = createdAt;
+    this.pollClosesAt = pollClosesAt;
   }
 
   public UUID getId() {
@@ -117,5 +122,9 @@ public class PostJpaEntity {
 
   public Instant getCreatedAt() {
     return createdAt;
+  }
+
+  public Instant getPollClosesAt() {
+    return pollClosesAt;
   }
 }

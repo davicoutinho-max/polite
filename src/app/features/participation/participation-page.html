@@ -16,8 +16,107 @@
   </div>
 
   <div class="participation__tabs">
-    <ui-tabs [tabs]="tabs" [active]="active()" (activeChange)="active.set($event)" />
+    <ui-tabs [tabs]="tabs" [active]="active()" (activeChange)="onTabChange($event)" />
+    @if (canCreate()) {
+      <ui-button
+        [label]="(showCreateForm() ? 'button.cancel' : 'button.create') | translate: (showCreateForm() ? 'Cancel' : 'Create')"
+        [icon]="showCreateForm() ? 'close' : 'add'"
+        variant="tonal"
+        (click)="toggleCreateForm()"
+      />
+    }
   </div>
+
+  @if (canCreate() && showCreateForm()) {
+    <form class="quick-form" (submit)="submitCreate(); $event.preventDefault()">
+      @switch (active()) {
+        @case ('petitions') {
+          <h4>{{ 'action.create-petition' | translate: 'Create petition' }}</h4>
+          <label class="quick-form__field">
+            <span>{{ 'label.title' | translate: 'Title' }}</span>
+            <input pInputText type="text" [ngModel]="petitionTitle()" (ngModelChange)="petitionTitle.set($event)" name="petitionTitle" />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.summary' | translate: 'Summary' }}</span>
+            <input pInputText type="text" [ngModel]="petitionSummary()" (ngModelChange)="petitionSummary.set($event)" name="petitionSummary" />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.category' | translate: 'Category' }}</span>
+            <input pInputText type="text" [ngModel]="petitionCategory()" (ngModelChange)="petitionCategory.set($event)" name="petitionCategory" />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.signature-goal' | translate: 'Signature goal' }}</span>
+            <input
+              pInputText
+              type="number"
+              min="1"
+              [ngModel]="petitionGoal()"
+              (ngModelChange)="petitionGoal.set($event)"
+              name="petitionGoal"
+            />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.deadline-optional' | translate: 'Deadline (optional)' }}</span>
+            <input pInputText type="date" [ngModel]="petitionDeadline()" (ngModelChange)="petitionDeadline.set($event)" name="petitionDeadline" />
+          </label>
+        }
+        @case ('consultations') {
+          <h4>{{ 'action.create-consultation' | translate: 'Create consultation' }}</h4>
+          <label class="quick-form__field">
+            <span>{{ 'label.title' | translate: 'Title' }}</span>
+            <input pInputText type="text" [ngModel]="consultationTitle()" (ngModelChange)="consultationTitle.set($event)" name="consultationTitle" />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.description' | translate: 'Description' }}</span>
+            <input
+              pInputText
+              type="text"
+              [ngModel]="consultationDescription()"
+              (ngModelChange)="consultationDescription.set($event)"
+              name="consultationDescription"
+            />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.deadline-optional' | translate: 'Deadline (optional)' }}</span>
+            <input
+              pInputText
+              type="date"
+              [ngModel]="consultationDeadline()"
+              (ngModelChange)="consultationDeadline.set($event)"
+              name="consultationDeadline"
+            />
+          </label>
+        }
+        @case ('surveys') {
+          <h4>{{ 'action.create-survey' | translate: 'Create survey' }}</h4>
+          <label class="quick-form__field">
+            <span>{{ 'label.question' | translate: 'Question' }}</span>
+            <input pInputText type="text" [ngModel]="surveyQuestion()" (ngModelChange)="surveyQuestion.set($event)" name="surveyQuestion" />
+          </label>
+          <label class="quick-form__field">
+            <span>{{ 'label.context' | translate: 'Context' }}</span>
+            <input pInputText type="text" [ngModel]="surveyContext()" (ngModelChange)="surveyContext.set($event)" name="surveyContext" />
+          </label>
+          @for (option of surveyOptions(); track $index) {
+            <div class="quick-form__row">
+              <label class="quick-form__field quick-form__field--grow">
+                <span>{{ 'label.option' | translate: 'Option' }} {{ $index + 1 }}</span>
+                <input pInputText type="text" [ngModel]="option" (ngModelChange)="setSurveyOption($index, $event)" [name]="'surveyOption' + $index" />
+              </label>
+              @if (surveyOptions().length > 2) {
+                <ui-button label="" icon="close" variant="text" type="button" (click)="removeSurveyOption($index)" />
+              }
+            </div>
+          }
+          <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="text" type="button" (click)="addSurveyOption()" />
+        }
+      }
+      @if (createError()) {
+        <p class="quick-form__error">{{ createError() }}</p>
+      }
+      <ui-button [label]="'button.create-one' | translate: 'Create'" icon="check" variant="filled" type="submit" [disabled]="createSubmitting()" />
+    </form>
+  }
 
   @switch (active()) {
     @case ('petitions') {

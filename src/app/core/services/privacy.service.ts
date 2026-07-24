@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
@@ -81,7 +81,13 @@ export class PrivacyService {
   ];
 
   constructor() {
-    this.reload().subscribe();
+    // See DirectoryService's reloadFollowing for why this waits on session.ready() instead of
+    // firing immediately — otherwise a hard refresh can permanently strand consents at defaults.
+    effect(() => {
+      if (this.session.ready()) {
+        this.reload().subscribe();
+      }
+    });
   }
 
   reload(): Observable<ConsentSetting[]> {

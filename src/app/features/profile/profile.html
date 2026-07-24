@@ -3,6 +3,7 @@
     [politician]="politician()"
     [following]="isFollowing()"
     [canFollow]="canFollow()"
+    [canContact]="canContact()"
     (toggleFollow)="onToggleFollow()"
     (contact)="onContact()"
   />
@@ -23,6 +24,7 @@
               (like)="onLike($event)"
               (addComment)="onComment($event)"
               (vote)="onVote($event)"
+              (unvote)="onUnvote($event)"
               (delete)="onDelete($event)"
             />
           } @empty {

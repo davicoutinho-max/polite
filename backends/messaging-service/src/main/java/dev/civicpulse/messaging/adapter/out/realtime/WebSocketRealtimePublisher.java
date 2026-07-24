@@ -18,13 +18,18 @@ class WebSocketRealtimePublisher implements RealtimeMessagePublisher {
   }
 
   @Override
-  public void messageSent(UUID conversationId, UUID messageId, UUID senderAccountId, String body, Instant createdAt) {
-    messageUpdated(conversationId, messageId, senderAccountId, body, createdAt, null, false);
-  }
-
-  @Override
   public void messageUpdated(
-      UUID conversationId, UUID messageId, UUID senderAccountId, String body, Instant createdAt, Instant editedAt, boolean deleted) {
+      UUID conversationId,
+      UUID messageId,
+      UUID senderAccountId,
+      String body,
+      Instant createdAt,
+      Instant editedAt,
+      boolean deleted,
+      String attachmentUrl,
+      String attachmentType,
+      String attachmentFileName,
+      UUID replyToMessageId) {
     Map<String, Object> payload = new HashMap<>();
     payload.put("type", "message");
     payload.put("id", messageId);
@@ -34,6 +39,10 @@ class WebSocketRealtimePublisher implements RealtimeMessagePublisher {
     payload.put("createdAt", createdAt);
     payload.put("editedAt", editedAt);
     payload.put("deleted", deleted);
+    payload.put("attachmentUrl", attachmentUrl);
+    payload.put("attachmentType", attachmentType);
+    payload.put("attachmentFileName", attachmentFileName);
+    payload.put("replyToMessageId", replyToMessageId);
     send(conversationId, payload);
   }
 

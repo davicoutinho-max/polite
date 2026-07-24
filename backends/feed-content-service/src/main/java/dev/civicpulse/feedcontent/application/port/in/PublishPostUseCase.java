@@ -26,6 +26,12 @@ public interface PublishPostUseCase {
   void deletePost(UUID postId, UUID requesterAccountId);
 
   /** Casts (or changes) the caller's vote on the post's poll — at most one vote per account is
-   * ever kept, so voting again just moves it to the new option. */
+   * ever kept, so voting again just moves it to the new option. Throws PollClosedException once
+   * the poll's optional closing time has passed. */
   void vote(UUID postId, UUID accountId, UUID optionId);
+
+  /** Removes the caller's vote entirely — a poll is never "definitive" while still open (a
+   * citizen may change their mind), only locked once it closes. Throws PollClosedException once
+   * the poll's optional closing time has passed. */
+  void unvote(UUID postId, UUID accountId);
 }

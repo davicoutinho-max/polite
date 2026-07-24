@@ -55,7 +55,7 @@ class MessageServiceTest {
     UUID conversationId = UUID.randomUUID();
     when(conversationRepository.findById(conversationId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.send(conversationId, UUID.randomUUID(), "hi")).isInstanceOf(ConversationNotFoundException.class);
+    assertThatThrownBy(() -> service.send(conversationId, UUID.randomUUID(), "hi", null)).isInstanceOf(ConversationNotFoundException.class);
   }
 
   @Test
@@ -66,7 +66,7 @@ class MessageServiceTest {
     when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
     when(conversationParticipantRepository.exists(conversationId, senderId)).thenReturn(false);
 
-    assertThatThrownBy(() -> service.send(conversationId, senderId, "hi")).isInstanceOf(NotAParticipantException.class);
+    assertThatThrownBy(() -> service.send(conversationId, senderId, "hi", null)).isInstanceOf(NotAParticipantException.class);
   }
 
   @Test
@@ -78,12 +78,27 @@ class MessageServiceTest {
     when(conversationParticipantRepository.exists(conversationId, senderId)).thenReturn(true);
     when(messageRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    var message = service.send(conversationId, senderId, "hello there");
+    var message = service.send(conversationId, senderId, "hello there", null);
 
     assertThat(message.body()).isEqualTo("hello there");
     assertThat(conversation.lastMessageAt()).contains(NOW);
     verify(conversationRepository).save(conversation);
     verify(eventPublisher).publish(any());
+  }
+
+  @Test
+  void sendWithReplyToMessageIdPersistsIt() {
+    UUID conversationId = UUID.randomUUID();
+    UUID senderId = UUID.randomUUID();
+    UUID replyToId = UUID.randomUUID();
+    Conversation conversation = Conversation.createDirect(conversationId, NOW);
+    when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+    when(conversationParticipantRepository.exists(conversationId, senderId)).thenReturn(true);
+    when(messageRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var message = service.send(conversationId, senderId, "quoting you", replyToId);
+
+    assertThat(message.replyToMessageId()).contains(replyToId);
   }
 
   @Test

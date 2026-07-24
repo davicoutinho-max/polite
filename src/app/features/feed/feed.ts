@@ -4,19 +4,21 @@ import { TrendingService } from '../../core/services/trending.service';
 import { BillsService } from '../../core/services/bills.service';
 import { SessionService } from '../../core/services/session.service';
 import { FeedSort as FeedSortValue, PostDraft } from '../../core/models';
+import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
 import { PostComposer } from './components/post-composer/post-composer';
 import { PostCard, CommentEvent, VoteEvent } from './components/post-card/post-card';
 import { FeedSort } from './components/feed-sort/feed-sort';
 import { TrendingTopics } from './components/trending-topics/trending-topics';
 import { RelevantBills } from './components/relevant-bills/relevant-bills';
 import { LiveNow } from './components/live-now/live-now';
+import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 /** Feed page — orchestrates stores and lays out the two-column feed. */
 @Component({
   selector: 'app-feed',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PostComposer, PostCard, FeedSort, TrendingTopics, RelevantBills, LiveNow, TranslatePipe],
+  imports: [PostComposer, PostCard, FeedSort, TrendingTopics, RelevantBills, LiveNow, InfiniteScrollDirective, UiIcon, TranslatePipe],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
@@ -36,6 +38,11 @@ export class Feed {
   protected readonly sort = this.feedService.sort;
   protected readonly topics = this.trendingService.topics;
   protected readonly bills = this.billsService.relevantBills;
+  protected readonly hasMore = this.feedService.hasMore;
+
+  protected onLoadMore(): void {
+    this.feedService.loadMore();
+  }
 
   protected onPublish(draft: PostDraft): void {
     const composer = this.composer();
@@ -56,6 +63,10 @@ export class Feed {
 
   protected onVote(event: VoteEvent): void {
     this.feedService.vote(event.postId, event.optionId);
+  }
+
+  protected onUnvote(postId: string): void {
+    this.feedService.unvote(postId);
   }
 
   protected onDelete(postId: string): void {

@@ -54,6 +54,10 @@ export class Profile {
   protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.politician().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly canFollow = computed(() => this.session.can('follow'));
+  /** Matches the /messages route's own canMatch guard (requirePermission('message')) — showing
+   * "Contact" to a visitor sent them into createConversation with no X-Account-Id (400), followed
+   * by an unconditional navigate() into a route guard that bounced them straight back to /feed. */
+  protected readonly canContact = computed(() => this.session.can('message'));
   protected readonly isFollowing = computed(() => this.directory.isFollowing('politician', this.politician().id));
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
 
@@ -71,7 +75,12 @@ export class Profile {
         this.politicianService.loadActivity(id),
         this.politicianService.loadTransparency(id),
         this.politicianService.loadCareer(id),
-      ]).subscribe();
+      ]).subscribe({
+        // A failed load (e.g. this id belongs to a party, not a politician) used to leave
+        // whichever politician had loaded here previously on screen with no indication anything
+        // was wrong — bouncing to /feed makes the failure visible instead of silently stale.
+        error: () => this.router.navigate(['/feed']),
+      });
     });
   }
 
@@ -91,6 +100,10 @@ export class Profile {
     this.feedService.vote(event.postId, event.optionId);
   }
 
+  protected onUnvote(postId: string): void {
+    this.feedService.unvote(postId);
+  }
+
   protected onDelete(postId: string): void {
     this.feedService.deletePost(postId).subscribe({ error: () => undefined });
   }
@@ -103,7 +116,9 @@ export class Profile {
   }
 
   protected onContact(): void {
-    this.messages.createConversation([this.politician()]);
-    this.router.navigate(['/messages']);
+    this.messages.createConversation([this.politician()]).subscribe({
+      next: () => this.router.navigate(['/messages']),
+      error: () => undefined,
+    });
   }
 }

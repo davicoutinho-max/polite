@@ -103,6 +103,12 @@ public class PostController {
     return ResponseEntity.noContent().build();
   }
 
+  @DeleteMapping("/{postId}/poll/votes")
+  public ResponseEntity<Void> unvote(@PathVariable UUID postId, @RequestHeader("X-Account-Id") UUID accountId) {
+    publishPostUseCase.unvote(postId, accountId);
+    return ResponseEntity.noContent().build();
+  }
+
   @GetMapping("/{postId}/poll/votes/{accountId}")
   public ResponseEntity<UUID> getMyVote(@PathVariable UUID postId, @PathVariable UUID accountId) {
     return postPollRepository.findVotedOptionId(postId, accountId).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
@@ -141,15 +147,15 @@ public class PostController {
   }
 
   private static PostAttachments attachmentsOf(PublishTextPostRequest request) {
-    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions());
+    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions(), request.pollClosesAt());
   }
 
   private static PostAttachments attachmentsOf(PublishAgendaPostRequest request) {
-    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions());
+    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions(), request.pollClosesAt());
   }
 
   private static PostAttachments attachmentsOf(PublishLivePostRequest request) {
-    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions());
+    return new PostAttachments(request.imageUrl(), request.fileUrl(), request.fileName(), request.pollOptions(), request.pollClosesAt());
   }
 
   private PostResponse toResponse(Post post) {

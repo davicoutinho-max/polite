@@ -19,11 +19,13 @@
 
     <div class="dir__selects">
       <p-select
-        [options]="levelSelect"
+        [options]="officeSelect()"
         optionLabel="label"
         optionValue="value"
-        [ngModel]="level()"
-        (ngModelChange)="level.set($event)"
+        [filter]="true"
+        filterBy="label"
+        [ngModel]="office()"
+        (ngModelChange)="office.set($event)"
         appendTo="body"
       />
       <p-select
@@ -78,9 +80,6 @@
             <div class="pcard__id">
               <span class="pcard__name">
                 {{ p.name }}
-                @if (p.verified) {
-                  <ui-icon name="verified" [size]="15" [fill]="true" class="pcard__verified" />
-                }
               </span>
               <span class="pcard__handle">{{ p.handle }}</span>
               @if (p.office || p.state) {

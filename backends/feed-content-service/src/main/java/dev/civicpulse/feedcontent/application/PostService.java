@@ -13,6 +13,7 @@ import dev.civicpulse.feedcontent.application.port.out.PostRepository;
 import dev.civicpulse.feedcontent.application.port.out.PostTagRepository;
 import dev.civicpulse.feedcontent.domain.event.PostPublished;
 import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
+import dev.civicpulse.feedcontent.domain.exception.PollClosedException;
 import dev.civicpulse.feedcontent.domain.exception.PostNotFoundException;
 import dev.civicpulse.feedcontent.domain.model.HashtagExtractor;
 import dev.civicpulse.feedcontent.domain.model.Post;
@@ -122,7 +123,22 @@ public class PostService implements PublishPostUseCase {
   @Override
   @Transactional
   public void vote(UUID postId, UUID accountId, UUID optionId) {
+    requireOpenPoll(postId);
     postPollRepository.vote(postId, accountId, optionId);
+  }
+
+  @Override
+  @Transactional
+  public void unvote(UUID postId, UUID accountId) {
+    requireOpenPoll(postId);
+    postPollRepository.unvote(postId, accountId);
+  }
+
+  private void requireOpenPoll(UUID postId) {
+    Post post = postRepository.findById(postId).orElseThrow(() -> new PostNotFoundException(postId));
+    if (post.isPollClosed(clock.instant())) {
+      throw new PollClosedException(postId);
+    }
   }
 
   private Post publish(
@@ -146,6 +162,7 @@ public class PostService implements PublishPostUseCase {
             visibility,
             context,
             liveSessionId,
+            attachments.hasPoll() ? attachments.pollClosesAt() : null,
             now);
     Post saved = postRepository.save(post);
     postMetricsRepository.save(PostMetrics.initial(saved.id(), now));

@@ -10,6 +10,7 @@ export interface NavItem {
   readonly route: string;
   /** Shown in the compact mobile bottom bar. */
   readonly mobile?: boolean;
-  /** When set, the item only appears for accounts holding this permission. */
-  readonly permission?: Permission;
+  /** When set, the item only appears for accounts holding this permission — or, if given an
+   * array, ANY one of them. */
+  readonly permission?: Permission | Permission[];
 }

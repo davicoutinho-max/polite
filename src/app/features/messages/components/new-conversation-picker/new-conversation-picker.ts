@@ -17,9 +17,10 @@ export interface NewConversationEvent {
 
 /**
  * Picker for starting a new conversation. Candidates are always politicians
- * and parties — never citizens — regardless of who opens the picker; that
- * restriction lives here as the data source, separate from the
- * `create-group-chat` permission that gates the entry-point button itself.
+ * and parties — never citizens — regardless of who opens the picker (any
+ * authenticated account with the `message` permission may open it); that
+ * restriction lives here as the data source, not as a permission gate on the
+ * entry-point button.
  */
 @Component({
   selector: 'app-new-conversation-picker',

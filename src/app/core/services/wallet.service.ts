@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { DigitalCard, FiliationStatus, FiliationStep, MembershipFee, PaymentStatus } from '../models';
@@ -109,7 +109,15 @@ export class WalletService {
   readonly pendingFee = computed(() => this._fees().find((f) => f.status !== 'paid'));
 
   constructor() {
-    this.reload().subscribe();
+    // Gated on session.ready() rather than fired immediately — see DirectoryService's
+    // reloadFollowing for the full explanation of why an unconditional constructor-time call
+    // here would silently and permanently desync from the real server-side affiliation state on
+    // a hard refresh.
+    effect(() => {
+      if (this.session.ready()) {
+        this.reload().subscribe();
+      }
+    });
   }
 
   reload(): Observable<void> {

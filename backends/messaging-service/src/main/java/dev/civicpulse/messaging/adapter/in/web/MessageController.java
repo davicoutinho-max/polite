@@ -6,6 +6,7 @@ import dev.civicpulse.messaging.adapter.in.web.dto.SendMessageRequest;
 import dev.civicpulse.messaging.application.port.in.EditMessageUseCase;
 import dev.civicpulse.messaging.application.port.in.GetMessageUseCase;
 import dev.civicpulse.messaging.application.port.in.SendMessageUseCase;
+import dev.civicpulse.messaging.domain.model.AttachmentType;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -39,7 +40,17 @@ public class MessageController {
   @PostMapping
   public ResponseEntity<MessageResponse> send(
       @PathVariable UUID conversationId, @RequestHeader("X-Account-Id") UUID senderAccountId, @Valid @RequestBody SendMessageRequest request) {
-    var message = sendMessageUseCase.send(conversationId, senderAccountId, request.body());
+    var message =
+        request.attachmentUrl() != null
+            ? sendMessageUseCase.sendWithAttachment(
+                conversationId,
+                senderAccountId,
+                request.body(),
+                request.attachmentUrl(),
+                AttachmentType.fromCode(request.attachmentType()),
+                request.attachmentFileName(),
+                request.replyToMessageId())
+            : sendMessageUseCase.send(conversationId, senderAccountId, request.body(), request.replyToMessageId());
     MessageResponse body = MessageResponse.from(message);
     return ResponseEntity.created(URI.create("/conversations/" + conversationId + "/messages/" + body.id())).body(body);
   }

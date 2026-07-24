@@ -3,7 +3,7 @@
   <aside class="list">
     <header class="list__head">
       <h1 class="list__title">{{ 'page.messages.title' | translate: 'Messages' }}</h1>
-      <ui-icon-button *appCan="'create-group-chat'" icon="edit_square" ariaLabel="New message" [iconSize]="20" (click)="openPicker()" />
+      <ui-icon-button *appCan="'message'" icon="edit_square" ariaLabel="New message" [iconSize]="20" (click)="openPicker()" />
     </header>
     <ul class="conversations">
       @for (conversation of conversations(); track conversation.id) {
@@ -19,9 +19,6 @@
               <div class="conversation__top">
                 <span class="conversation__name">
                   {{ peerName(conversation) }}
-                  @if (peerVerified(conversation)) {
-                    <ui-icon name="verified" [size]="14" [fill]="true" />
-                  }
                 </span>
                 <span class="conversation__time">{{ conversation.timeLabel }}</span>
               </div>
@@ -70,11 +67,12 @@
           <div class="thread__peer">
             <span class="thread__name">
               {{ peerName(conversation) }}
-              @if (peerVerified(conversation)) {
-                <ui-icon name="verified" [size]="14" [fill]="true" />
-              }
             </span>
-            @if (isPeerTyping(conversation)) {
+            @if (isPeerRecording(conversation)) {
+              <span class="thread__role thread__role--typing">
+                <ui-icon name="mic" [size]="13" />{{ 'label.recording-audio' | translate: 'recording audio…' }}
+              </span>
+            } @else if (isPeerTyping(conversation)) {
               <span class="thread__role thread__role--typing">{{ 'label.typing' | translate: 'typing…' }}</span>
             } @else {
               <span class="thread__role">{{ peerRole(conversation) }}</span>
@@ -107,7 +105,12 @@
         }
       </header>
 
-      <div class="thread__body">
+      <div class="thread__body" #threadBody>
+        @if (conversation.hasMoreHistory) {
+          <div class="thread__sentinel" appInfiniteScroll [disabled]="!conversation.hasMoreHistory" (loadMore)="loadOlderMessages(conversation.id)">
+            <ui-icon name="progress_activity" [size]="18" class="thread__spinner" />
+          </div>
+        }
         @for (message of conversation.messages; track message.id) {
           <div class="bubble" [class.bubble--me]="message.fromMe">
             @if (editingMessageId() === message.id) {
@@ -129,7 +132,28 @@
                 {{ 'label.message-deleted' | translate: 'This message was deleted' }}
               </div>
             } @else {
-              <div class="bubble__text">{{ message.text }}</div>
+              @if (message.replyToMessageId; as replyId) {
+                <div class="bubble__reply">
+                  <span class="bubble__reply-bar"></span>
+                  <span class="bubble__reply-text">{{ replyPreviewLabel(replyPreview(conversation, message)) }}</span>
+                </div>
+              }
+              @if (message.attachmentType === 'image') {
+                <img class="bubble__attachment-image" [src]="message.attachmentUrl" alt="" loading="lazy" referrerpolicy="no-referrer" />
+              } @else if (message.attachmentType === 'video') {
+                <video class="bubble__attachment-video" [src]="message.attachmentUrl" controls></video>
+              } @else if (message.attachmentType === 'audio') {
+                <audio class="bubble__attachment-audio" [src]="message.attachmentUrl" controls></audio>
+              } @else if (message.attachmentType === 'file') {
+                <a class="bubble__attachment-file" [href]="message.attachmentUrl" target="_blank" rel="noopener noreferrer" download>
+                  <ui-icon name="description" [size]="20" />
+                  <span>{{ message.attachmentFileName || ('label.attachment' | translate: 'Attachment') }}</span>
+                  <ui-icon name="download" [size]="16" />
+                </a>
+              }
+              @if (message.text) {
+                <div class="bubble__text">{{ message.text }}</div>
+              }
             }
             <div class="bubble__meta">
               @if (message.edited && !message.deleted) {
@@ -139,10 +163,17 @@
               @if (isSeen(conversation, message)) {
                 <span class="bubble__seen">{{ 'label.seen' | translate: 'Seen' }}</span>
               }
-              @if (message.fromMe && !message.deleted && editingMessageId() !== message.id) {
-                <button type="button" class="bubble__action" (click)="startEditMessage(message)" [attr.aria-label]="'button.edit-message' | translate: 'Edit message'">
-                  <ui-icon name="edit" [size]="13" />
+              @if (!message.deleted && editingMessageId() !== message.id) {
+                <button type="button" class="bubble__action" (click)="startReply(message)" [attr.aria-label]="'button.reply-message' | translate: 'Reply'">
+                  <ui-icon name="reply" [size]="13" />
                 </button>
+              }
+              @if (message.fromMe && !message.deleted && editingMessageId() !== message.id) {
+                @if (!message.attachmentType) {
+                  <button type="button" class="bubble__action" (click)="startEditMessage(message)" [attr.aria-label]="'button.edit-message' | translate: 'Edit message'">
+                    <ui-icon name="edit" [size]="13" />
+                  </button>
+                }
                 <button type="button" class="bubble__action" (click)="deleteMessage(conversation.id, message.id)" [attr.aria-label]="'button.delete-message' | translate: 'Delete message'">
                   <ui-icon name="delete" [size]="13" />
                 </button>
@@ -152,22 +183,83 @@
         }
       </div>
 
-      <form class="composer" (submit)="$event.preventDefault(); onSend()">
-        <input
-          pInputText
-          class="composer__input"
-          type="text"
-          [placeholder]="'placeholder.write-message' | translate: 'Write a message…'"
-          [ngModel]="draft()"
-          (ngModelChange)="draft.set($event)"
-          (input)="onComposerInput(conversation.id)"
-          name="draft"
-          autocomplete="off"
-        />
-        <button type="submit" class="composer__send" [disabled]="!draft().trim()" aria-label="Send">
-          <ui-icon name="send" [size]="20" [fill]="true" />
-        </button>
-      </form>
+      @if (replyingTo(); as reply) {
+        <div class="composer__reply">
+          <ui-icon name="reply" [size]="16" />
+          <span class="composer__reply-text">{{ replyPreviewLabel(reply) }}</span>
+          <ui-icon-button icon="close" ariaLabel="Cancel reply" [iconSize]="16" (click)="cancelReply()" />
+        </div>
+      }
+
+      @if (isRecording()) {
+        <div class="composer composer--recording">
+          <ui-icon-button
+            icon="delete"
+            class="composer__cancel-recording"
+            [ariaLabel]="'button.cancel-recording' | translate: 'Cancel recording'"
+            [iconSize]="22"
+            (click)="cancelRecording()"
+          />
+          <span class="composer__recording-dot"></span>
+          <span class="composer__recording-label">{{ 'label.recording' | translate: 'Recording audio…' }} {{ recordingTimeLabel() }}</span>
+          <ui-icon-button
+            icon="send"
+            [fill]="true"
+            class="composer__send-recording"
+            [ariaLabel]="'button.send-recording' | translate: 'Send voice message'"
+            [iconSize]="20"
+            (click)="stopRecordingAndSend()"
+          />
+        </div>
+      } @else {
+        <form class="composer" (submit)="$event.preventDefault(); onSend()">
+          <ui-icon-button
+            icon="attach_file"
+            [ariaLabel]="'button.attach-file' | translate: 'Attach file'"
+            [iconSize]="20"
+            (click)="attachmentInput.click()"
+          />
+          <input #attachmentInput type="file" class="composer__hidden-input" (change)="onAttachmentSelected(conversation.id, $event)" />
+
+          <div class="composer__emoji">
+            <ui-icon-button
+              icon="mood"
+              [ariaLabel]="'button.insert-emoji' | translate: 'Insert emoji'"
+              [iconSize]="20"
+              (click)="toggleEmojiPicker()"
+            />
+            @if (showEmojiPicker()) {
+              <div class="composer__emoji-backdrop" (click)="closeEmojiPicker()"></div>
+              <div class="composer__emoji-panel" role="menu">
+                @for (emoji of emojis; track emoji) {
+                  <button type="button" class="composer__emoji-item" (click)="insertEmoji(emoji)">{{ emoji }}</button>
+                }
+              </div>
+            }
+          </div>
+
+          <input
+            pInputText
+            class="composer__input"
+            type="text"
+            [placeholder]="'placeholder.write-message' | translate: 'Write a message…'"
+            [ngModel]="draft()"
+            (ngModelChange)="draft.set($event)"
+            (input)="onComposerInput(conversation.id)"
+            name="draft"
+            autocomplete="off"
+          />
+          <ui-icon-button
+            icon="mic"
+            [ariaLabel]="'button.record-audio' | translate: 'Record a voice message'"
+            [iconSize]="20"
+            (click)="startRecording(conversation.id)"
+          />
+          <button type="submit" class="composer__send" [disabled]="!draft().trim()" aria-label="Send">
+            <ui-icon name="send" [size]="20" [fill]="true" />
+          </button>
+        </form>
+      }
     } @else {
       <ui-empty
         icon="chat"

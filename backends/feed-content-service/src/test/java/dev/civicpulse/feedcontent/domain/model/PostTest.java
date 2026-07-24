@@ -15,7 +15,8 @@ class PostTest {
     Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
     Post post =
-        Post.publish(id, authorId, PostKind.TEXT, "hello world", "http://img", "http://file", "notes.pdf", PostVisibility.PUBLIC, "ctx", null, now);
+        Post.publish(
+            id, authorId, PostKind.TEXT, "hello world", "http://img", "http://file", "notes.pdf", PostVisibility.PUBLIC, "ctx", null, null, now);
 
     assertThat(post.id()).isEqualTo(id);
     assertThat(post.authorAccountId()).isEqualTo(authorId);
@@ -45,6 +46,7 @@ class PostTest {
             PostVisibility.PUBLIC,
             null,
             liveSessionId,
+            null,
             Instant.now());
 
     assertThat(post.liveSessionId()).contains(liveSessionId);
@@ -55,8 +57,8 @@ class PostTest {
   void equalityIsBasedOnId() {
     UUID id = UUID.randomUUID();
     Instant now = Instant.now();
-    Post a = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "a", null, null, null, PostVisibility.PUBLIC, null, null, now);
-    Post b = Post.reconstitute(id, UUID.randomUUID(), PostKind.TEXT, "b", null, null, null, PostVisibility.PRIVATE, null, null, now);
+    Post a = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "a", null, null, null, PostVisibility.PUBLIC, null, null, null, now);
+    Post b = Post.reconstitute(id, UUID.randomUUID(), PostKind.TEXT, "b", null, null, null, PostVisibility.PRIVATE, null, null, now, null);
 
     assertThat(a).isEqualTo(b);
     assertThat(a.hashCode()).isEqualTo(b.hashCode());

@@ -14,17 +14,21 @@
         <p class="hero__ideology">{{ party().ideology }}</p>
       </div>
       <div class="hero__actions">
-        <ui-button
-          [label]="'button.join-party' | translate: 'Join party'"
-          icon="how_to_reg"
-          variant="filled"
-          routerLink="/wallet"
-          [queryParams]="{ partyId: party().id }"
-        />
-        @if (following()) {
-          <ui-button [label]="'button.following' | translate: 'Following'" icon="check" variant="tonal" (click)="toggleFollow()" />
-        } @else {
-          <ui-button [label]="'button.follow' | translate: 'Follow'" icon="add" variant="outlined" (click)="toggleFollow()" />
+        @if (canJoinParty()) {
+          <ui-button
+            [label]="'button.join-party' | translate: 'Join party'"
+            icon="how_to_reg"
+            variant="filled"
+            routerLink="/wallet"
+            [queryParams]="{ partyId: party().id }"
+          />
+        }
+        @if (canFollow()) {
+          @if (following()) {
+            <ui-button [label]="'button.following' | translate: 'Following'" icon="check" variant="tonal" (click)="toggleFollow()" />
+          } @else {
+            <ui-button [label]="'button.follow' | translate: 'Follow'" icon="add" variant="outlined" (click)="toggleFollow()" />
+          }
         }
       </div>
     </div>
@@ -50,6 +54,8 @@
               [canReact]="canReact()"
               (like)="onLike($event)"
               (addComment)="onComment($event)"
+              (vote)="onVote($event)"
+              (unvote)="onUnvote($event)"
             />
           } @empty {
             <ui-empty
@@ -86,22 +92,6 @@
               </ul>
             </ui-section>
 
-            <ui-section [title]="'section.events-agenda' | translate: 'Events, courses & agenda'" icon="calendar_month">
-              <ul class="events">
-                @for (event of party().events; track event.id) {
-                  <li class="event">
-                    <div class="event__date">
-                      <ui-icon name="event" [size]="20" />
-                    </div>
-                    <div class="event__body">
-                      <div class="event__title">{{ event.title }}</div>
-                      <div class="event__meta">{{ event.date }} · {{ event.location }}</div>
-                    </div>
-                    <ui-tag [label]="event.tag.label" [severity]="event.tag.severity" />
-                  </li>
-                }
-              </ul>
-            </ui-section>
           </div>
 
           <div class="grid__side">
@@ -136,6 +126,54 @@
             </ui-section>
           </div>
         </div>
+      }
+      @case ('agenda') {
+        <ui-section [title]="'tab.agenda' | translate: 'Agenda'" icon="calendar_month">
+          <ul class="events">
+            @for (event of upcomingEvents(); track event.id) {
+              <li class="event">
+                <div class="event__date">
+                  <ui-icon name="event" [size]="20" />
+                </div>
+                <div class="event__body">
+                  <div class="event__title">{{ event.title }}</div>
+                  <div class="event__meta">{{ event.date }} · {{ event.location }}</div>
+                </div>
+                <ui-tag [label]="event.tag.label" [severity]="event.tag.severity" />
+              </li>
+            } @empty {
+              <ui-empty
+                icon="calendar_month"
+                [title]="'empty.party-agenda.title' | translate: 'Nothing scheduled yet'"
+                [description]="'empty.party-agenda.desc' | translate: 'Upcoming events, courses and meetings will appear here.'"
+              />
+            }
+          </ul>
+        </ui-section>
+      }
+      @case ('events') {
+        <ui-section [title]="'tab.events' | translate: 'Events'" icon="event">
+          <ul class="events">
+            @for (event of pastEvents(); track event.id) {
+              <li class="event">
+                <div class="event__date">
+                  <ui-icon name="event" [size]="20" />
+                </div>
+                <div class="event__body">
+                  <div class="event__title">{{ event.title }}</div>
+                  <div class="event__meta">{{ event.date }} · {{ event.location }}</div>
+                </div>
+                <ui-tag [label]="event.tag.label" [severity]="event.tag.severity" />
+              </li>
+            } @empty {
+              <ui-empty
+                icon="event"
+                [title]="'empty.party-events.title' | translate: 'No past events yet'"
+                [description]="'empty.party-events.desc' | translate: 'Past events, courses and meetings will appear here.'"
+              />
+            }
+          </ul>
+        </ui-section>
       }
     }
   </div>

@@ -36,6 +36,7 @@ interface PostResponseDto {
   readonly agendaEventDate: string | null;
   readonly agendaLocation: string | null;
   readonly pollOptions: PollOptionResponseDto[];
+  readonly pollClosesAt: string | null;
 }
 
 interface MediaUploadResponseDto {
@@ -50,6 +51,7 @@ interface ResolvedAttachments {
   readonly fileUrl?: string;
   readonly fileName?: string;
   readonly pollOptions?: string[];
+  readonly pollClosesAt?: string;
 }
 
 interface PostMetricsResponseDto {
@@ -104,13 +106,21 @@ export class FeedService {
   private readonly identityApiBase = `${environment.apiBaseUrl}/api/identity`;
 
   private readonly authorCache = new Map<string, UserSummary>();
+  private static readonly PAGE_SIZE = 20;
 
   private readonly _posts = signal<Post[]>([]);
   private readonly _sort = signal<FeedSort>('top');
   private readonly _liveNow = signal<LiveNowInfo | null>(null);
+  private readonly _page = signal(0);
+  private readonly _hasMore = signal(true);
+  private readonly _loadingMore = signal(false);
 
   readonly sort = this._sort.asReadonly();
   readonly liveNow = this._liveNow.asReadonly();
+  /** Whether another page is worth requesting — false once a fetch comes back short of a full
+   * page (the standard "ran out of rows" signal for this style of offset pagination). */
+  readonly hasMore = this._hasMore.asReadonly();
+  readonly loadingMore = this._loadingMore.asReadonly();
 
   /** Posts ordered according to the active sort. */
   readonly posts = computed<Post[]>(() => {
@@ -139,8 +149,33 @@ export class FeedService {
     return computed(() => this._posts().filter((p) => p.author.id === authorId));
   }
 
-  reloadFeed(page = 0, pageSize = 50): Observable<Post[]> {
-    return this.http.get<PostResponseDto[]>(`${this.feedApiBase}/posts`, { params: { page, pageSize } }).pipe(
+  /** Resets to the first page and replaces the feed — used for the initial load. */
+  reloadFeed(): Observable<Post[]> {
+    this._page.set(0);
+    this._hasMore.set(true);
+    return this.fetchPage(0).pipe(tap((posts) => this._posts.set(posts)));
+  }
+
+  /** Appends the next page — the infinite-scroll sentinel on the feed page calls this. A no-op
+   * while a fetch is already in flight or the previous page came back short of a full page. */
+  loadMore(): void {
+    if (this._loadingMore() || !this._hasMore()) {
+      return;
+    }
+    this._loadingMore.set(true);
+    const nextPage = this._page() + 1;
+    this.fetchPage(nextPage).subscribe({
+      next: (posts) => {
+        this._page.set(nextPage);
+        this._posts.update((existing) => [...existing, ...posts]);
+        this._loadingMore.set(false);
+      },
+      error: () => this._loadingMore.set(false),
+    });
+  }
+
+  private fetchPage(page: number): Observable<Post[]> {
+    return this.http.get<PostResponseDto[]>(`${this.feedApiBase}/posts`, { params: { page, pageSize: FeedService.PAGE_SIZE } }).pipe(
       switchMap((list) =>
         list.length
           ? forkJoin(
@@ -152,7 +187,7 @@ export class FeedService {
           : of([]),
       ),
       map((posts) => posts.filter((p): p is Post => p !== null)),
-      tap((posts) => this._posts.set(posts)),
+      tap((posts) => this._hasMore.set(posts.length >= FeedService.PAGE_SIZE)),
     );
   }
 
@@ -275,7 +310,27 @@ export class FeedService {
               }
               return o;
             });
-            return { ...p, poll: { options, myVoteOptionId: optionId } };
+            return { ...p, poll: { ...p.poll, options, myVoteOptionId: optionId } };
+          }),
+        ),
+    });
+  }
+
+  /** Removes the caller's vote entirely — a poll stays revocable while it's open (see
+   * PublishPostUseCase's own doc on this), it's never "final" just because someone voted once. */
+  unvote(postId: string): void {
+    this.http.delete<void>(`${this.feedApiBase}/posts/${postId}/poll/votes`).subscribe({
+      next: () =>
+        this._posts.update((posts) =>
+          posts.map((p) => {
+            if (p.id !== postId || !p.poll || !p.poll.myVoteOptionId) {
+              return p;
+            }
+            const previousOptionId = p.poll.myVoteOptionId;
+            const options = p.poll.options.map((o) =>
+              o.id === previousOptionId ? { ...o, votes: Math.max(0, o.votes - 1) } : o,
+            );
+            return { ...p, poll: { ...p.poll, options, myVoteOptionId: undefined } };
           }),
         ),
     });
@@ -292,6 +347,7 @@ export class FeedService {
         fileUrl: file?.url,
         fileName: file?.fileName,
         pollOptions: draft.pollOptions && draft.pollOptions.length >= 2 ? draft.pollOptions : undefined,
+        pollClosesAt: draft.pollClosesAt,
       })),
     );
   }
@@ -442,7 +498,9 @@ export class FeedService {
                 scheduledFor: live.scheduledFor ?? undefined,
               }
             : undefined,
-          poll: pollOptions.length ? { options: pollOptions, myVoteOptionId: myVoteOptionId ?? undefined } : undefined,
+          poll: pollOptions.length
+            ? { options: pollOptions, myVoteOptionId: myVoteOptionId ?? undefined, closesAt: dto.pollClosesAt ?? undefined }
+            : undefined,
           visibility: dto.visibility as PostVisibility,
           metrics: { likes: metrics.likesCount, comments: metrics.commentsCount, liked },
           comments,

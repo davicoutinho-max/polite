@@ -26,6 +26,25 @@
     color: var(--cp-on-surface-variant);
     padding: var(--cp-space-xl);
   }
+
+  &__sentinel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--cp-space-sm);
+    padding: var(--cp-space-lg);
+    color: var(--cp-on-surface-variant);
+  }
+
+  &__spinner {
+    animation: feed-spin 1s linear infinite;
+  }
+}
+
+@keyframes feed-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (min-width: 768px) {
@@ -40,7 +59,10 @@
   .feed {
     grid-template-columns: 2fr 1fr;
     grid-template-rows: 1fr;
-    height: 100dvh;
+    /* Matches .shell__content's actual available height (100dvh minus the 64px top bar it
+       already sits below) — see messages-page.scss for the same fix and why a bare 100dvh here
+       overflows its flex parent and breaks independent column scrolling. */
+    height: calc(100dvh - 64px);
     overflow: hidden;
   }
   .feed__main,

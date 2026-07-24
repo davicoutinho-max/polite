@@ -11,7 +11,11 @@ public record MessageResponse(
     String body,
     Instant createdAt,
     Instant editedAt,
-    boolean deleted) {
+    boolean deleted,
+    String attachmentUrl,
+    String attachmentType,
+    String attachmentFileName,
+    UUID replyToMessageId) {
 
   public static MessageResponse from(Message message) {
     return new MessageResponse(
@@ -21,6 +25,10 @@ public record MessageResponse(
         message.body(),
         message.createdAt(),
         message.editedAt().orElse(null),
-        message.isDeleted());
+        message.isDeleted(),
+        message.attachmentUrl().orElse(null),
+        message.attachmentType().map(t -> t.code()).orElse(null),
+        message.attachmentFileName().orElse(null),
+        message.replyToMessageId().orElse(null));
   }
 }

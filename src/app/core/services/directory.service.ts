@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { GovLevel, PartySpectrum, PartySummary, PoliticianSummary } from '../models';
@@ -17,12 +17,6 @@ export interface FilterOption {
   readonly value: string;
   readonly label: string;
 }
-
-export const LEVEL_OPTIONS: readonly { value: GovLevel; label: string }[] = [
-  { value: 'federal', label: 'Federal' },
-  { value: 'state', label: 'State' },
-  { value: 'municipal', label: 'Municipal' },
-];
 
 export const SPECTRUM_OPTIONS: readonly { value: PartySpectrum; label: string }[] = [
   { value: 'left', label: 'Left' },
@@ -121,11 +115,31 @@ export class DirectoryService {
       .map((s) => ({ value: s, label: s })),
   );
 
+  /** Derived from whatever office values politicians actually carry (e.g. "Senador", "Deputado
+   * Federal", "City Councilor") rather than a hardcoded enum — real-world office titles vary too
+   * much across levels/parties to enumerate up front, same reasoning as stateOptions above. */
+  readonly officeOptions = computed<FilterOption[]>(() =>
+    [...new Set(this._politicians().map((p) => p.office).filter((o) => o))]
+      .sort()
+      .map((o) => ({ value: o, label: o })),
+  );
+
   constructor() {
     this.reloadPoliticians().subscribe();
     this.reloadParties().subscribe();
-    this.reloadFollowing('politician').subscribe();
-    this.reloadFollowing('party').subscribe();
+    // Gated on session.ready() rather than fired immediately: on a hard refresh the token-restore
+    // in SessionService resolves asynchronously (see its constructor), so isAuthenticated() is
+    // still false at this constructor's first tick. Firing here unconditionally used to silently
+    // fetch an empty following set that was never retried, permanently desyncing every Follow
+    // button from the real server-side state until the next full reload happened to race the
+    // other way. The effect re-runs whenever `ready` flips, so it fires exactly once the real
+    // auth state is known, whether that's on this tick or a moment later.
+    effect(() => {
+      if (this.session.ready()) {
+        this.reloadFollowing('politician').subscribe();
+        this.reloadFollowing('party').subscribe();
+      }
+    });
   }
 
   reloadPoliticians(): Observable<PoliticianSummary[]> {
@@ -167,13 +181,21 @@ export class DirectoryService {
   }
 
   follow(targetType: 'politician' | 'party', targetId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiBase}/follows`, { targetType, targetId }).pipe(tap(() => this.addFollowingLocally(targetType, targetId)));
+    return this.http.post<void>(`${this.apiBase}/follows`, { targetType, targetId }).pipe(
+      tap(() => {
+        this.addFollowingLocally(targetType, targetId);
+        this.bumpCountLocally(targetType, targetId, 1);
+      }),
+    );
   }
 
   unfollow(targetType: 'politician' | 'party', targetId: string): Observable<void> {
-    return this.http
-      .request<void>('DELETE', `${this.apiBase}/follows`, { body: { targetType, targetId } })
-      .pipe(tap(() => this.removeFollowingLocally(targetType, targetId)));
+    return this.http.request<void>('DELETE', `${this.apiBase}/follows`, { body: { targetType, targetId } }).pipe(
+      tap(() => {
+        this.removeFollowingLocally(targetType, targetId);
+        this.bumpCountLocally(targetType, targetId, -1);
+      }),
+    );
   }
 
   private addFollowingLocally(targetType: 'politician' | 'party', targetId: string): void {
@@ -188,5 +210,16 @@ export class DirectoryService {
       next.delete(targetId);
       return next;
     });
+  }
+
+  /** Optimistic local follower/member count bump — the real count still gets confirmed on the
+   * next `reloadPoliticians()`/`reloadParties()`, but without this the card the user is looking
+   * straight at doesn't move until they reload the page. */
+  private bumpCountLocally(targetType: 'politician' | 'party', targetId: string, delta: 1 | -1): void {
+    if (targetType === 'politician') {
+      this._politicians.update((list) => list.map((p) => (p.id === targetId ? { ...p, followers: p.followers + delta } : p)));
+    } else {
+      this._parties.update((list) => list.map((p) => (p.id === targetId ? { ...p, members: p.members + delta } : p)));
+    }
   }
 }

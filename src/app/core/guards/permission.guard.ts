@@ -6,22 +6,25 @@ import { Permission } from '../models';
 import { SessionService } from '../services/session.service';
 
 /**
- * Route guard factory: only matches the route when the current account holds
- * `permission`. Otherwise it redirects to the public feed, so typing a
- * restricted URL directly is blocked exactly like the hidden nav item.
+ * Route guard factory: only matches the route when the current account holds `permission` — or,
+ * if given an array, holds ANY of them (e.g. a page split between "citizens participate" and
+ * "politicians/parties create" still needs exactly one shared route). Otherwise it redirects to
+ * the public feed, so typing a restricted URL directly is blocked exactly like the hidden nav
+ * item.
  *
  * Waits for `session.ready()` first — on a hard refresh the account starts out as the
  * placeholder visitor until the token-restore call resolves; evaluating `can()` before that
  * settles would incorrectly bounce an actually-signed-in user to /feed.
  */
-export function requirePermission(permission: Permission): CanMatchFn {
+export function requirePermission(permission: Permission | Permission[]): CanMatchFn {
+  const permissions = Array.isArray(permission) ? permission : [permission];
   return () => {
     const session = inject(SessionService);
     const router = inject(Router);
     return toObservable(session.ready).pipe(
       filter((ready) => ready),
       take(1),
-      map(() => (session.can(permission) ? true : router.parseUrl('/feed'))),
+      map(() => (permissions.some((p) => session.can(p)) ? true : router.parseUrl('/feed'))),
     );
   };
 }

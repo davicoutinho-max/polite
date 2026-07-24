@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Alert, AlertCategory } from '../models';
@@ -33,7 +33,13 @@ export class AlertsService {
   readonly unreadCount = computed(() => this._alerts().filter((a) => !a.read).length);
 
   constructor() {
-    this.reload().subscribe();
+    // See DirectoryService's reloadFollowing for why this waits on session.ready() instead of
+    // firing immediately — otherwise a hard refresh can permanently strand this at "no alerts".
+    effect(() => {
+      if (this.session.ready()) {
+        this.reload().subscribe();
+      }
+    });
   }
 
   reload(page = 0, pageSize = 50): Observable<Alert[]> {

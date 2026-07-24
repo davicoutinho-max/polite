@@ -1,13 +1,10 @@
 <ui-card [hover]="true" padding="lg">
   <header class="post__header">
-    <a class="post__author" [routerLink]="['/profile', post().author.id]">
+    <a class="post__author" [routerLink]="authorLink()">
       <ui-avatar [src]="post().author.avatarUrl" [alt]="post().author.name" [size]="48" [ring]="true" />
       <div>
         <div class="post__name-row">
           <h3 class="post__name">{{ post().author.name }}</h3>
-          @if (post().author.verified) {
-            <ui-icon name="verified" [fill]="true" [size]="16" class="post__verified" />
-          }
         </div>
         <p class="post__meta">{{ post().createdAt }} • {{ post().context }}</p>
       </div>
@@ -32,7 +29,11 @@
   </header>
 
   @if (post().content) {
-    <p class="post__content">{{ post().content }}</p>
+    @if (post().poll) {
+      <h4 class="post__poll-title">{{ post().content }}</h4>
+    } @else {
+      <p class="post__content">{{ post().content }}</p>
+    }
   }
 
   @if (post().tags.length) {
@@ -89,16 +90,26 @@
           type="button"
           class="post__poll-option"
           [class.post__poll-option--voted]="poll.myVoteOptionId === option.id"
-          [disabled]="!canReact()"
+          [disabled]="!canReact() || isPollClosed(poll)"
           [style.--pct.%]="pollPercentage(option, poll)"
-          (click)="vote.emit({ postId: post().id, optionId: option.id })"
+          (click)="onPollOptionClick(poll, option)"
         >
           <span class="post__poll-option-fill"></span>
           <span class="post__poll-option-label">{{ option.label }}</span>
           <span class="post__poll-option-pct">{{ pollPercentage(option, poll) }}%</span>
+          @if (poll.myVoteOptionId === option.id) {
+            <ui-icon name="check_circle" [size]="16" [fill]="true" class="post__poll-option-check" />
+          }
         </button>
       }
-      <p class="post__poll-total">{{ pollTotalVotes(poll) | compactNumber }} votes</p>
+      <div class="post__poll-footer">
+        <p class="post__poll-total">{{ pollTotalVotes(poll) | compactNumber }} votes</p>
+        @if (isPollClosed(poll)) {
+          <p class="post__poll-status">{{ 'label.poll-closed' | translate: 'Poll closed' }}</p>
+        } @else if (poll.myVoteOptionId) {
+          <p class="post__poll-status post__poll-status--hint">{{ 'hint.tap-to-change-vote' | translate: 'Tap your choice again to remove your vote' }}</p>
+        }
+      </div>
     </div>
   }
 
@@ -163,9 +174,6 @@
             <div class="comment__head">
               <span class="comment__name">
                 {{ comment.author.name }}
-                @if (comment.author.verified) {
-                  <ui-icon name="verified" [size]="12" [fill]="true" />
-                }
               </span>
               <span class="comment__time">{{ comment.timeLabel }}</span>
             </div>

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, forkJoin, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AreaPoint } from '../../shared/ui/ui-area-chart/ui-area-chart';
@@ -76,7 +76,13 @@ export class AnalyticsService {
   readonly byAccountType = this._byAccountType.asReadonly();
 
   constructor() {
-    this.reload().subscribe();
+    // See DirectoryService's reloadFollowing for why this waits on session.ready() instead of
+    // firing immediately — otherwise a hard refresh can permanently strand this dashboard empty.
+    effect(() => {
+      if (this.session.ready()) {
+        this.reload().subscribe();
+      }
+    });
   }
 
   reload(): Observable<void> {

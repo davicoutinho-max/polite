@@ -114,6 +114,10 @@
 
 .thread__body { flex: 1; overflow-y: auto; padding: var(--cp-space-lg); display: flex; flex-direction: column; gap: var(--cp-space-sm); }
 
+.thread__sentinel { display: flex; align-items: center; justify-content: center; padding: var(--cp-space-sm); }
+.thread__spinner { color: var(--cp-on-surface-variant); animation: thread-spin 1s linear infinite; }
+@keyframes thread-spin { to { transform: rotate(360deg); } }
+
 .bubble { max-width: 72%; align-self: flex-start; }
 .bubble--me { align-self: flex-end; }
 .bubble__text {
@@ -130,6 +134,20 @@
   font-style: italic; color: var(--cp-on-surface-variant); background: var(--cp-surface-container-low);
 }
 .bubble--me .bubble__text--deleted { background: var(--cp-surface-container-low); color: var(--cp-on-surface-variant); }
+
+.bubble__attachment-image {
+  display: block; max-width: 260px; max-height: 260px; width: 100%; border-radius: var(--cp-radius-lg);
+  object-fit: cover;
+}
+.bubble__attachment-video { display: block; max-width: 280px; border-radius: var(--cp-radius-lg); }
+.bubble__attachment-audio { display: block; max-width: 260px; }
+.bubble__attachment-file {
+  display: inline-flex; align-items: center; gap: var(--cp-space-sm);
+  padding: var(--cp-space-sm) var(--cp-space-md); border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface-container-high); color: var(--cp-on-surface);
+  text-decoration: none; font-size: 13px;
+}
+.bubble--me .bubble__attachment-file { background: var(--cp-primary-container); color: var(--cp-on-primary); }
 
 .bubble__edit {
   display: flex; align-items: center; gap: 4px;
@@ -169,6 +187,55 @@
   flex-shrink: 0; transition: opacity 0.15s ease;
 }
 .composer__send:disabled { opacity: 0.5; cursor: not-allowed; }
+.composer__hidden-input { display: none; }
+
+/* ---- Emoji picker ---- */
+.composer__emoji { position: relative; flex-shrink: 0; }
+.composer__emoji-backdrop { position: fixed; inset: 0; z-index: 10; }
+.composer__emoji-panel {
+  position: absolute; bottom: 100%; left: 0; z-index: 11;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+  width: 264px; margin-bottom: var(--cp-space-xs); padding: var(--cp-space-sm);
+  border-radius: var(--cp-radius-lg); border: 1px solid var(--cp-outline-variant);
+  background: var(--cp-surface-container-lowest); box-shadow: var(--cp-shadow-card);
+  max-height: 220px; overflow-y: auto;
+}
+.composer__emoji-item {
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; border-radius: var(--cp-radius);
+  font-size: 20px; line-height: 1; padding: 6px; cursor: pointer;
+}
+.composer__emoji-item:hover { background: var(--cp-surface-container-low); }
+
+.composer__reply {
+  display: flex; align-items: center; gap: var(--cp-space-sm);
+  padding: var(--cp-space-sm) var(--cp-space-lg);
+  border-top: 1px solid var(--cp-outline-variant); background: var(--cp-surface-container-low);
+  color: var(--cp-on-surface-variant);
+}
+.composer__reply-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+
+.composer--recording { justify-content: flex-start; }
+.composer__recording-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--cp-error);
+  animation: recording-pulse 1s ease-in-out infinite;
+}
+.composer__recording-label { flex: 1; font-size: 14px; color: var(--cp-on-surface); }
+.composer__cancel-recording { color: var(--cp-on-surface-variant); }
+.composer__send-recording { color: var(--cp-on-primary); background: var(--cp-primary-container); border-radius: var(--cp-radius-full); }
+@keyframes recording-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.bubble__reply {
+  display: flex; gap: 6px; margin-bottom: 4px; padding: 4px 8px;
+  border-radius: var(--cp-radius); background: rgba(0, 0, 0, 0.06);
+  font-size: 12px; color: var(--cp-on-surface-variant);
+}
+.bubble--me .bubble__reply { background: rgba(255, 255, 255, 0.15); }
+.bubble__reply-bar { flex-shrink: 0; width: 3px; border-radius: 2px; background: var(--cp-primary); }
+.bubble__reply-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- Mobile: single pane with slide to thread ---- */
 @media (max-width: 899px) {

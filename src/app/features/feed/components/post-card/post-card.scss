@@ -98,6 +98,14 @@
     color: var(--cp-on-surface);
   }
 
+  &__poll-title {
+    margin: 0 0 var(--cp-space-sm);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--cp-on-surface);
+  }
+
   &__tags {
     display: flex;
     flex-wrap: wrap;
@@ -222,10 +230,29 @@
     font-size: 13px;
     color: var(--cp-on-surface-variant);
   }
+  &__poll-option-check {
+    position: relative;
+    flex-shrink: 0;
+    color: var(--cp-secondary);
+  }
+  &__poll-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cp-space-sm);
+  }
   &__poll-total {
     margin: 0;
     font-size: 12px;
     color: var(--cp-on-surface-variant);
+  }
+  &__poll-status {
+    margin: 0;
+    font-size: 12px;
+    color: var(--cp-on-surface-variant);
+  }
+  &__poll-status--hint {
+    font-style: italic;
   }
 
   &__actions {

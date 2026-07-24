@@ -6,11 +6,12 @@
  *               causes but not create them.
  * - politician: a public figure registered by a party (CPF/CNPJ verification
  *               collected at registration time), who publishes content and
- *               may create fundraising causes and group chats with other
- *               politicians/parties.
+ *               may create fundraising causes, petitions/consultations/surveys,
+ *               and group chats with other politicians/parties.
  * - party:      manages a party's presence (members, content, events,
  *               analytics), registers politicians under it, and — like
- *               politicians — may create fundraising causes and group chats.
+ *               politicians — may create fundraising causes,
+ *               petitions/consultations/surveys, and group chats.
  * - admin:      platform administrator — creates/edits parties and handles
  *               independent-politician reassignment from a settings screen.
  */
@@ -26,7 +27,7 @@ export type Permission =
   | 'request-affiliation' // request party affiliation
   | 'membership' // digital membership card / affiliation area
   | 'create-fundraiser' // create fundraising actions (politicians & parties)
-  | 'create-group-chat' // start a group conversation (politicians & parties)
+  | 'create-participation' // create petitions/consultations/surveys (politicians & parties)
   | 'publish-content' // publish posts / news (politicians & parties)
   | 'party-admin' // manage a party's presence
   | 'platform-admin' // platform administration (create parties, assign politicians)
@@ -52,7 +53,7 @@ export const TYPE_PERMISSIONS: Record<AccountType, readonly Permission[]> = {
     'message',
     'publish-content',
     'create-fundraiser',
-    'create-group-chat',
+    'create-participation',
     'analytics',
   ],
   party: [
@@ -62,7 +63,7 @@ export const TYPE_PERMISSIONS: Record<AccountType, readonly Permission[]> = {
     'message',
     'publish-content',
     'create-fundraiser',
-    'create-group-chat',
+    'create-participation',
     'party-admin',
     'analytics',
   ],

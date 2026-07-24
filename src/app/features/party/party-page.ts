@@ -15,13 +15,15 @@ import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { ProfileTabs } from '../profile/components/profile-tabs/profile-tabs';
-import { PostCard, CommentEvent } from '../feed/components/post-card/post-card';
+import { PostCard, CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { TranslateService } from '../../core/services/translate.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 const TABS: ProfileTab[] = [
   { id: 'activity', label: 'Activity', key: 'tab.activity', icon: 'forum' },
   { id: 'overview', label: 'Overview', key: 'tab.overview', icon: 'info' },
+  { id: 'agenda', label: 'Agenda', key: 'tab.agenda', icon: 'calendar_month' },
+  { id: 'events', label: 'Events', key: 'tab.events', icon: 'event' },
 ];
 
 /** Party profile page. */
@@ -62,6 +64,11 @@ export class PartyPage {
   protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.party().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
+  protected readonly canFollow = computed(() => this.session.can('follow'));
+  /** Matches the /wallet route's own canMatch guard (requirePermission('membership')) exactly —
+   * showing this button to anyone without that permission (visitors, politicians, parties,
+   * admins) sent them straight into a route-guard redirect back to /feed with no explanation. */
+  protected readonly canJoinParty = computed(() => this.session.can('membership'));
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -93,6 +100,14 @@ export class PartyPage {
     this.feedService.addComment(event.postId, event.text);
   }
 
+  protected onVote(event: VoteEvent): void {
+    this.feedService.vote(event.postId, event.optionId);
+  }
+
+  protected onUnvote(postId: string): void {
+    this.feedService.unvote(postId);
+  }
+
   protected readonly hasStatute = computed(() => !!this.party().statuteUrl && this.party().statuteUrl !== '#');
 
   protected openStatute(): void {
@@ -101,6 +116,22 @@ export class PartyPage {
       window.open(url, '_blank', 'noopener');
     }
   }
+
+  /** Agenda = scheduled/upcoming; Events = past history. Same underlying list, split by date —
+   * there's no separate "agenda" data source, just a different time-window view of party events. */
+  protected readonly upcomingEvents = computed(() => {
+    const now = Date.now();
+    return this.party()
+      .events.filter((e) => new Date(e.date).getTime() >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  });
+
+  protected readonly pastEvents = computed(() => {
+    const now = Date.now();
+    return this.party()
+      .events.filter((e) => new Date(e.date).getTime() < now)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  });
 
   protected readonly overview = computed<DataListItem[]>(() => {
     const p = this.party();

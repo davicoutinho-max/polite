@@ -19,6 +19,7 @@ import dev.civicpulse.feedcontent.application.port.out.PostRepository;
 import dev.civicpulse.feedcontent.application.port.out.PostTagRepository;
 import dev.civicpulse.feedcontent.domain.event.PostPublished;
 import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
+import dev.civicpulse.feedcontent.domain.exception.PollClosedException;
 import dev.civicpulse.feedcontent.domain.exception.PostNotFoundException;
 import dev.civicpulse.feedcontent.domain.model.Post;
 import dev.civicpulse.feedcontent.domain.model.PostAgendaDetails;
@@ -152,7 +153,7 @@ class PostServiceTest {
   void deletePostRemovesAllDependentRowsThenThePostItself() {
     UUID postId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
-    Post post = Post.reconstitute(postId, authorId, PostKind.TEXT, "hello", null, null, null, PostVisibility.PUBLIC, "ctx", null, NOW);
+    Post post = Post.reconstitute(postId, authorId, PostKind.TEXT, "hello", null, null, null, PostVisibility.PUBLIC, "ctx", null, NOW, null);
     when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
     service.deletePost(postId, authorId);
@@ -172,7 +173,7 @@ class PostServiceTest {
     UUID postId = UUID.randomUUID();
     UUID authorId = UUID.randomUUID();
     UUID strangerId = UUID.randomUUID();
-    Post post = Post.reconstitute(postId, authorId, PostKind.TEXT, "hello", null, null, null, PostVisibility.PUBLIC, "ctx", null, NOW);
+    Post post = Post.reconstitute(postId, authorId, PostKind.TEXT, "hello", null, null, null, PostVisibility.PUBLIC, "ctx", null, NOW, null);
     when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
     assertThatThrownBy(() -> service.deletePost(postId, strangerId)).isInstanceOf(NotPostOwnerException.class);
@@ -192,7 +193,7 @@ class PostServiceTest {
   @Test
   void publishTextPostWithTwoOrMorePollOptionsSavesThemInOrder() {
     when(postRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    var attachments = new PostAttachments(null, null, null, List.of("Yes", "No", "Undecided"));
+    var attachments = new PostAttachments(null, null, null, List.of("Yes", "No", "Undecided"), null);
 
     var post = service.publishTextPost(UUID.randomUUID(), "Do you support this bill?", attachments, PostVisibility.PUBLIC, "ctx");
 
@@ -206,7 +207,7 @@ class PostServiceTest {
   @Test
   void publishTextPostWithFewerThanTwoPollOptionsSavesNoPoll() {
     when(postRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    var attachments = new PostAttachments(null, null, null, List.of("Only one"));
+    var attachments = new PostAttachments(null, null, null, List.of("Only one"), null);
 
     service.publishTextPost(UUID.randomUUID(), "Not really a poll", attachments, PostVisibility.PUBLIC, "ctx");
 
@@ -218,9 +219,47 @@ class PostServiceTest {
     UUID postId = UUID.randomUUID();
     UUID accountId = UUID.randomUUID();
     UUID optionId = UUID.randomUUID();
+    Post openPoll = Post.reconstitute(postId, UUID.randomUUID(), PostKind.TEXT, "q", null, null, null, PostVisibility.PUBLIC, null, null, NOW, null);
+    when(postRepository.findById(postId)).thenReturn(Optional.of(openPoll));
 
     service.vote(postId, accountId, optionId);
 
     verify(postPollRepository).vote(postId, accountId, optionId);
+  }
+
+  @Test
+  void unvoteDelegatesToPollRepository() {
+    UUID postId = UUID.randomUUID();
+    UUID accountId = UUID.randomUUID();
+    Post openPoll = Post.reconstitute(postId, UUID.randomUUID(), PostKind.TEXT, "q", null, null, null, PostVisibility.PUBLIC, null, null, NOW, null);
+    when(postRepository.findById(postId)).thenReturn(Optional.of(openPoll));
+
+    service.unvote(postId, accountId);
+
+    verify(postPollRepository).unvote(postId, accountId);
+  }
+
+  @Test
+  void voteOnClosedPollThrows() {
+    UUID postId = UUID.randomUUID();
+    Post closedPoll =
+        Post.reconstitute(
+            postId, UUID.randomUUID(), PostKind.TEXT, "q", null, null, null, PostVisibility.PUBLIC, null, null, NOW, NOW.minusSeconds(1));
+    when(postRepository.findById(postId)).thenReturn(Optional.of(closedPoll));
+
+    assertThatThrownBy(() -> service.vote(postId, UUID.randomUUID(), UUID.randomUUID())).isInstanceOf(PollClosedException.class);
+    verify(postPollRepository, never()).vote(any(), any(), any());
+  }
+
+  @Test
+  void unvoteOnClosedPollThrows() {
+    UUID postId = UUID.randomUUID();
+    Post closedPoll =
+        Post.reconstitute(
+            postId, UUID.randomUUID(), PostKind.TEXT, "q", null, null, null, PostVisibility.PUBLIC, null, null, NOW, NOW.minusSeconds(1));
+    when(postRepository.findById(postId)).thenReturn(Optional.of(closedPoll));
+
+    assertThatThrownBy(() -> service.unvote(postId, UUID.randomUUID())).isInstanceOf(PollClosedException.class);
+    verify(postPollRepository, never()).unvote(any(), any());
   }
 }

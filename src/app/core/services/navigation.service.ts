@@ -14,7 +14,14 @@ export class NavigationService {
     { label: 'Parties', key: 'nav.parties', icon: 'flag', route: '/parties', mobile: true },
     { label: 'Elections', key: 'nav.elections', icon: 'ballot', route: '/elections', mobile: true },
     { label: 'Ask AI', key: 'nav.assistant', icon: 'auto_awesome', route: '/assistant' },
-    { label: 'Participation', key: 'nav.participation', icon: 'how_to_vote', route: '/participation', mobile: true, permission: 'participate' },
+    {
+      label: 'Participation',
+      key: 'nav.participation',
+      icon: 'how_to_vote',
+      route: '/participation',
+      mobile: true,
+      permission: ['participate', 'create-participation'],
+    },
     { label: 'Fundraising', key: 'nav.fundraising', icon: 'volunteer_activism', route: '/fundraising', permission: 'account' },
     { label: 'Wallet', key: 'nav.wallet', icon: 'wallet', route: '/wallet', permission: 'membership' },
     { label: 'Analytics', key: 'nav.analytics', icon: 'analytics', route: '/analytics', permission: 'analytics' },
@@ -31,6 +38,12 @@ export class NavigationService {
   readonly secondaryItems = computed<NavItem[]>(() => this.visible(this.allSecondary));
 
   private visible(items: NavItem[]): NavItem[] {
-    return items.filter((item) => !item.permission || this.session.can(item.permission));
+    return items.filter((item) => {
+      if (!item.permission) {
+        return true;
+      }
+      const permissions = Array.isArray(item.permission) ? item.permission : [item.permission];
+      return permissions.some((p) => this.session.can(p));
+    });
   }
 }

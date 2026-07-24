@@ -3,6 +3,7 @@ package dev.civicpulse.feedcontent.adapter.in.web;
 import dev.civicpulse.feedcontent.domain.exception.AlreadyLikedException;
 import dev.civicpulse.feedcontent.domain.exception.MediaUploadFailedException;
 import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
+import dev.civicpulse.feedcontent.domain.exception.PollClosedException;
 import dev.civicpulse.feedcontent.domain.exception.PostNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(NotPostOwnerException.class)
   public ProblemDetail handleNotPostOwner(NotPostOwnerException ex) {
     return problem(HttpStatus.FORBIDDEN, "Not the post owner", ex.getMessage());
+  }
+
+  @ExceptionHandler(PollClosedException.class)
+  public ProblemDetail handlePollClosed(PollClosedException ex) {
+    return problem(HttpStatus.CONFLICT, "Poll closed", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

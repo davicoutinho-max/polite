@@ -78,13 +78,21 @@ export class PostComposer {
   protected readonly attachedFile = signal<File | null>(null);
   protected readonly pollMode = signal(false);
   protected readonly pollOptionInputs = signal<string[]>(['', '']);
+  /** 'none' = the poll never locks on its own — voting/unvoting/switching stays open forever. */
+  protected readonly pollDuration = signal<'none' | '1d' | '3d' | '1w'>('1d');
+  protected readonly pollDurationOptions: { value: 'none' | '1d' | '3d' | '1w'; label: string }[] = [
+    { value: 'none', label: 'No time limit' },
+    { value: '1d', label: '1 day' },
+    { value: '3d', label: '3 days' },
+    { value: '1w', label: '1 week' },
+  ];
 
   private readonly pollOptionsValid = computed(
     () => this.pollOptionInputs().filter((o) => o.trim().length > 0).length >= 2,
   );
 
   protected readonly canPublish = computed(() => {
-    if (this.pollMode() && !this.pollOptionsValid()) {
+    if (this.pollMode() && (!this.pollOptionsValid() || this.draft().trim().length === 0)) {
       return false;
     }
     switch (this.mode()) {
@@ -153,6 +161,15 @@ export class PostComposer {
     }
   }
 
+  private computePollClosesAt(): string | undefined {
+    const duration = this.pollDuration();
+    if (duration === 'none') {
+      return undefined;
+    }
+    const hours = { '1d': 24, '3d': 72, '1w': 168 }[duration];
+    return new Date(Date.now() + hours * 3600_000).toISOString();
+  }
+
   protected onPublish(): void {
     if (!this.canPublish() || this.submitting()) {
       return;
@@ -163,6 +180,7 @@ export class PostComposer {
       imageFile: this.imageFile() ?? undefined,
       attachedFile: this.attachedFile() ?? undefined,
       pollOptions: this.pollMode() ? this.pollOptionInputs().map((o) => o.trim()).filter((o) => o.length > 0) : undefined,
+      pollClosesAt: this.pollMode() ? this.computePollClosesAt() : undefined,
     };
 
     if (kind === 'agenda') {
@@ -234,6 +252,7 @@ export class PostComposer {
     this.attachedFile.set(null);
     this.pollMode.set(false);
     this.pollOptionInputs.set(['', '']);
+    this.pollDuration.set('1d');
     this.mode.set('text');
   }
 }

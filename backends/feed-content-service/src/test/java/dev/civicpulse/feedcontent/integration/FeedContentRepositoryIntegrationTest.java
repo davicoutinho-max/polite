@@ -75,7 +75,7 @@ class FeedContentRepositoryIntegrationTest {
   @Test
   void savesAndRetrievesTextPost() {
     UUID id = UUID.randomUUID();
-    Post post = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "hello world", null, null, null, PostVisibility.PUBLIC, "ctx", null, Instant.now());
+    Post post = Post.publish(id, UUID.randomUUID(), PostKind.TEXT, "hello world", null, null, null, PostVisibility.PUBLIC, "ctx", null, null, Instant.now());
 
     postRepository.save(post);
 
@@ -89,7 +89,7 @@ class FeedContentRepositoryIntegrationTest {
   @Test
   void agendaDetailsRoundTrip() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.AGENDA, null, null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.AGENDA, null, null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
 
     postAgendaDetailsRepository.save(PostAgendaDetails.create(postId, "Town hall", "Aug 12, 2026 - 14:00", "City Hall"));
 
@@ -107,7 +107,7 @@ class FeedContentRepositoryIntegrationTest {
   @Test
   void postTagPersistsAndListsByPost() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "tagged", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "tagged", null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
 
     postTagRepository.save(PostTag.add(postId, "#Agenda", TagSeverity.INFO, "event"));
 
@@ -123,7 +123,7 @@ class FeedContentRepositoryIntegrationTest {
   void likeExistsReflectsSavedState() {
     UUID postId = UUID.randomUUID();
     UUID accountId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "likeme", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "likeme", null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
 
     try {
       assertThat(likeRepository.exists(postId, accountId)).isFalse();
@@ -143,7 +143,7 @@ class FeedContentRepositoryIntegrationTest {
   @Test
   void commentPersistsAndListsInCreationOrder() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "commented", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "commented", null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
 
     commentRepository.save(Comment.add(UUID.randomUUID(), postId, UUID.randomUUID(), "first!", Instant.now()));
 
@@ -158,7 +158,7 @@ class FeedContentRepositoryIntegrationTest {
   @Test
   void postMetricsPersistsCounters() {
     UUID postId = UUID.randomUUID();
-    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "counted", null, null, null, PostVisibility.PUBLIC, null, null, Instant.now()));
+    postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "counted", null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
     PostMetrics metrics = PostMetrics.initial(postId, Instant.now());
     metrics.incrementLikes(Instant.now());
 

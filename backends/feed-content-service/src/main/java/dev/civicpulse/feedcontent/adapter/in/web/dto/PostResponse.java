@@ -25,7 +25,8 @@ public record PostResponse(
     String agendaTitle,
     String agendaEventDate,
     String agendaLocation,
-    List<PollOptionResponse> pollOptions) {
+    List<PollOptionResponse> pollOptions,
+    Instant pollClosesAt) {
 
   public record TagResponse(String label, String severity, String icon) {
     public static TagResponse from(PostTag tag) {
@@ -57,6 +58,7 @@ public record PostResponse(
         agendaDetails == null ? null : agendaDetails.title(),
         agendaDetails == null ? null : agendaDetails.eventDate(),
         agendaDetails == null ? null : agendaDetails.location(),
-        pollOptions.stream().map(o -> PollOptionResponse.from(o, pollVoteCounts)).toList());
+        pollOptions.stream().map(o -> PollOptionResponse.from(o, pollVoteCounts)).toList(),
+        post.pollClosesAt().orElse(null));
   }
 }

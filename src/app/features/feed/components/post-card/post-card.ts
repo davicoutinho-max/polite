@@ -5,6 +5,7 @@ import { InputText } from 'primeng/inputtext';
 import { Post, PostPoll, PostPollOption } from '../../../../core/models';
 import { SessionService } from '../../../../core/services/session.service';
 import { AlertsService } from '../../../../core/services/alerts.service';
+import { DirectoryService } from '../../../../core/services/directory.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
 import { UiAvatar } from '../../../../shared/ui/ui-avatar/ui-avatar';
 import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
@@ -12,6 +13,7 @@ import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-button';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 import { UiYoutube } from '../../../../shared/ui/ui-youtube/ui-youtube';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 export interface CommentEvent {
   readonly postId: string;
@@ -27,13 +29,14 @@ export interface VoteEvent {
 @Component({
   selector: 'app-post-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiAvatar, UiIcon, UiTag, UiIconButton, CompactNumberPipe, RouterLink, FormsModule, InputText, UiYoutube],
+  imports: [UiCard, UiAvatar, UiIcon, UiTag, UiIconButton, CompactNumberPipe, RouterLink, FormsModule, InputText, UiYoutube, TranslatePipe],
   templateUrl: './post-card.html',
   styleUrl: './post-card.scss',
 })
 export class PostCard {
   private readonly session = inject(SessionService);
   private readonly alerts = inject(AlertsService);
+  private readonly directory = inject(DirectoryService);
 
   readonly post = input.required<Post>();
   readonly currentUserAvatar = input('');
@@ -42,6 +45,7 @@ export class PostCard {
   readonly like = output<string>();
   readonly addComment = output<CommentEvent>();
   readonly vote = output<VoteEvent>();
+  readonly unvote = output<string>();
   readonly delete = output<string>();
 
   protected readonly showComments = signal(false);
@@ -49,6 +53,16 @@ export class PostCard {
   protected readonly draft = signal('');
 
   protected readonly canDelete = computed(() => this.session.account().id === this.post().author.id);
+
+  /** Politicians get a /profile page, parties get a /party page — both share the same accounts
+   * table so nothing on the author itself distinguishes them; this checks DirectoryService's
+   * already-loaded party list instead. Routing every author to /profile regardless of type used
+   * to silently 404/error the party's dossier lookup on the profile page, which then just kept
+   * showing whatever politician had loaded there previously. */
+  protected readonly authorLink = computed<string[]>(() => {
+    const id = this.post().author.id;
+    return this.directory.parties().some((p) => p.id === id) ? ['/party', id] : ['/profile', id];
+  });
 
   protected toggleMenu(): void {
     this.showMenu.update((v) => !v);
@@ -60,7 +74,7 @@ export class PostCard {
   }
 
   protected share(): void {
-    const url = `${location.origin}/profile/${this.post().author.id}`;
+    const url = `${location.origin}${this.authorLink().join('/')}`;
     const shareData = { title: this.post().author.name, text: this.post().content, url };
     if (navigator.share) {
       navigator.share(shareData).catch(() => undefined);
@@ -100,5 +114,23 @@ export class PostCard {
   protected pollPercentage(option: PostPollOption, poll: PostPoll): number {
     const total = this.pollTotalVotes(poll);
     return total === 0 ? 0 : Math.round((option.votes / total) * 100);
+  }
+
+  /** A poll is never "definitive" while open — clicking your own vote again withdraws it,
+   * clicking another option switches it. Both are blocked once the poll's optional deadline has
+   * passed. */
+  protected isPollClosed(poll: PostPoll): boolean {
+    return !!poll.closesAt && new Date(poll.closesAt).getTime() <= Date.now();
+  }
+
+  protected onPollOptionClick(poll: PostPoll, option: PostPollOption): void {
+    if (this.isPollClosed(poll)) {
+      return;
+    }
+    if (poll.myVoteOptionId === option.id) {
+      this.unvote.emit(this.post().id);
+    } else {
+      this.vote.emit({ postId: this.post().id, optionId: option.id });
+    }
   }
 }

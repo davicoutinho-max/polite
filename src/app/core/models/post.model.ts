@@ -44,6 +44,10 @@ export interface PostPoll {
   readonly options: PostPollOption[];
   /** The signed-in account's own vote, if any — undefined for visitors or accounts that haven't voted. */
   readonly myVoteOptionId?: string;
+  /** ISO timestamp after which the poll is locked (no more votes/unvotes) — undefined means the
+   * poll never closes on its own. Voting stays changeable/revocable until then; it's never
+   * "final" just because someone cast it once. */
+  readonly closesAt?: string;
 }
 
 export interface Post {
@@ -85,4 +89,6 @@ export interface PostDraft {
   readonly attachedFile?: File;
   /** 2+ entries attaches a poll to the post; fewer is ignored. */
   readonly pollOptions?: string[];
+  /** ISO timestamp the poll locks at — undefined/omitted means it never closes on its own. */
+  readonly pollClosesAt?: string;
 }

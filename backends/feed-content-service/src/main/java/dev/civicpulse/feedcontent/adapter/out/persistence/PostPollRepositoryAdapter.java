@@ -47,6 +47,11 @@ class PostPollRepositoryAdapter implements PostPollRepository {
   }
 
   @Override
+  public void unvote(UUID postId, UUID accountId) {
+    voteJpaRepository.deleteById(new PostPollVoteId(postId, accountId));
+  }
+
+  @Override
   public Optional<UUID> findVotedOptionId(UUID postId, UUID accountId) {
     return voteJpaRepository.findById(new PostPollVoteId(postId, accountId)).map(PostPollVoteJpaEntity::getOptionId);
   }

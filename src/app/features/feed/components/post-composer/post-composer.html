@@ -9,7 +9,7 @@
         pTextarea
         class="composer__input"
         rows="2"
-        [placeholder]="mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
+        [placeholder]="pollMode() ? 'Poll title — ask your question…' : mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
       ></textarea>
@@ -49,7 +49,7 @@
         pTextarea
         class="composer__input"
         rows="2"
-        placeholder="Add a note (optional)..."
+        [placeholder]="pollMode() ? 'Poll title — ask your question…' : 'Add a note (optional)...'"
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
       ></textarea>
@@ -72,7 +72,7 @@
 
     @if (pollMode()) {
       <div class="composer__poll">
-        <p class="composer__poll-hint">Your post text above is the poll question.</p>
+        <p class="composer__poll-hint">The title above is shown as your poll's question.</p>
         @for (option of pollOptionInputs(); track $index) {
           <label class="composer__field composer__field--grow composer__poll-option">
             <input
@@ -90,6 +90,17 @@
         @if (pollOptionInputs().length < 6) {
           <ui-button label="Add option" icon="add" variant="text" (click)="addPollOption()" />
         }
+        <label class="composer__field composer__field--grow">
+          <span>Voting closes</span>
+          <p-select
+            [options]="pollDurationOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="pollDuration()"
+            (ngModelChange)="pollDuration.set($event)"
+            appendTo="body"
+          />
+        </label>
       </div>
     }
 

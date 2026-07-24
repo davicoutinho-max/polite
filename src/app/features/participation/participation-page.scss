@@ -16,7 +16,13 @@
   p { margin: 0; font-size: 13px; line-height: 18px; }
 }
 
-.participation__tabs { margin-bottom: var(--cp-space-lg); }
+.participation__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-md);
+  margin-bottom: var(--cp-space-lg);
+}
 
 .grid {
   display: grid;
@@ -25,3 +31,27 @@
   align-items: start;
 }
 @media (min-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+.quick-form {
+  display: flex; flex-direction: column; gap: var(--cp-space-md);
+  padding: var(--cp-space-lg); margin-bottom: var(--cp-space-lg);
+  border: 1px solid var(--cp-outline-variant); border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface-container-lowest);
+
+  h4 { margin: 0; font-size: 14px; color: var(--cp-on-surface); }
+}
+.quick-form__row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--cp-space-md); }
+.quick-form__field {
+  display: flex; flex-direction: column; gap: var(--cp-space-xs);
+  flex: 1; min-width: 120px;
+  font-size: 13px; font-weight: 600; color: var(--cp-on-surface-variant);
+
+  &--grow { flex: 2; }
+}
+.quick-form__field input {
+  width: 100%;
+}
+.quick-form__error {
+  display: flex; align-items: center; gap: var(--cp-space-xs);
+  margin: 0; font-size: 13px; color: var(--cp-error);
+}

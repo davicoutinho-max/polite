@@ -186,14 +186,20 @@ export class SessionService {
     this._account.set(VISITOR_ACCOUNT);
   }
 
-  /** User-initiated sign-out. Revokes the refresh token server-side (best-effort) and clears
-   * local state immediately regardless of whether that call succeeds. */
+  /** User-initiated sign-out. Revokes the refresh token server-side (best-effort), then does a
+   * hard browser navigation to /login rather than an in-SPA route change. Every other root
+   * service (messages, wallet, notifications, feed, …) caches per-account state in signals that
+   * are only ever populated once and never reset on logout — an in-SPA redirect would leave all
+   * of that stale data on screen under the next signed-in identity. A full navigation tears down
+   * the whole Angular injector and reloads fresh, which is the only way to guarantee none of that
+   * lingers without auditing and patching every such service individually. */
   logout(): void {
     const refreshToken = this.refreshTokenValue;
     this.forceLogout();
     if (refreshToken) {
       this.http.post(`${this.apiBase}/auth/logout`, { refreshToken }).subscribe({ error: () => undefined });
     }
+    window.location.href = '/login';
   }
 
   private loadAccount(accountId: string): Observable<Account> {

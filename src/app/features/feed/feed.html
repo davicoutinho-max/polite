@@ -14,10 +14,18 @@
         (like)="onLike($event)"
         (addComment)="onComment($event)"
         (vote)="onVote($event)"
+        (unvote)="onUnvote($event)"
         (delete)="onDelete($event)"
       />
     } @empty {
       <p class="feed__empty">{{ 'empty.no-posts-filter' | translate: 'No posts to show for this filter.' }}</p>
+    }
+
+    @if (hasMore()) {
+      <div class="feed__sentinel" appInfiniteScroll [disabled]="hasMore() === false" (loadMore)="onLoadMore()">
+        <ui-icon name="progress_activity" [size]="22" class="feed__spinner" />
+        <span>{{ 'label.loading-more' | translate: 'Loading more…' }}</span>
+      </div>
     }
   </section>
 

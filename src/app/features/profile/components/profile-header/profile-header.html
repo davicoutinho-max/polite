@@ -13,7 +13,6 @@
       <div class="profile-header__identity">
         <h2 class="profile-header__name">{{ politician().name }}</h2>
         <a class="profile-header__party" [routerLink]="['/party', politician().partyId]">
-          <ui-icon name="verified" [fill]="true" [size]="16" />
           {{ politician().party }}
         </a>
       </div>
@@ -23,7 +22,9 @@
     </div>
 
     <div class="profile-header__actions">
-      <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" (click)="contact.emit()" />
+      @if (canContact()) {
+        <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" (click)="contact.emit()" />
+      }
       @if (canFollow()) {
         @if (following()) {
           <ui-button [label]="'button.following' | translate: 'Following'" icon="how_to_reg" variant="tonal" (click)="toggleFollow.emit()" />

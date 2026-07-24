@@ -23,6 +23,7 @@ public final class Post {
   private final String context;
   private final UUID liveSessionId;
   private final Instant createdAt;
+  private final Instant pollClosesAt;
 
   private Post(
       UUID id,
@@ -35,7 +36,8 @@ public final class Post {
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
-      Instant createdAt) {
+      Instant createdAt,
+      Instant pollClosesAt) {
     this.id = Objects.requireNonNull(id);
     this.authorAccountId = Objects.requireNonNull(authorAccountId);
     this.kind = Objects.requireNonNull(kind);
@@ -47,6 +49,7 @@ public final class Post {
     this.context = context;
     this.liveSessionId = liveSessionId;
     this.createdAt = Objects.requireNonNull(createdAt);
+    this.pollClosesAt = pollClosesAt;
   }
 
   public static Post publish(
@@ -60,8 +63,9 @@ public final class Post {
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
+      Instant pollClosesAt,
       Instant now) {
-    return new Post(id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, now);
+    return new Post(id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, now, pollClosesAt);
   }
 
   public static Post reconstitute(
@@ -75,8 +79,10 @@ public final class Post {
       PostVisibility visibility,
       String context,
       UUID liveSessionId,
-      Instant createdAt) {
-    return new Post(id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, createdAt);
+      Instant createdAt,
+      Instant pollClosesAt) {
+    return new Post(
+        id, authorAccountId, kind, content, imageUrl, fileUrl, fileName, visibility, context, liveSessionId, createdAt, pollClosesAt);
   }
 
   public UUID id() {
@@ -121,6 +127,15 @@ public final class Post {
 
   public Instant createdAt() {
     return createdAt;
+  }
+
+  /** Null = the poll (if any) never closes on its own. */
+  public Optional<Instant> pollClosesAt() {
+    return Optional.ofNullable(pollClosesAt);
+  }
+
+  public boolean isPollClosed(Instant now) {
+    return pollClosesAt != null && !pollClosesAt.isAfter(now);
   }
 
   @Override

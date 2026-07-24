@@ -34,10 +34,32 @@ public class MessageJpaEntity {
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
+  @Column(name = "attachment_url")
+  private String attachmentUrl;
+
+  @Column(name = "attachment_type")
+  private String attachmentType;
+
+  @Column(name = "attachment_file_name")
+  private String attachmentFileName;
+
+  @Column(name = "reply_to_message_id")
+  private UUID replyToMessageId;
+
   protected MessageJpaEntity() {}
 
   public MessageJpaEntity(
-      UUID id, UUID conversationId, UUID senderAccountId, String body, Instant createdAt, Instant editedAt, Instant deletedAt) {
+      UUID id,
+      UUID conversationId,
+      UUID senderAccountId,
+      String body,
+      Instant createdAt,
+      Instant editedAt,
+      Instant deletedAt,
+      String attachmentUrl,
+      String attachmentType,
+      String attachmentFileName,
+      UUID replyToMessageId) {
     this.id = id;
     this.conversationId = conversationId;
     this.senderAccountId = senderAccountId;
@@ -45,6 +67,10 @@ public class MessageJpaEntity {
     this.createdAt = createdAt;
     this.editedAt = editedAt;
     this.deletedAt = deletedAt;
+    this.attachmentUrl = attachmentUrl;
+    this.attachmentType = attachmentType;
+    this.attachmentFileName = attachmentFileName;
+    this.replyToMessageId = replyToMessageId;
   }
 
   public UUID getId() {
@@ -73,5 +99,21 @@ public class MessageJpaEntity {
 
   public Instant getDeletedAt() {
     return deletedAt;
+  }
+
+  public String getAttachmentUrl() {
+    return attachmentUrl;
+  }
+
+  public String getAttachmentType() {
+    return attachmentType;
+  }
+
+  public String getAttachmentFileName() {
+    return attachmentFileName;
+  }
+
+  public UUID getReplyToMessageId() {
+    return replyToMessageId;
   }
 }

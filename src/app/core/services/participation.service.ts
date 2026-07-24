@@ -152,6 +152,27 @@ export class ParticipationService {
       );
   }
 
+  /** Only politicians/parties reach the composer that calls this (see participation-page's
+   * `canCreate` gate) — `deadline` is an optional ISO date (yyyy-MM-dd); omitting it leaves the
+   * petition open-ended. */
+  createPetition(title: string, summary: string, category: string, goal: number, deadline: string | null): Observable<Petition> {
+    return this.http
+      .post<PetitionResponseDto>(`${this.apiBase}/petitions`, { title, summary, category, goal, deadline })
+      .pipe(
+        switchMap((dto) => this.toPetition(dto)),
+        tap((petition) => this._petitions.update((list) => [petition, ...list])),
+      );
+  }
+
+  createConsultation(title: string, description: string, deadline: string | null): Observable<Consultation> {
+    return this.http
+      .post<ConsultationResponseDto>(`${this.apiBase}/consultations`, { title, description, deadline })
+      .pipe(
+        switchMap((dto) => this.toConsultation(dto)),
+        tap((consultation) => this._consultations.update((list) => [consultation, ...list])),
+      );
+  }
+
   private toPetition(dto: PetitionResponseDto): Observable<Petition> {
     const citizenId = this.citizenId;
     const signed$ = citizenId

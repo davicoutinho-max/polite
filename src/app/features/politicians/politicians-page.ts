@@ -5,7 +5,7 @@ import { Select } from 'primeng/select';
 import { InputText } from 'primeng/inputtext';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
-import { DirectoryService, FilterOption, LEVEL_OPTIONS } from '../../core/services/directory.service';
+import { DirectoryService, FilterOption } from '../../core/services/directory.service';
 import { SessionService } from '../../core/services/session.service';
 import { PoliticianSummary } from '../../core/models';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
@@ -51,10 +51,10 @@ export class PoliticiansPage {
   protected readonly canFollow = computed(() => this.session.can('follow'));
 
   // ---- Select options (with an "all" entry) ----
-  protected readonly levelSelect: FilterOption[] = [
-    { value: 'all', label: this.translate.t('label.all-levels', 'All levels') },
-    ...LEVEL_OPTIONS.map((o) => ({ value: o.value, label: this.translate.t(`level.${o.value}`, o.label) })),
-  ];
+  protected readonly officeSelect = computed<FilterOption[]>(() => [
+    { value: 'all', label: this.translate.t('label.all-offices', 'All offices') },
+    ...this.directory.officeOptions(),
+  ]);
   protected readonly partySelect = computed<FilterOption[]>(() => [
     { value: 'all', label: this.translate.t('label.all-parties', 'All parties') },
     ...this.directory.partyOptions(),
@@ -71,7 +71,7 @@ export class PoliticiansPage {
 
   // ---- Filters ----
   protected readonly search = signal('');
-  protected readonly level = signal('all');
+  protected readonly office = signal('all');
   protected readonly party = signal('all');
   protected readonly state = signal('all');
   protected readonly sort = signal<SortKey>('followers');
@@ -80,12 +80,12 @@ export class PoliticiansPage {
 
   protected readonly filtered = computed<PoliticianSummary[]>(() => {
     const q = this.search().trim().toLowerCase();
-    const level = this.level();
+    const office = this.office();
     const party = this.party();
     const state = this.state();
 
     const list = this.directory.politicians().filter((p) => {
-      if (level !== 'all' && p.level !== level) return false;
+      if (office !== 'all' && p.office !== office) return false;
       if (party !== 'all' && p.partyId !== party) return false;
       if (state !== 'all' && p.state !== state) return false;
       if (q && !p.name.toLowerCase().includes(q) && !p.handle.toLowerCase().includes(q) && !p.partyAcronym.toLowerCase().includes(q)) {
@@ -109,7 +109,7 @@ export class PoliticiansPage {
   constructor() {
     // Reset paging whenever any filter changes.
     const filterKey = computed(
-      () => `${this.search()}|${this.level()}|${this.party()}|${this.state()}|${this.sort()}`,
+      () => `${this.search()}|${this.office()}|${this.party()}|${this.state()}|${this.sort()}`,
     );
     effect(() => {
       filterKey();
@@ -138,7 +138,7 @@ export class PoliticiansPage {
 
   protected clearFilters(): void {
     this.search.set('');
-    this.level.set('all');
+    this.office.set('all');
     this.party.set('all');
     this.state.set('all');
     this.sort.set('followers');

@@ -32,7 +32,7 @@ export const routes: Routes = [
       {
         path: 'participation',
         title: 'Citizen Participation — CivicPulse',
-        canMatch: [requirePermission('participate')],
+        canMatch: [requirePermission(['participate', 'create-participation'])],
         loadComponent: () =>
           import('./features/participation/participation-page').then((m) => m.ParticipationPage),
       },

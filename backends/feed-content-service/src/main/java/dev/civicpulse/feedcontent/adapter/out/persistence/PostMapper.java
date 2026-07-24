@@ -18,7 +18,8 @@ class PostMapper {
         entity.getVisibility(),
         entity.getContext(),
         entity.getLiveSessionId(),
-        entity.getCreatedAt());
+        entity.getCreatedAt(),
+        entity.getPollClosesAt());
   }
 
   PostJpaEntity toEntity(Post post) {
@@ -33,6 +34,7 @@ class PostMapper {
         post.visibility(),
         post.context().orElse(null),
         post.liveSessionId().orElse(null),
-        post.createdAt());
+        post.createdAt(),
+        post.pollClosesAt().orElse(null));
   }
 }

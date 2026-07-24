@@ -13,6 +13,7 @@ import dev.civicpulse.messaging.domain.exception.ConversationNotFoundException;
 import dev.civicpulse.messaging.domain.exception.MessageNotFoundException;
 import dev.civicpulse.messaging.domain.exception.NotAParticipantException;
 import dev.civicpulse.messaging.domain.exception.NotMessageSenderException;
+import dev.civicpulse.messaging.domain.model.AttachmentType;
 import dev.civicpulse.messaging.domain.model.Conversation;
 import dev.civicpulse.messaging.domain.model.Message;
 import java.time.Clock;
@@ -49,19 +50,44 @@ public class MessageService implements SendMessageUseCase, GetMessageUseCase, Ed
 
   @Override
   @Transactional
-  public Message send(UUID conversationId, UUID senderAccountId, String body) {
+  public Message send(UUID conversationId, UUID senderAccountId, String body, UUID replyToMessageId) {
+    Instant now = clock.instant();
+    Message message =
+        replyToMessageId != null
+            ? Message.sendReply(UUID.randomUUID(), conversationId, senderAccountId, body, replyToMessageId, now)
+            : Message.send(UUID.randomUUID(), conversationId, senderAccountId, body, now);
+    return sendMessage(conversationId, senderAccountId, message, now);
+  }
+
+  @Override
+  @Transactional
+  public Message sendWithAttachment(
+      UUID conversationId,
+      UUID senderAccountId,
+      String body,
+      String attachmentUrl,
+      AttachmentType attachmentType,
+      String attachmentFileName,
+      UUID replyToMessageId) {
+    Instant now = clock.instant();
+    Message message =
+        Message.sendWithAttachment(
+            UUID.randomUUID(), conversationId, senderAccountId, body, attachmentUrl, attachmentType, attachmentFileName, replyToMessageId, now);
+    return sendMessage(conversationId, senderAccountId, message, now);
+  }
+
+  private Message sendMessage(UUID conversationId, UUID senderAccountId, Message toSend, Instant now) {
     Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new ConversationNotFoundException(conversationId));
     if (!conversationParticipantRepository.exists(conversationId, senderAccountId)) {
       throw new NotAParticipantException();
     }
 
-    Instant now = clock.instant();
-    Message message = messageRepository.save(Message.send(UUID.randomUUID(), conversationId, senderAccountId, body, now));
+    Message message = messageRepository.save(toSend);
     conversation.recordMessageSent(now);
     conversationRepository.save(conversation);
 
     eventPublisher.publish(new MessageSent(conversationId, message.id(), senderAccountId, now));
-    realtimePublisher.messageSent(conversationId, message.id(), senderAccountId, message.body(), now);
+    publishUpdate(message);
     return message;
   }
 
@@ -99,7 +125,11 @@ public class MessageService implements SendMessageUseCase, GetMessageUseCase, Ed
         message.body(),
         message.createdAt(),
         message.editedAt().orElse(null),
-        message.isDeleted());
+        message.isDeleted(),
+        message.attachmentUrl().orElse(null),
+        message.attachmentType().map(AttachmentType::code).orElse(null),
+        message.attachmentFileName().orElse(null),
+        message.replyToMessageId().orElse(null));
   }
 
   private Message requireSender(UUID messageId, UUID requesterAccountId) {
