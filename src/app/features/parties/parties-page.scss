@@ -98,8 +98,9 @@
 }
 .qcard__badge {
   flex-shrink: 0;
-  width: 44px;
+  min-width: 44px;
   height: 44px;
+  padding: 0 var(--cp-space-xs);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -108,6 +109,10 @@
   color: var(--cp-on-primary);
   font-weight: 700;
   font-size: 18px;
+  white-space: nowrap;
+  /* A party's electoral number is normally 2 digits, but an unresolved one is shown as a
+     longer placeholder (see PartyRegistryEntry.number's javadoc) — this must grow to fit
+     that instead of clipping/overlapping the name next to it (min-width, not width). */
 }
 .qcard__id { display: flex; flex-direction: column; min-width: 0; }
 .qcard__name { font-size: 16px; font-weight: 700; color: var(--cp-on-surface); }

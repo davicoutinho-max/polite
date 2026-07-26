@@ -13,7 +13,7 @@ export class NavigationService {
     { label: 'Politicians', key: 'nav.politicians', icon: 'diversity_3', route: '/politicians', mobile: true },
     { label: 'Parties', key: 'nav.parties', icon: 'flag', route: '/parties', mobile: true },
     { label: 'Elections', key: 'nav.elections', icon: 'ballot', route: '/elections', mobile: true },
-    { label: 'Ask AI', key: 'nav.assistant', icon: 'auto_awesome', route: '/assistant' },
+    { label: 'Bills', key: 'nav.bills', icon: 'gavel', route: '/bills' },
     {
       label: 'Participation',
       key: 'nav.participation',

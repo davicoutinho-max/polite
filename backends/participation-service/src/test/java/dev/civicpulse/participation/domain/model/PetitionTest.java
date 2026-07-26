@@ -10,7 +10,8 @@ class PetitionTest {
 
   @Test
   void createStartsAtZeroSignatures() {
-    Petition petition = Petition.create(UUID.randomUUID(), "Save the park", "summary", "environment", 1000, null);
+    Petition petition =
+        Petition.create(UUID.randomUUID(), "Save the park", "summary", "environment", 1000, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT);
 
     assertThat(petition.signaturesCount()).isZero();
     assertThat(petition.goal()).isEqualTo(1000);
@@ -18,12 +19,14 @@ class PetitionTest {
 
   @Test
   void createRejectsNonPositiveGoal() {
-    assertThatThrownBy(() -> Petition.create(UUID.randomUUID(), "title", null, null, 0, null)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () -> Petition.create(UUID.randomUUID(), "title", null, null, 0, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void recordSignatureIncreasesCount() {
-    Petition petition = Petition.create(UUID.randomUUID(), "title", null, null, 100, null);
+    Petition petition = Petition.create(UUID.randomUUID(), "title", null, null, 100, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT);
 
     petition.recordSignature();
     petition.recordSignature();

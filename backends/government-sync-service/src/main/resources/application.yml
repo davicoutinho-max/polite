@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: government-sync-service
+
+server:
+  port: ${SERVER_PORT:8100}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+government-sync:
+  camara:
+    base-url: ${CAMARA_API_BASE_URL:https://dadosabertos.camara.leg.br/api/v2}
+  senado:
+    base-url: ${SENADO_API_BASE_URL:https://legis.senado.leg.br/dadosabertos}
+  tse:
+    base-url: ${TSE_ODS_BASE_URL:https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona}
+  party-management-service:
+    base-url: ${PARTY_MANAGEMENT_SERVICE_BASE_URL:http://localhost:8083}
+  platform-configuration-service:
+    base-url: ${PLATFORM_CONFIGURATION_SERVICE_BASE_URL:http://localhost:8084}
+  legislative-service:
+    base-url: ${LEGISLATIVE_SERVICE_BASE_URL:http://localhost:8096}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    dev.civicpulse.governmentsync: INFO

@@ -1,66 +1,213 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { Petition } from '../../../../core/models';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { LegislativeBillSummary, Petition, StartPetitionSignatureCommand } from '../../../../core/models';
+import { LegislativeOpenDataService } from '../../../../core/services/legislative-open-data.service';
+import { ParticipationService } from '../../../../core/services/participation.service';
+import { SessionService } from '../../../../core/services/session.service';
+import { TranslateService } from '../../../../core/services/translate.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
-import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
-import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
-import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
-import { UiProgress } from '../../../../shared/ui/ui-progress/ui-progress';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { BillCard } from '../../../../shared/legislative/bill-card/bill-card';
+import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
+import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
+import { UiDialog } from '../../../../shared/ui/ui-dialog/ui-dialog';
+import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
+import { UiProgress } from '../../../../shared/ui/ui-progress/ui-progress';
+import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 
-/** Petition (abaixo-assinado) card with signature progress and a sign action. */
+type SignStep = 'closed' | 'confirm' | 'form' | 'code';
+
+/** Matches LegislativeOpenDataService's own page size — used here only to guess whether a "load
+ * more" click is likely to reveal anything. */
+const BILLS_PAGE_SIZE = 8;
+
+/** Petition (abaixo-assinado) card with signature progress, attachments, a "View details" dialog,
+ * a "Related bills" dialog searching real bills related to this petition straight from the
+ * federal legislature's own open-data APIs (Câmara dos Deputados / Senado Federal — see
+ * LegislativeOpenDataService and BillCard, not internal or LLM-generated data), and a
+ * DocuSign-like sign wizard: confirm → tiered identity capture → code verification. */
 @Component({
   selector: 'app-petition-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiTag, UiButton, UiProgress, CompactNumberPipe, TranslatePipe],
-  template: `
-    <ui-card [hover]="true" padding="lg">
-      <div class="head">
-        <ui-tag [label]="petition().category" severity="neutral" />
-        <ui-tag [label]="petition().status.label" [severity]="petition().status.severity" />
-      </div>
-      <h3 class="title">{{ petition().title }}</h3>
-      <p class="summary">{{ petition().summary }}</p>
-
-      <div class="progress">
-        <div class="progress__row">
-          <span class="progress__count">{{ petition().signatures | compactNumber }} {{ 'label.signatures' | translate: 'signatures' }}</span>
-          <span class="progress__goal">{{ 'label.goal' | translate: 'Goal' }} {{ petition().goal | compactNumber }}</span>
-        </div>
-        <ui-progress [value]="percent()" [color]="percent() >= 100 ? 'tertiary' : 'secondary'" />
-      </div>
-
-      <div class="foot">
-        <span class="deadline">{{ petition().deadline }}</span>
-        @if (petition().signed) {
-          <ui-button [label]="'label.signed' | translate: 'Signed'" icon="check" variant="tonal" [disabled]="true" />
-        } @else {
-          <ui-button [label]="'button.sign-petition' | translate: 'Sign petition'" icon="edit_document" variant="filled" (click)="sign.emit(petition().id)" />
-        }
-      </div>
-    </ui-card>
-  `,
-  styles: `
-    :host { display: block; }
-    .head { display: flex; gap: var(--cp-space-sm); margin-bottom: var(--cp-space-md); flex-wrap: wrap; }
-    .title { margin: 0 0 var(--cp-space-sm); font-size: 20px; line-height: 28px; font-weight: 600; color: var(--cp-on-surface); }
-    .summary { margin: 0 0 var(--cp-space-lg); font-size: 14px; line-height: 20px; color: var(--cp-on-surface-variant); }
-    .progress { margin-bottom: var(--cp-space-md); }
-    .progress__row { display: flex; justify-content: space-between; margin-bottom: var(--cp-space-xs); }
-    .progress__count { font-weight: 700; color: var(--cp-on-surface); }
-    .progress__goal { font-size: 14px; color: var(--cp-on-surface-variant); }
-    .foot {
-      display: flex; justify-content: space-between; align-items: center; gap: var(--cp-space-md);
-      margin-top: var(--cp-space-md); padding-top: var(--cp-space-md);
-      border-top: 1px solid var(--cp-outline-variant); flex-wrap: wrap;
-    }
-    .deadline { font-size: 12px; font-weight: 600; letter-spacing: 0.03em; color: var(--cp-on-surface-variant); }
-  `,
+  imports: [FormsModule, UiCard, UiTag, UiButton, UiProgress, UiIcon, UiDialog, BillCard, CompactNumberPipe, TranslatePipe],
+  templateUrl: './petition-card.html',
+  styleUrl: './petition-card.scss',
 })
 export class PetitionCard {
-  readonly petition = input.required<Petition>();
-  readonly sign = output<string>();
+  private readonly participation = inject(ParticipationService);
+  private readonly session = inject(SessionService);
+  private readonly translate = inject(TranslateService);
+  private readonly legislativeOpenData = inject(LegislativeOpenDataService);
 
-  protected readonly percent = computed(() =>
-    Math.min(100, Math.round((this.petition().signatures / this.petition().goal) * 100)),
-  );
+  readonly petition = input.required<Petition>();
+
+  protected readonly percent = computed(() => Math.min(100, Math.round((this.petition().signatures / this.petition().goal) * 100)));
+
+  protected readonly isPopularInitiative = computed(() => this.petition().petitionType === 'popular_initiative');
+
+  // ---- View details ----
+  protected readonly showDetails = signal(false);
+
+  // ---- Related bills (real bills from Câmara/Senado open-data APIs) ----
+  protected readonly showBills = signal(false);
+  protected readonly billsLoading = signal(false);
+  protected readonly billsError = signal('');
+  protected readonly bills = signal<LegislativeBillSummary[]>([]);
+  protected readonly billsLoadingMore = signal(false);
+  protected readonly billsExhausted = signal(false);
+  private billsSearched = false;
+  private billsPage = 1;
+
+  // ---- Sign wizard ----
+  protected readonly signStep = signal<SignStep>('closed');
+  protected readonly signError = signal('');
+  protected readonly signSubmitting = signal(false);
+
+  protected readonly fullName = signal('');
+  protected readonly cpf = signal('');
+  protected readonly birthDate = signal('');
+  protected readonly city = signal('');
+  protected readonly state = signal('');
+  protected readonly verificationMethod = signal<'sms' | 'email'>('sms');
+  protected readonly contact = signal('');
+  protected readonly electoralData = signal('');
+  protected readonly eSignatureConsent = signal(false);
+  protected readonly typedSignature = signal('');
+
+  protected readonly verificationId = signal<string | null>(null);
+  protected readonly demoCode = signal('');
+  protected readonly codeInput = signal('');
+
+  protected openDetails(): void {
+    this.showDetails.set(true);
+  }
+
+  protected openBills(): void {
+    this.showBills.set(true);
+    if (this.billsSearched) {
+      return;
+    }
+    this.billsSearched = true;
+    this.billsLoading.set(true);
+    this.billsError.set('');
+    const keyword = this.petition().category || this.petition().title;
+    this.legislativeOpenData.searchBills(keyword, 1).subscribe({
+      next: (bills) => {
+        this.billsLoading.set(false);
+        this.bills.set(bills);
+        this.billsExhausted.set(bills.length < BILLS_PAGE_SIZE);
+        if (bills.length === 0) {
+          this.billsError.set(this.translate.t('error.bills-none-found', 'No related bills were found on Câmara/Senado for this topic.'));
+        }
+      },
+      error: () => {
+        this.billsLoading.set(false);
+        this.billsError.set(this.translate.t('error.bills-search-failed', 'Could not reach Câmara/Senado open-data services right now.'));
+      },
+    });
+  }
+
+  protected loadMoreBills(): void {
+    const keyword = this.petition().category || this.petition().title;
+    const nextPage = this.billsPage + 1;
+    this.billsLoadingMore.set(true);
+    this.legislativeOpenData.searchBills(keyword, nextPage).subscribe({
+      next: (bills) => {
+        this.billsLoadingMore.set(false);
+        const previousCount = this.bills().length;
+        this.billsPage = nextPage;
+        this.bills.set(bills);
+        if (bills.length <= previousCount) {
+          this.billsExhausted.set(true);
+        }
+      },
+      error: () => {
+        this.billsLoadingMore.set(false);
+        this.billsExhausted.set(true);
+      },
+    });
+  }
+
+  protected startSignWizard(): void {
+    const account = this.session.account();
+    this.fullName.set(account.name ?? '');
+    this.cpf.set('');
+    this.birthDate.set('');
+    this.city.set('');
+    this.state.set('');
+    this.verificationMethod.set('sms');
+    this.contact.set('');
+    this.electoralData.set('');
+    this.eSignatureConsent.set(false);
+    this.typedSignature.set('');
+    this.signError.set('');
+    this.signStep.set('confirm');
+  }
+
+  protected closeSignWizard(): void {
+    this.signStep.set('closed');
+    this.signError.set('');
+    this.signSubmitting.set(false);
+  }
+
+  protected confirmWantsToSign(): void {
+    this.signStep.set('form');
+  }
+
+  protected submitSignatureForm(): void {
+    if (!this.fullName().trim() || !this.cpf().trim() || !this.typedSignature().trim() || !this.eSignatureConsent()) {
+      this.signError.set(
+        this.translate.t('error.petition-sign-required', 'Fill in your name, CPF, consent and typed signature to continue.'),
+      );
+      return;
+    }
+    this.signError.set('');
+    this.signSubmitting.set(true);
+
+    const command: StartPetitionSignatureCommand = {
+      fullName: this.fullName().trim(),
+      cpf: this.cpf().trim(),
+      birthDate: this.birthDate() || null,
+      city: this.city().trim() || null,
+      state: this.state().trim() || null,
+      verificationMethod: this.verificationMethod(),
+      contact: this.contact().trim() || null,
+      electoralData: this.isPopularInitiative() ? this.electoralData().trim() || null : null,
+      eSignatureConsent: this.eSignatureConsent(),
+      typedSignature: this.typedSignature().trim(),
+    };
+
+    this.participation.startPetitionSignature(this.petition().id, command).subscribe({
+      next: (started) => {
+        this.signSubmitting.set(false);
+        this.verificationId.set(started.verificationId);
+        this.demoCode.set(started.demoCode);
+        this.codeInput.set('');
+        this.signStep.set('code');
+      },
+      error: () => {
+        this.signSubmitting.set(false);
+        this.signError.set(this.translate.t('error.petition-sign-start-failed', 'Could not start the signature — check your CPF and try again.'));
+      },
+    });
+  }
+
+  protected submitCode(): void {
+    const verificationId = this.verificationId();
+    if (!verificationId || !this.codeInput().trim()) {
+      return;
+    }
+    this.signError.set('');
+    this.signSubmitting.set(true);
+    this.participation.confirmPetitionSignature(this.petition().id, verificationId, this.codeInput().trim()).subscribe({
+      next: () => {
+        this.signSubmitting.set(false);
+        this.closeSignWizard();
+      },
+      error: () => {
+        this.signSubmitting.set(false);
+        this.signError.set(this.translate.t('error.petition-sign-code-invalid', 'Incorrect or expired code — please try again.'));
+      },
+    });
+  }
 }

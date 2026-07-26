@@ -15,6 +15,7 @@ import dev.civicpulse.participation.domain.model.ConsultationResponse;
 import dev.civicpulse.participation.domain.model.ConsultationStance;
 import dev.civicpulse.participation.domain.model.Petition;
 import dev.civicpulse.participation.domain.model.PetitionSignature;
+import dev.civicpulse.participation.domain.model.PetitionType;
 import dev.civicpulse.participation.domain.model.Survey;
 import dev.civicpulse.participation.domain.model.SurveyOption;
 import dev.civicpulse.participation.domain.model.SurveyVote;
@@ -62,11 +63,14 @@ class ParticipationRepositoryIntegrationTest {
   void petitionAndSignatureRoundTrip() {
     UUID petitionId = UUID.randomUUID();
     UUID citizenId = UUID.randomUUID();
-    petitionRepository.save(Petition.create(petitionId, "Save the park", "summary", "environment", 1000, null));
+    petitionRepository.save(
+        Petition.create(petitionId, "Save the park", "summary", "environment", 1000, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT));
 
     assertThat(petitionSignatureRepository.exists(petitionId, citizenId)).isFalse();
 
-    petitionSignatureRepository.save(PetitionSignature.sign(petitionId, citizenId, Instant.now()));
+    petitionSignatureRepository.save(
+        PetitionSignature.sign(
+            petitionId, citizenId, Instant.now(), "Jane Doe", "529.982.247-25", null, "City", "ST", "sms", null, true, true, "Jane Doe"));
 
     assertThat(petitionSignatureRepository.exists(petitionId, citizenId)).isTrue();
     assertThat(petitionRepository.findById(petitionId)).isPresent().get().satisfies(found -> assertThat(found.title()).isEqualTo("Save the park"));

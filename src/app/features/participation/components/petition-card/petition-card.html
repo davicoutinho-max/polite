@@ -1,0 +1,235 @@
+<ui-card [hover]="true" padding="lg">
+  <div class="head">
+    <ui-tag [label]="petition().category" severity="neutral" />
+    <ui-tag [label]="petition().status.label" [severity]="petition().status.severity" />
+  </div>
+  <h3 class="title">{{ petition().title }}</h3>
+  <p class="summary">{{ petition().summary }}</p>
+
+  @if (petition().imageUrl; as imageUrl) {
+    <img class="thumb" [src]="imageUrl" alt="" />
+  }
+
+  <div class="progress">
+    <div class="progress__row">
+      <span class="progress__count">{{ petition().signatures | compactNumber }} {{ 'label.signatures' | translate: 'signatures' }}</span>
+      <span class="progress__goal">{{ 'label.goal' | translate: 'Goal' }} {{ petition().goal | compactNumber }}</span>
+    </div>
+    <ui-progress [value]="percent()" [color]="percent() >= 100 ? 'tertiary' : 'secondary'" />
+  </div>
+
+  <div class="actions">
+    <ui-button [label]="'button.view-details' | translate: 'View details'" icon="visibility" variant="text" (click)="openDetails()" />
+    <ui-button [label]="'button.related-bills' | translate: 'Related bills'" icon="gavel" variant="text" (click)="openBills()" />
+  </div>
+
+  <div class="foot">
+    <span class="deadline">{{ petition().deadline }}</span>
+    @if (petition().signed) {
+      <ui-button [label]="'label.signed' | translate: 'Signed'" icon="check" variant="tonal" [disabled]="true" />
+    } @else {
+      <ui-button [label]="'button.sign-petition' | translate: 'Sign petition'" icon="edit_document" variant="filled" (click)="startSignWizard()" />
+    }
+  </div>
+</ui-card>
+
+<!-- View details -->
+<ui-dialog [open]="showDetails()" [title]="petition().title" [closeLabel]="'button.close' | translate: 'Close'" (close)="showDetails.set(false)">
+  <div class="details">
+    <div class="details__tags">
+      <ui-tag [label]="petition().category" severity="neutral" />
+      <ui-tag
+        [label]="isPopularInitiative() ? ('label.popular-initiative' | translate: 'Popular Initiative') : ('label.verified-support' | translate: 'Verified Support')"
+        severity="secondary"
+      />
+    </div>
+    <p class="details__summary">{{ petition().summary }}</p>
+
+    @if (petition().imageUrl; as imageUrl) {
+      <img class="details__image" [src]="imageUrl" alt="" />
+    }
+    @if (petition().videoUrl; as videoUrl) {
+      <video class="details__video" [src]="videoUrl" controls></video>
+    }
+    @if (petition().fileUrl; as fileUrl) {
+      <a class="details__file" [href]="fileUrl" target="_blank" rel="noopener">
+        <ui-icon name="description" [size]="18" />
+        <span>{{ petition().fileName || ('label.attached-file' | translate: 'Attached file') }}</span>
+      </a>
+    }
+
+    <div class="details__stats">
+      <div>
+        <span class="details__stat-value">{{ petition().signatures | compactNumber }}</span>
+        <span class="details__stat-label">{{ 'label.signatures' | translate: 'Signatures' }}</span>
+      </div>
+      <div>
+        <span class="details__stat-value">{{ petition().goal | compactNumber }}</span>
+        <span class="details__stat-label">{{ 'label.goal' | translate: 'Goal' }}</span>
+      </div>
+      <div>
+        <span class="details__stat-value">{{ petition().deadline }}</span>
+        <span class="details__stat-label">{{ 'label.deadline' | translate: 'Deadline' }}</span>
+      </div>
+    </div>
+  </div>
+</ui-dialog>
+
+<!-- Projetos de lei: real bills from Câmara dos Deputados / Senado Federal open-data APIs -->
+<ui-dialog
+  [open]="showBills()"
+  [title]="'label.related-bills' | translate: 'Related bills'"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  (close)="showBills.set(false)"
+>
+  <div class="bills">
+    <p class="bills__source-note">
+      {{ 'hint.bills-source' | translate: 'Live results from the official open-data services of the Chamber of Deputies and the Federal Senate.' }}
+    </p>
+
+    @if (billsLoading()) {
+      <p class="bills__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+    } @else if (billsError() && bills().length === 0) {
+      <p class="bills__status">{{ billsError() }}</p>
+    }
+
+    @for (bill of bills(); track bill.id) {
+      <app-bill-card [bill]="bill" />
+    }
+
+    @if (!billsExhausted() && bills().length > 0) {
+      <div class="bills__load-more">
+        <ui-button
+          [label]="'button.load-more' | translate: 'Load more'"
+          icon="expand_more"
+          variant="tonal"
+          [disabled]="billsLoadingMore()"
+          (click)="loadMoreBills()"
+        />
+      </div>
+    }
+  </div>
+</ui-dialog>
+
+<!-- Sign wizard -->
+<ui-dialog
+  [open]="signStep() !== 'closed'"
+  [title]="'button.sign-petition' | translate: 'Sign petition'"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  (close)="closeSignWizard()"
+>
+  @switch (signStep()) {
+    @case ('confirm') {
+      <div class="sign-step">
+        <p>
+          {{
+            isPopularInitiative()
+              ? ('hint.sign-confirm-popular' | translate: 'This petition is a Popular Initiative. Signing requires your CPF, electoral data when required by law, a valid electronic signature and identity validation, with a timestamp recorded as evidence for its formal presentation.')
+              : ('hint.sign-confirm-verified' | translate: 'Signing requires your name, CPF, birth date, city and state, confirmed by SMS or e-mail as a verified citizen endorsement.')
+          }}
+        </p>
+        <div class="sign-step__actions">
+          <ui-button [label]="'button.cancel' | translate: 'Cancel'" variant="text" (click)="closeSignWizard()" />
+          <ui-button [label]="'button.continue' | translate: 'Continue'" variant="filled" icon="arrow_forward" (click)="confirmWantsToSign()" />
+        </div>
+      </div>
+    }
+    @case ('form') {
+      <form class="sign-form" (submit)="submitSignatureForm(); $event.preventDefault()">
+        <label class="sign-form__field">
+          <span>{{ 'label.full-name' | translate: 'Full name' }}</span>
+          <input type="text" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+        </label>
+        <label class="sign-form__field">
+          <span>{{ 'label.cpf' | translate: 'CPF' }}</span>
+          <input type="text" [ngModel]="cpf()" (ngModelChange)="cpf.set($event)" name="cpf" placeholder="000.000.000-00" />
+        </label>
+        <div class="sign-form__row">
+          <label class="sign-form__field">
+            <span>{{ 'label.birth-date' | translate: 'Birth date' }}</span>
+            <input type="date" [ngModel]="birthDate()" (ngModelChange)="birthDate.set($event)" name="birthDate" />
+          </label>
+          <label class="sign-form__field">
+            <span>{{ 'label.city' | translate: 'City' }}</span>
+            <input type="text" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
+          </label>
+          <label class="sign-form__field">
+            <span>{{ 'label.state' | translate: 'State' }}</span>
+            <input type="text" [ngModel]="state()" (ngModelChange)="state.set($event)" name="state" maxlength="2" />
+          </label>
+        </div>
+
+        @if (isPopularInitiative()) {
+          <label class="sign-form__field">
+            <span>{{ 'label.electoral-data' | translate: 'Electoral data (título de eleitor)' }}</span>
+            <input type="text" [ngModel]="electoralData()" (ngModelChange)="electoralData.set($event)" name="electoralData" />
+          </label>
+        }
+
+        <div class="sign-form__row">
+          <label class="sign-form__field">
+            <span>{{ 'label.verification-method' | translate: 'Verify by' }}</span>
+            <select [ngModel]="verificationMethod()" (ngModelChange)="verificationMethod.set($event)" name="verificationMethod">
+              <option value="sms">{{ 'label.sms' | translate: 'SMS' }}</option>
+              <option value="email">{{ 'label.email' | translate: 'E-mail' }}</option>
+            </select>
+          </label>
+          <label class="sign-form__field sign-form__field--grow">
+            <span>{{ verificationMethod() === 'sms' ? ('label.phone' | translate: 'Phone number') : ('label.email' | translate: 'E-mail') }}</span>
+            <input type="text" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" />
+          </label>
+        </div>
+
+        <label class="sign-form__field">
+          <span>{{ 'label.typed-signature' | translate: 'Type your full legal name as your electronic signature' }}</span>
+          <input type="text" [ngModel]="typedSignature()" (ngModelChange)="typedSignature.set($event)" name="typedSignature" />
+        </label>
+
+        <label class="sign-form__checkbox">
+          <input type="checkbox" [ngModel]="eSignatureConsent()" (ngModelChange)="eSignatureConsent.set($event)" name="eSignatureConsent" />
+          <span>{{ 'hint.esignature-consent' | translate: 'I agree this typed name is a valid electronic signature for this petition.' }}</span>
+        </label>
+
+        @if (signError()) {
+          <p class="sign-form__error">{{ signError() }}</p>
+        }
+
+        <div class="sign-step__actions">
+          <ui-button [label]="'button.back' | translate: 'Back'" variant="text" type="button" (click)="signStep.set('confirm')" />
+          <ui-button
+            [label]="'button.send-code' | translate: 'Send verification code'"
+            variant="filled"
+            icon="sms"
+            type="submit"
+            [disabled]="signSubmitting()"
+          />
+        </div>
+      </form>
+    }
+    @case ('code') {
+      <form class="sign-form" (submit)="submitCode(); $event.preventDefault()">
+        <p class="sign-form__demo-hint">
+          {{ 'hint.demo-code' | translate: 'Demo mode — this platform has no real SMS/e-mail gateway, so here is the code that would have been sent:' }}
+          <strong>{{ demoCode() }}</strong>
+        </p>
+        <label class="sign-form__field">
+          <span>{{ 'label.verification-code' | translate: 'Verification code' }}</span>
+          <input type="text" inputmode="numeric" [ngModel]="codeInput()" (ngModelChange)="codeInput.set($event)" name="codeInput" />
+        </label>
+        @if (signError()) {
+          <p class="sign-form__error">{{ signError() }}</p>
+        }
+        <div class="sign-step__actions">
+          <ui-button [label]="'button.back' | translate: 'Back'" variant="text" type="button" (click)="signStep.set('form')" />
+          <ui-button
+            [label]="'button.confirm-signature' | translate: 'Confirm signature'"
+            variant="filled"
+            icon="check"
+            type="submit"
+            [disabled]="signSubmitting()"
+          />
+        </div>
+      </form>
+    }
+  }
+</ui-dialog>

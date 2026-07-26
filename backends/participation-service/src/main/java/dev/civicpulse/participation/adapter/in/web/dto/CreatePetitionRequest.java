@@ -4,4 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 
-public record CreatePetitionRequest(@NotBlank String title, String summary, String category, @Positive int goal, LocalDate deadline) {}
+public record CreatePetitionRequest(
+    @NotBlank String title,
+    String summary,
+    String category,
+    @Positive int goal,
+    LocalDate deadline,
+    String imageUrl,
+    String videoUrl,
+    String fileUrl,
+    String fileName,
+    @NotBlank String petitionType) {}

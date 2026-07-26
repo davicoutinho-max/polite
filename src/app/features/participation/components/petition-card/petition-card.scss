@@ -1,0 +1,209 @@
+:host {
+  display: block;
+}
+
+.head {
+  display: flex;
+  gap: var(--cp-space-sm);
+  margin-bottom: var(--cp-space-md);
+  flex-wrap: wrap;
+}
+.title {
+  margin: 0 0 var(--cp-space-sm);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--cp-on-surface);
+}
+.summary {
+  margin: 0 0 var(--cp-space-lg);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cp-on-surface-variant);
+}
+.thumb {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: var(--cp-radius);
+  margin-bottom: var(--cp-space-lg);
+}
+.progress {
+  margin-bottom: var(--cp-space-md);
+}
+.progress__row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--cp-space-xs);
+}
+.progress__count {
+  font-weight: 700;
+  color: var(--cp-on-surface);
+}
+.progress__goal {
+  font-size: 14px;
+  color: var(--cp-on-surface-variant);
+}
+.actions {
+  display: flex;
+  gap: var(--cp-space-sm);
+  flex-wrap: wrap;
+}
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cp-space-md);
+  margin-top: var(--cp-space-md);
+  padding-top: var(--cp-space-md);
+  border-top: 1px solid var(--cp-outline-variant);
+  flex-wrap: wrap;
+}
+.deadline {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--cp-on-surface-variant);
+}
+
+// ---- View details ----
+.details__tags {
+  display: flex;
+  gap: var(--cp-space-sm);
+  margin-bottom: var(--cp-space-md);
+}
+.details__summary {
+  margin: 0 0 var(--cp-space-md);
+  color: var(--cp-on-surface-variant);
+  line-height: 22px;
+}
+.details__image {
+  display: block;
+  width: 100%;
+  border-radius: var(--cp-radius);
+  margin-bottom: var(--cp-space-md);
+}
+.details__video {
+  display: block;
+  width: 100%;
+  border-radius: var(--cp-radius);
+  margin-bottom: var(--cp-space-md);
+}
+.details__file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  color: var(--cp-secondary);
+  text-decoration: none;
+  margin-bottom: var(--cp-space-md);
+}
+.details__file:hover {
+  text-decoration: underline;
+}
+.details__stats {
+  display: flex;
+  gap: var(--cp-space-lg);
+  padding-top: var(--cp-space-md);
+  border-top: 1px solid var(--cp-outline-variant);
+}
+.details__stats > div {
+  display: flex;
+  flex-direction: column;
+}
+.details__stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cp-on-surface);
+}
+.details__stat-label {
+  font-size: 12px;
+  color: var(--cp-on-surface-variant);
+}
+
+// ---- Related bills (real bills from Câmara/Senado open-data APIs) ----
+.bills {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+}
+.bills__source-note {
+  margin: 0 0 var(--cp-space-md);
+  font-size: 12px;
+  color: var(--cp-on-surface-variant);
+}
+.bills__status {
+  margin: 0;
+  color: var(--cp-on-surface-variant);
+  font-size: 13px;
+}
+.bills__load-more {
+  display: flex;
+  justify-content: center;
+}
+
+// ---- Sign wizard ----
+.sign-step p {
+  color: var(--cp-on-surface-variant);
+  line-height: 22px;
+  margin: 0 0 var(--cp-space-lg);
+}
+.sign-step__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--cp-space-sm);
+}
+.sign-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+}
+.sign-form__row {
+  display: flex;
+  gap: var(--cp-space-md);
+  flex-wrap: wrap;
+}
+.sign-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+  flex: 1;
+  min-width: 120px;
+}
+.sign-form__field--grow {
+  flex: 2;
+}
+.sign-form__field input,
+.sign-form__field select {
+  font: inherit;
+  font-weight: 400;
+  padding: var(--cp-space-sm) var(--cp-space-md);
+  border-radius: var(--cp-radius);
+  border: 1px solid var(--cp-outline-variant);
+  background: var(--cp-surface-container-lowest);
+  color: var(--cp-on-surface);
+}
+.sign-form__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-sm);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+}
+.sign-form__error {
+  margin: 0;
+  color: var(--cp-error);
+  font-size: 13px;
+}
+.sign-form__demo-hint {
+  margin: 0 0 var(--cp-space-md);
+  padding: var(--cp-space-md);
+  border-radius: var(--cp-radius);
+  background: var(--cp-surface-container-low);
+  color: var(--cp-on-surface-variant);
+  font-size: 13px;
+  line-height: 20px;
+}

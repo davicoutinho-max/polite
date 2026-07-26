@@ -1,0 +1,86 @@
+<div class="bills-page">
+  <app-page-header
+    [title]="'page.bills.title' | translate: 'Bills'"
+    [subtitle]="'page.bills.subtitle' | translate: 'Real bills from the Chamber of Deputies and the Federal Senate, with their full processing history'"
+    icon="gavel"
+  />
+
+  <div class="bills-page__notice">
+    <ui-icon name="info" [size]="18" />
+    <p>
+      {{ 'hint.bills-source' | translate: 'Live results from the official open-data services of the Chamber of Deputies and the Federal Senate.' }}
+    </p>
+  </div>
+
+  <form class="bills-page__search" (submit)="search(); $event.preventDefault()">
+    <input
+      pInputText
+      type="text"
+      [ngModel]="keyword()"
+      (ngModelChange)="keyword.set($event)"
+      name="keyword"
+      [placeholder]="'label.search-bills-placeholder' | translate: 'Optional: search by topic, e.g. saúde, educação…'"
+    />
+    <select class="bills-page__type-filter" [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event)" name="typeFilter">
+      <option value="all">{{ 'label.all-bill-types' | translate: 'All types' }}</option>
+      @for (type of billTypes; track type.code) {
+        <option [value]="type.code">{{ type.label }}</option>
+      }
+    </select>
+    <ui-button [label]="'button.search' | translate: 'Search'" icon="search" variant="filled" type="submit" [disabled]="loading()" />
+    @if (isSearching()) {
+      <ui-button [label]="'button.clear' | translate: 'Clear'" icon="close" variant="text" type="button" (click)="clearSearch()" />
+    }
+  </form>
+
+  @if (loading()) {
+    <p class="bills-page__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+  } @else if (error() && (isSearching() ? (searchResults() ?? []).length === 0 : true)) {
+    <p class="bills-page__status">{{ error() }}</p>
+  }
+
+  @if (isSearching()) {
+    <!-- Search results: flat list, only shown when the citizen typed something -->
+    <div class="grid">
+      @for (bill of visibleSearchResults(); track bill.id) {
+        <app-bill-card [bill]="bill" />
+      }
+    </div>
+    @if (!searchExhausted() && (searchResults() ?? []).length > 0) {
+      <div class="bills-page__load-more">
+        <ui-button
+          [label]="'button.load-more' | translate: 'Load more'"
+          icon="expand_more"
+          variant="tonal"
+          [disabled]="loadingMoreSearch()"
+          (click)="loadMoreSearch()"
+        />
+      </div>
+    }
+  } @else {
+    <!-- Default view: every main bill type, already loaded, no search required -->
+    @for (type of visibleTypes(); track type.code) {
+      @if (billsForType(type.code).length > 0) {
+        <section class="bills-page__section">
+          <h2 class="bills-page__section-title">{{ type.label }}</h2>
+          <div class="grid">
+            @for (bill of billsForType(type.code); track bill.id) {
+              <app-bill-card [bill]="bill" />
+            }
+          </div>
+          @if (!isExhausted(type.code)) {
+            <div class="bills-page__load-more">
+              <ui-button
+                [label]="'button.load-more' | translate: 'Load more'"
+                icon="expand_more"
+                variant="tonal"
+                [disabled]="loadingMoreType() === type.code"
+                (click)="loadMoreForType(type.code)"
+              />
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+</div>

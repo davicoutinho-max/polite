@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { ParticipationService } from '../../core/services/participation.service';
 import { SessionService } from '../../core/services/session.service';
 import { TranslateService } from '../../core/services/translate.service';
-import { ConsultationStance } from '../../core/models';
+import { ConsultationStance, PetitionType } from '../../core/models';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiTabs, UiTab } from '../../shared/ui/ui-tabs/ui-tabs';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
@@ -43,10 +44,6 @@ export class ParticipationPage {
   ];
   protected readonly active = signal('petitions');
 
-  protected onSign(id: string): void {
-    this.participation.signPetition(id);
-  }
-
   protected onStance(event: { id: string; stance: ConsultationStance }): void {
     this.participation.setStance(event.id, event.stance);
   }
@@ -70,6 +67,10 @@ export class ParticipationPage {
   protected readonly petitionCategory = signal('');
   protected readonly petitionGoal = signal(100);
   protected readonly petitionDeadline = signal('');
+  protected readonly petitionType = signal<PetitionType>('verified_support');
+  protected readonly petitionImageFile = signal<File | null>(null);
+  protected readonly petitionVideoFile = signal<File | null>(null);
+  protected readonly petitionAttachedFile = signal<File | null>(null);
 
   protected readonly consultationTitle = signal('');
   protected readonly consultationDescription = signal('');
@@ -96,6 +97,27 @@ export class ParticipationPage {
     this.surveyOptions.update((list) => (list.length > 2 ? list.filter((_, i) => i !== index) : list));
   }
 
+  protected onPetitionImageSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.petitionImageFile.set(file);
+    }
+  }
+
+  protected onPetitionVideoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.petitionVideoFile.set(file);
+    }
+  }
+
+  protected onPetitionFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.petitionAttachedFile.set(file);
+    }
+  }
+
   protected submitCreate(): void {
     switch (this.active()) {
       case 'petitions':
@@ -118,8 +140,32 @@ export class ParticipationPage {
     }
     this.createError.set('');
     this.createSubmitting.set(true);
-    this.participation
-      .createPetition(title, this.petitionSummary().trim(), this.petitionCategory().trim(), this.petitionGoal(), this.petitionDeadline() || null)
+
+    const imageFile = this.petitionImageFile();
+    const videoFile = this.petitionVideoFile();
+    const attachedFile = this.petitionAttachedFile();
+
+    forkJoin([
+      imageFile ? this.participation.uploadPetitionMedia(imageFile) : of(null),
+      videoFile ? this.participation.uploadPetitionMedia(videoFile) : of(null),
+      attachedFile ? this.participation.uploadPetitionMedia(attachedFile) : of(null),
+    ])
+      .pipe(
+        switchMap(([image, video, file]) =>
+          this.participation.createPetition(
+            title,
+            this.petitionSummary().trim(),
+            this.petitionCategory().trim(),
+            this.petitionGoal(),
+            this.petitionDeadline() || null,
+            this.petitionType(),
+            image?.url ?? null,
+            video?.url ?? null,
+            file?.url ?? null,
+            file?.fileName ?? null,
+          ),
+        ),
+      )
       .subscribe({
         next: () => {
           this.createSubmitting.set(false);
@@ -128,6 +174,10 @@ export class ParticipationPage {
           this.petitionCategory.set('');
           this.petitionGoal.set(100);
           this.petitionDeadline.set('');
+          this.petitionType.set('verified_support');
+          this.petitionImageFile.set(null);
+          this.petitionVideoFile.set(null);
+          this.petitionAttachedFile.set(null);
           this.showCreateForm.set(false);
         },
         error: () => {

@@ -25,10 +25,19 @@ interface PoliticianJpaRepository extends JpaRepository<PoliticianJpaEntity, UUI
   @Query("update PoliticianJpaEntity p set p.partyId = :partyId, p.partyAcronym = :partyAcronym, p.updatedAt = :now where p.accountId = :accountId")
   void assignParty(@Param("accountId") UUID accountId, @Param("partyId") UUID partyId, @Param("partyAcronym") String partyAcronym, @Param("now") Instant now);
 
+  // level uses coalesce(:level, p.level) rather than a plain assignment — a null :level (the two
+  // admin-driven flows never supply one) must leave whatever level is already projected alone,
+  // not clear it. Only government-sync-service passes a real value here.
   @Modifying
-  @Query("update PoliticianJpaEntity p set p.office = :office, p.state = :state, p.updatedAt = :now where p.accountId = :accountId")
+  @Query(
+      "update PoliticianJpaEntity p set p.office = :office, p.state = :state, p.level = coalesce(:level, p.level), p.updatedAt = :now "
+          + "where p.accountId = :accountId")
   void assignOffice(
-      @Param("accountId") UUID accountId, @Param("office") String office, @Param("state") String state, @Param("now") Instant now);
+      @Param("accountId") UUID accountId,
+      @Param("office") String office,
+      @Param("state") String state,
+      @Param("level") GovLevel level,
+      @Param("now") Instant now);
 
   @Modifying
   @Query(

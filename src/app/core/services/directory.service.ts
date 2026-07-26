@@ -5,9 +5,6 @@ import { environment } from '../../environments/environment';
 import { GovLevel, PartySpectrum, PartySummary, PoliticianSummary } from '../models';
 import { SessionService } from './session.service';
 
-const DEFAULT_AVATAR =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuARrPtz8cdX-XEjmt6mzDr-yEB20GT86Vn2pwKXi-5JWa3WGOtpu2UZ53Clzs2UcsoUoRwjb6wjw4AUdOdgkX173o7MCsccQ_OhfJNR75fdsj3a5mJYH-bXhcLbpBI1-z4fVeifFnFeEQQKMdwNjq0xdG4H2KkmEDaK3ibUiLFVAb-mCXTgCg2zRPjR05v5YuxVH-JTO2o9dQN3hagJW1O1M_Tkor9T5VNVg8T-Ui3Hh1LYLnroVzxx0g';
-
 /** Loading a single large page once and filtering/sorting client-side (same pattern used
  * throughout this pass — see legislative-service's demo-scale reasoning) rather than wiring
  * server-side pagination through every directory page's filter UI. */
@@ -59,7 +56,7 @@ function toPoliticianSummary(response: PoliticianResponse): PoliticianSummary {
     id: response.accountId,
     name: response.name,
     handle: `@${response.handle}`,
-    avatarUrl: response.avatarUrl ?? DEFAULT_AVATAR,
+    avatarUrl: response.avatarUrl,
     verified: response.verified,
     office: response.office ?? '',
     level: (response.level as GovLevel) ?? 'federal',
@@ -77,7 +74,7 @@ function toPartySummary(response: PartyResponse): PartySummary {
     name: response.name,
     acronym: response.acronym,
     number: response.number,
-    logoUrl: response.logoUrl ?? DEFAULT_AVATAR,
+    logoUrl: response.logoUrl,
     spectrum: (response.spectrum?.replace(/_/g, '-') as PartySpectrum) ?? 'center',
     ideology: response.ideology ?? '',
     members: response.memberCount,

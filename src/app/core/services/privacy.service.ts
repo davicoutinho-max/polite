@@ -3,6 +3,7 @@ import { effect, inject, Injectable, signal } from '@angular/core';
 import { Observable, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SessionService } from './session.service';
+import { TranslateService } from './translate.service';
 
 export interface ConsentSetting {
   readonly id: string;
@@ -26,33 +27,46 @@ interface DataExportRequestResponseDto {
   readonly id: string;
 }
 
-/** Static shell — `enabled` gets overwritten by the real per-account state on load. */
-const CONSENT_SHELL: readonly Omit<ConsentSetting, 'enabled'>[] = [
-  {
-    id: 'essential',
-    label: 'Essential account data',
-    description: 'Identity and security data required to run your account. Cannot be disabled.',
-    locked: true,
-  },
-  {
-    id: 'personalization',
-    label: 'Personalized notifications',
-    description: 'Use who you follow to tailor alerts about bills, votes and parties.',
-    locked: false,
-  },
-  {
-    id: 'analytics',
-    label: 'Usage analytics',
-    description: 'Anonymous usage metrics that help improve the platform.',
-    locked: false,
-  },
-  {
-    id: 'marketing',
-    label: 'Marketing & outreach',
-    description: 'Receive updates about new features, civic campaigns and outreach initiatives.',
-    locked: false,
-  },
-];
+/** Static shell — `enabled` gets overwritten by the real per-account state on load. `id` is the
+ * real purpose sent to/from privacy-compliance-service; label/description are display-only, so
+ * translating them is always safe. */
+function consentShell(translate: TranslateService): readonly Omit<ConsentSetting, 'enabled'>[] {
+  return [
+    {
+      id: 'essential',
+      label: translate.t('label.consent-essential', 'Essential account data'),
+      description: translate.t(
+        'label.consent-essential-desc',
+        'Identity and security data required to run your account. Cannot be disabled.',
+      ),
+      locked: true,
+    },
+    {
+      id: 'personalization',
+      label: translate.t('label.consent-personalization', 'Personalized notifications'),
+      description: translate.t(
+        'label.consent-personalization-desc',
+        'Use who you follow to tailor alerts about bills, votes and parties.',
+      ),
+      locked: false,
+    },
+    {
+      id: 'analytics',
+      label: translate.t('label.consent-analytics', 'Usage analytics'),
+      description: translate.t('label.consent-analytics-desc', 'Anonymous usage metrics that help improve the platform.'),
+      locked: false,
+    },
+    {
+      id: 'marketing',
+      label: translate.t('label.consent-marketing', 'Marketing & outreach'),
+      description: translate.t(
+        'label.consent-marketing-desc',
+        'Receive updates about new features, civic campaigns and outreach initiatives.',
+      ),
+      locked: false,
+    },
+  ];
+}
 
 /**
  * LGPD-oriented privacy controls, backed by privacy-compliance-service: granular consent (real
@@ -65,19 +79,20 @@ const CONSENT_SHELL: readonly Omit<ConsentSetting, 'enabled'>[] = [
 export class PrivacyService {
   private readonly http = inject(HttpClient);
   private readonly session = inject(SessionService);
+  private readonly translate = inject(TranslateService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/privacy`;
 
-  private readonly _consents = signal<ConsentSetting[]>(CONSENT_SHELL.map((c) => ({ ...c, enabled: c.locked })));
+  private readonly _consents = signal<ConsentSetting[]>(consentShell(this.translate).map((c) => ({ ...c, enabled: c.locked })));
   readonly consents = this._consents.asReadonly();
 
   /** LGPD data-subject rights, surfaced to the user. */
   readonly rights: readonly string[] = [
-    'Confirm whether we process your personal data and access it.',
-    'Correct incomplete, inaccurate or outdated data.',
-    'Request anonymization, blocking or deletion of unnecessary data.',
-    'Port your data to another service provider.',
-    'Withdraw consent at any time.',
-    'Be informed about with whom your data is shared.',
+    this.translate.t('label.lgpd-right-confirm', 'Confirm whether we process your personal data and access it.'),
+    this.translate.t('label.lgpd-right-correct', 'Correct incomplete, inaccurate or outdated data.'),
+    this.translate.t('label.lgpd-right-anonymize', 'Request anonymization, blocking or deletion of unnecessary data.'),
+    this.translate.t('label.lgpd-right-port', 'Port your data to another service provider.'),
+    this.translate.t('label.lgpd-right-withdraw', 'Withdraw consent at any time.'),
+    this.translate.t('label.lgpd-right-informed', 'Be informed about with whom your data is shared.'),
   ];
 
   constructor() {
@@ -97,7 +112,9 @@ export class PrivacyService {
     return this.http.get<ConsentRecordResponseDto[]>(`${this.apiBase}/consents`).pipe(
       map((records) => {
         const granted = new Map(records.map((r) => [r.purpose, r.granted]));
-        return CONSENT_SHELL.map((shell): ConsentSetting => ({ ...shell, enabled: shell.locked ? true : (granted.get(shell.id) ?? false) }));
+        return consentShell(this.translate).map(
+          (shell): ConsentSetting => ({ ...shell, enabled: shell.locked ? true : (granted.get(shell.id) ?? false) }),
+        );
       }),
       tap((consents) => this._consents.set(consents)),
     );

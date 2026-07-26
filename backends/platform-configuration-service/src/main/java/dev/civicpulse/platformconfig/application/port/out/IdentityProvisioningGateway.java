@@ -13,5 +13,17 @@ public interface IdentityProvisioningGateway {
   ProvisionedAccount provisionPartyAccount(
       String name, String handle, String email, String rawPassword, String documentType, String rawDocumentNumber);
 
+  /** Government-data-sync path (see government-sync-service) — the party never signed up, so
+   * there is no password; idempotent by {@code (externalSource, externalId)} on Identity's side. */
+  ProvisionedAccount provisionSyncedPartyAccount(
+      String name,
+      String handle,
+      String email,
+      String avatarUrl,
+      String documentType,
+      String rawDocumentNumber,
+      String externalSource,
+      String externalId);
+
   record ProvisionedAccount(UUID accountId, String name, String handle) {}
 }

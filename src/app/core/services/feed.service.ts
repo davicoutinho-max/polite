@@ -520,7 +520,7 @@ export class FeedService {
         id: politician.id,
         name: politician.name,
         handle: politician.handle,
-        avatarUrl: politician.avatarUrl,
+        avatarUrl: politician.avatarUrl ?? '',
         verified: politician.verified,
         role: politician.office,
       };
@@ -532,7 +532,7 @@ export class FeedService {
       const author: UserSummary = {
         id: party.id,
         name: party.name,
-        avatarUrl: party.logoUrl,
+        avatarUrl: party.logoUrl ?? '',
         verified: true,
         role: 'Official party account',
       };

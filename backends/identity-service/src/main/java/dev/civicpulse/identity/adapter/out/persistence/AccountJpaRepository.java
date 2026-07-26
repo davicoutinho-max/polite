@@ -10,9 +10,13 @@ interface AccountJpaRepository extends JpaRepository<AccountJpaEntity, UUID> {
 
   Optional<AccountJpaEntity> findByHandle(String handle);
 
+  Optional<AccountJpaEntity> findByExternalSourceAndExternalId(String externalSource, String externalId);
+
   boolean existsByEmail(String email);
 
   boolean existsByHandle(String handle);
 
   boolean existsByDocumentNumberHash(String documentNumberHash);
+
+  Optional<AccountJpaEntity> findByDocumentNumberHash(String documentNumberHash);
 }

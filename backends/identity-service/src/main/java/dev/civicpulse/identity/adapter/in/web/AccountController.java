@@ -2,8 +2,11 @@ package dev.civicpulse.identity.adapter.in.web;
 
 import dev.civicpulse.identity.adapter.in.web.dto.AccountResponse;
 import dev.civicpulse.identity.adapter.in.web.dto.ProvisionAccountRequest;
+import dev.civicpulse.identity.adapter.in.web.dto.ProvisionSyncedAccountRequest;
 import dev.civicpulse.identity.adapter.in.web.dto.RegisterAccountRequest;
 import dev.civicpulse.identity.application.port.in.GetAccountUseCase;
+import dev.civicpulse.identity.application.port.in.ProvisionSyncedAccountUseCase;
+import dev.civicpulse.identity.application.port.in.ProvisionSyncedAccountUseCase.ProvisionSyncedAccountCommand;
 import dev.civicpulse.identity.application.port.in.RegisterAccountUseCase;
 import dev.civicpulse.identity.application.port.in.RegisterAccountUseCase.RegisterAccountCommand;
 import dev.civicpulse.identity.application.port.in.VerifyDocumentUseCase;
@@ -28,14 +31,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountController {
 
   private final RegisterAccountUseCase registerAccountUseCase;
+  private final ProvisionSyncedAccountUseCase provisionSyncedAccountUseCase;
   private final GetAccountUseCase getAccountUseCase;
   private final VerifyDocumentUseCase verifyDocumentUseCase;
 
   public AccountController(
       RegisterAccountUseCase registerAccountUseCase,
+      ProvisionSyncedAccountUseCase provisionSyncedAccountUseCase,
       GetAccountUseCase getAccountUseCase,
       VerifyDocumentUseCase verifyDocumentUseCase) {
     this.registerAccountUseCase = registerAccountUseCase;
+    this.provisionSyncedAccountUseCase = provisionSyncedAccountUseCase;
     this.getAccountUseCase = getAccountUseCase;
     this.verifyDocumentUseCase = verifyDocumentUseCase;
   }
@@ -60,6 +66,27 @@ public class AccountController {
             accountType,
             new RegisterAccountCommand(
                 request.name(), request.handle(), request.email(), request.password(), documentType, request.documentNumber()));
+    return created(account);
+  }
+
+  /** Internal-only: not routed to the public internet by the Gateway. Called by
+   * government-sync-service to provision (or update, on re-sync) an account for a real
+   * politician/party who never signed up — no password, see ProvisionSyncedAccountUseCase. */
+  @PostMapping("/provision-synced")
+  public ResponseEntity<AccountResponse> provisionSynced(@Valid @RequestBody ProvisionSyncedAccountRequest request) {
+    AccountType accountType = AccountType.fromCode(request.accountType());
+    Account account =
+        provisionSyncedAccountUseCase.provisionOrUpdate(
+            accountType,
+            new ProvisionSyncedAccountCommand(
+                request.name(),
+                request.handle(),
+                request.email(),
+                request.avatarUrl(),
+                DocumentType.fromCode(request.documentType()),
+                request.documentNumber(),
+                request.externalSource(),
+                request.externalId()));
     return created(account);
   }
 

@@ -2,6 +2,7 @@ package dev.civicpulse.partymanagement.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,10 +14,12 @@ import dev.civicpulse.partymanagement.application.port.out.PartyRepresentativeRe
 import dev.civicpulse.partymanagement.domain.event.DomainEvent;
 import dev.civicpulse.partymanagement.domain.event.PoliticianRegistered;
 import dev.civicpulse.partymanagement.domain.event.RepresentativeLinked;
+import dev.civicpulse.partymanagement.domain.event.RepresentativeRemoved;
 import dev.civicpulse.partymanagement.domain.model.PartyRepresentative;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +53,7 @@ class RegisterPoliticianServiceTest {
 
     when(identityProvisioningGateway.provisionPoliticianAccount("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901"))
         .thenReturn(new ProvisionedAccount(accountId, "Jane Doe", "janedoe"));
+    when(representativeRepository.findByPoliticianAccountId(accountId)).thenReturn(Optional.empty());
     when(representativeRepository.save(any(PartyRepresentative.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     PartyRepresentative result = service.registerPolitician(partyId, command);
@@ -64,5 +68,54 @@ class RegisterPoliticianServiceTest {
     assertThat(eventCaptor.getAllValues().get(0)).isInstanceOf(PoliticianRegistered.class);
     assertThat(eventCaptor.getAllValues().get(1)).isInstanceOf(RepresentativeLinked.class);
     assertThat(((RepresentativeLinked) eventCaptor.getAllValues().get(1)).state()).isEqualTo("São Paulo");
+  }
+
+  @Test
+  void registeringAnAlreadyLinkedClaimedAccountForTheSamePartyIsANoOp() {
+    // Identity turns a same-CPF registration into a claim of an already-synced account (see
+    // Account.claim) — if that account was already linked to this same party by the earlier
+    // government sync, re-inserting the link would violate party_representatives' unique index.
+    UUID partyId = UUID.randomUUID();
+    UUID accountId = UUID.randomUUID();
+    RegisterPoliticianCommand command =
+        new RegisterPoliticianCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901", "Deputy", "São Paulo");
+    PartyRepresentative existingLink = PartyRepresentative.link(UUID.randomUUID(), partyId, accountId, "Deputado Federal", NOW);
+
+    when(identityProvisioningGateway.provisionPoliticianAccount(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new ProvisionedAccount(accountId, "Jane Doe", "janedoe"));
+    when(representativeRepository.findByPoliticianAccountId(accountId)).thenReturn(Optional.of(existingLink));
+
+    PartyRepresentative result = service.registerPolitician(partyId, command);
+
+    assertThat(result).isSameAs(existingLink);
+    verify(representativeRepository, never()).save(any());
+    verify(representativeRepository, never()).delete(any());
+    verify(eventPublisher).publish(any(PoliticianRegistered.class));
+    verify(eventPublisher, never()).publish(any(RepresentativeLinked.class));
+  }
+
+  @Test
+  void registeringAClaimedAccountForADifferentPartyUnlinksTheOldOneFirst() {
+    UUID oldPartyId = UUID.randomUUID();
+    UUID newPartyId = UUID.randomUUID();
+    UUID accountId = UUID.randomUUID();
+    RegisterPoliticianCommand command =
+        new RegisterPoliticianCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", "cpf", "12345678901", "Deputy", "São Paulo");
+    PartyRepresentative existingLink = PartyRepresentative.link(UUID.randomUUID(), oldPartyId, accountId, "Deputado Federal", NOW);
+
+    when(identityProvisioningGateway.provisionPoliticianAccount(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new ProvisionedAccount(accountId, "Jane Doe", "janedoe"));
+    when(representativeRepository.findByPoliticianAccountId(accountId)).thenReturn(Optional.of(existingLink));
+    when(representativeRepository.save(any(PartyRepresentative.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    PartyRepresentative result = service.registerPolitician(newPartyId, command);
+
+    assertThat(result.partyId()).isEqualTo(newPartyId);
+    verify(representativeRepository).delete(existingLink.id());
+
+    ArgumentCaptor<DomainEvent> eventCaptor = ArgumentCaptor.forClass(DomainEvent.class);
+    verify(eventPublisher, org.mockito.Mockito.times(3)).publish(eventCaptor.capture());
+    assertThat(eventCaptor.getAllValues().get(0)).isInstanceOf(RepresentativeRemoved.class);
+    assertThat(((RepresentativeRemoved) eventCaptor.getAllValues().get(0)).partyId()).isEqualTo(oldPartyId);
   }
 }

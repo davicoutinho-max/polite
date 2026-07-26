@@ -4,6 +4,7 @@ import dev.civicpulse.directory.application.port.in.ProjectDirectoryUseCase;
 import dev.civicpulse.directory.application.port.out.AccountLookupGateway;
 import dev.civicpulse.directory.application.port.out.PartyRepository;
 import dev.civicpulse.directory.application.port.out.PoliticianRepository;
+import dev.civicpulse.directory.domain.model.GovLevel;
 import dev.civicpulse.directory.domain.model.Party;
 import java.time.Clock;
 import java.time.Instant;
@@ -55,7 +56,8 @@ public class ProjectDirectoryService implements ProjectDirectoryUseCase {
 
   @Override
   @Transactional
-  public void onRepresentativeLinked(UUID politicianAccountId, UUID partyId, String roleTitle, String state, Instant linkedAt) {
+  public void onRepresentativeLinked(
+      UUID politicianAccountId, UUID partyId, String roleTitle, String state, String govLevel, Instant linkedAt) {
     // Targeted column updates, not a read-modify-save round trip: RepresentativeLinked and
     // PoliticianRegistered both fire within milliseconds of the same registration action, and
     // both carry a party linkage. A fetch-mutate-save cycle here would race with the other
@@ -67,7 +69,7 @@ public class ProjectDirectoryService implements ProjectDirectoryUseCase {
     }
     String partyAcronym = partyRepository.findById(partyId).map(Party::acronym).orElse(null);
     politicianRepository.assignParty(politicianAccountId, partyId, partyAcronym, linkedAt);
-    politicianRepository.assignOffice(politicianAccountId, roleTitle, state, linkedAt);
+    politicianRepository.assignOffice(politicianAccountId, roleTitle, state, govLevel == null ? null : GovLevel.fromCode(govLevel), linkedAt);
   }
 
   @Override

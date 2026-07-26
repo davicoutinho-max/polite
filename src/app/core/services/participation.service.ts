@@ -2,8 +2,18 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Consultation, ConsultationStance, Petition, PollOption, Survey } from '../models';
+import {
+  Consultation,
+  ConsultationStance,
+  Petition,
+  PetitionSignatureVerificationStarted,
+  PetitionType,
+  PollOption,
+  StartPetitionSignatureCommand,
+  Survey,
+} from '../models';
 import { SessionService } from './session.service';
+import { TranslateService } from './translate.service';
 
 interface PetitionResponseDto {
   readonly id: string;
@@ -13,6 +23,23 @@ interface PetitionResponseDto {
   readonly goal: number;
   readonly signaturesCount: number;
   readonly deadline: string | null;
+  readonly imageUrl: string | null;
+  readonly videoUrl: string | null;
+  readonly fileUrl: string | null;
+  readonly fileName: string | null;
+  readonly petitionType: PetitionType;
+}
+
+interface MediaUploadResponseDto {
+  readonly url: string;
+  readonly fileName: string;
+}
+
+interface StartSignatureResponseDto {
+  readonly verificationId: string;
+  readonly demoCode: string;
+  readonly contact: string | null;
+  readonly method: string;
 }
 
 interface ConsultationResponseDto {
@@ -35,29 +62,30 @@ interface SurveyOptionResponseDto {
   readonly votesCount: number;
 }
 
-function formatDeadline(iso: string | null, prefix: string): string {
+function formatDeadline(translate: TranslateService, iso: string | null, prefixKey: string, prefixFallback: string): string {
   if (!iso) {
-    return 'Open-ended';
+    return translate.t('label.open-ended', 'Open-ended');
   }
   const date = new Date(`${iso}T00:00:00`);
   const formatted = Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return `${prefix} ${formatted}`;
+  return `${translate.t(prefixKey, prefixFallback)} ${formatted}`;
 }
 
-function petitionStatus(signaturesCount: number, goal: number): Petition['status'] {
+function petitionStatus(translate: TranslateService, signaturesCount: number, goal: number): Petition['status'] {
   if (goal > 0 && signaturesCount >= goal) {
-    return { label: 'Goal reached', severity: 'secondary' };
+    return { label: translate.t('label.goal-reached', 'Goal reached'), severity: 'secondary' };
   }
   if (goal > 0 && signaturesCount / goal >= 0.8) {
-    return { label: 'Almost there', severity: 'warning' };
+    return { label: translate.t('label.almost-there', 'Almost there'), severity: 'warning' };
   }
-  return { label: 'Open', severity: 'success' };
+  return { label: translate.t('label.open', 'Open'), severity: 'success' };
 }
 
 @Injectable({ providedIn: 'root' })
 export class ParticipationService {
   private readonly http = inject(HttpClient);
   private readonly session = inject(SessionService);
+  private readonly translate = inject(TranslateService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/participation`;
 
   private readonly _petitions = signal<Petition[]>([]);
@@ -100,17 +128,43 @@ export class ParticipationService {
     );
   }
 
-  signPetition(id: string): void {
+  uploadPetitionMedia(file: File): Observable<{ url: string; fileName: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<MediaUploadResponseDto>(`${environment.apiBaseUrl}/api/feed/media`, formData);
+  }
+
+  /** Step 1 of the DocuSign-like sign flow: captures the tier-specific identity fields and
+   * returns a verification code (stood in for a real SMS/email send — see `demoCode`). Nothing is
+   * recorded as a signature yet. */
+  startPetitionSignature(petitionId: string, command: StartPetitionSignatureCommand): Observable<PetitionSignatureVerificationStarted> {
     const citizenId = this.citizenId;
     if (!citizenId) {
-      return;
+      throw new Error('Sign in to sign a petition');
     }
-    this.http.post(`${this.apiBase}/petitions/${id}/signatures`, { citizenAccountId: citizenId }).subscribe({
-      next: () =>
-        this._petitions.update((list) =>
-          list.map((p) => (p.id === id && !p.signed ? { ...p, signed: true, signatures: p.signatures + 1 } : p)),
+    return this.http
+      .post<StartSignatureResponseDto>(`${this.apiBase}/petitions/${petitionId}/signatures/start`, {
+        citizenAccountId: citizenId,
+        ...command,
+      })
+      .pipe(map((dto) => ({ verificationId: dto.verificationId, demoCode: dto.demoCode, contact: dto.contact, method: dto.method })));
+  }
+
+  /** Step 2: confirms the code and, only then, materializes the real signature. */
+  confirmPetitionSignature(petitionId: string, verificationId: string, code: string): Observable<void> {
+    const citizenId = this.citizenId;
+    if (!citizenId) {
+      throw new Error('Sign in to sign a petition');
+    }
+    return this.http
+      .post<void>(`${this.apiBase}/petitions/${petitionId}/signatures/confirm`, { citizenAccountId: citizenId, verificationId, code })
+      .pipe(
+        tap(() =>
+          this._petitions.update((list) =>
+            list.map((p) => (p.id === petitionId && !p.signed ? { ...p, signed: true, signatures: p.signatures + 1 } : p)),
+          ),
         ),
-    });
+      );
   }
 
   setStance(id: string, stance: ConsultationStance): void {
@@ -154,10 +208,32 @@ export class ParticipationService {
 
   /** Only politicians/parties reach the composer that calls this (see participation-page's
    * `canCreate` gate) — `deadline` is an optional ISO date (yyyy-MM-dd); omitting it leaves the
-   * petition open-ended. */
-  createPetition(title: string, summary: string, category: string, goal: number, deadline: string | null): Observable<Petition> {
+   * petition open-ended. Attachment URLs come from `uploadPetitionMedia()` having already run. */
+  createPetition(
+    title: string,
+    summary: string,
+    category: string,
+    goal: number,
+    deadline: string | null,
+    petitionType: PetitionType,
+    imageUrl: string | null,
+    videoUrl: string | null,
+    fileUrl: string | null,
+    fileName: string | null,
+  ): Observable<Petition> {
     return this.http
-      .post<PetitionResponseDto>(`${this.apiBase}/petitions`, { title, summary, category, goal, deadline })
+      .post<PetitionResponseDto>(`${this.apiBase}/petitions`, {
+        title,
+        summary,
+        category,
+        goal,
+        deadline,
+        petitionType,
+        imageUrl,
+        videoUrl,
+        fileUrl,
+        fileName,
+      })
       .pipe(
         switchMap((dto) => this.toPetition(dto)),
         tap((petition) => this._petitions.update((list) => [petition, ...list])),
@@ -187,9 +263,14 @@ export class ParticipationService {
           category: dto.category ?? '',
           goal: dto.goal,
           signatures: dto.signaturesCount,
-          deadline: formatDeadline(dto.deadline, 'Closes'),
-          status: petitionStatus(dto.signaturesCount, dto.goal),
+          deadline: formatDeadline(this.translate, dto.deadline, 'label.closes', 'Closes'),
+          status: petitionStatus(this.translate, dto.signaturesCount, dto.goal),
           signed,
+          imageUrl: dto.imageUrl,
+          videoUrl: dto.videoUrl,
+          fileUrl: dto.fileUrl,
+          fileName: dto.fileName,
+          petitionType: dto.petitionType,
         }),
       ),
     );
@@ -211,8 +292,8 @@ export class ParticipationService {
           id: dto.id,
           title: dto.title,
           description: dto.description ?? '',
-          deadline: formatDeadline(dto.deadline, 'Open until'),
-          status: { label: 'Open', severity: 'success' },
+          deadline: formatDeadline(this.translate, dto.deadline, 'label.open-until', 'Open until'),
+          status: { label: this.translate.t('label.open', 'Open'), severity: 'success' },
           responses: dto.responsesCount,
           stance,
         }),

@@ -4,7 +4,8 @@ import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Bill } from '../models';
 import { DirectoryService } from './directory.service';
-import { STATUS_TAGS } from './politician.service';
+import { statusTag } from './politician.service';
+import { TranslateService } from './translate.service';
 
 interface LegislativeItemResponseDto {
   readonly id: string;
@@ -21,6 +22,7 @@ interface LegislativeItemResponseDto {
 export class BillsService {
   private readonly http = inject(HttpClient);
   private readonly directory = inject(DirectoryService);
+  private readonly translate = inject(TranslateService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/legislative`;
 
   private readonly _relevantBills = signal<Bill[]>([]);
@@ -40,9 +42,9 @@ export class BillsService {
             reference: i.reference,
             title: i.title,
             summary: i.summary ?? undefined,
-            sponsor: sponsor ? `Sponsored by ${sponsor.name}` : undefined,
+            sponsor: sponsor ? `${this.translate.t('label.sponsored-by', 'Sponsored by')} ${sponsor.name}` : undefined,
             politicianId: i.politicianAccountId,
-            status: STATUS_TAGS[i.status] ?? { label: i.status, severity: 'neutral' as const },
+            status: statusTag(this.translate, i.status),
           };
         }),
       ),

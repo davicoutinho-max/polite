@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { AreaPoint } from '../../shared/ui/ui-area-chart/ui-area-chart';
 import { BarDatum } from '../../shared/ui/ui-bar-chart/ui-bar-chart';
 import { SessionService } from './session.service';
+import { TranslateService } from './translate.service';
 
 export interface AnalyticsKpi {
   readonly icon: string;
@@ -33,18 +34,18 @@ interface TypeCountResponseDto {
   readonly count: number;
 }
 
-const CONTENT_TYPE_LABELS: Record<string, string> = {
-  text: 'Text posts',
-  video: 'Videos',
-  agenda: 'Agenda',
-  live: 'Live sessions',
+const CONTENT_TYPE_LABEL_KEYS: Record<string, [string, string]> = {
+  text: ['label.content-type-text', 'Text posts'],
+  video: ['label.content-type-video', 'Videos'],
+  agenda: ['label.content-type-agenda', 'Agenda'],
+  live: ['label.content-type-live', 'Live sessions'],
 };
 
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  citizen: 'Citizens',
-  politician: 'Politicians',
-  party: 'Parties',
-  admin: 'Platform admins',
+const ACCOUNT_TYPE_LABEL_KEYS: Record<string, [string, string]> = {
+  citizen: ['label.account-type-citizen', 'Citizens'],
+  politician: ['label.account-type-politician', 'Politicians'],
+  party: ['label.account-type-party', 'Parties'],
+  admin: ['label.account-type-admin', 'Platform admins'],
 };
 
 function abbreviate(n: number): string {
@@ -61,6 +62,7 @@ function abbreviate(n: number): string {
 export class AnalyticsService {
   private readonly http = inject(HttpClient);
   private readonly session = inject(SessionService);
+  private readonly translate = inject(TranslateService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/analytics`;
 
   private readonly _kpis = signal<AnalyticsKpi[]>([]);
@@ -97,11 +99,27 @@ export class AnalyticsService {
       byAccountType: this.http.get<TypeCountResponseDto[]>(`${this.apiBase}/${authorId}/by-account-type`),
     }).pipe(
       tap(({ kpis, engagement, byContentType, byAccountType }) => {
+        const t = (key: string, fallback: string) => this.translate.t(key, fallback);
         this._kpis.set([
-          { icon: 'visibility', label: 'Reach', value: abbreviate(kpis.reach), caption: 'Distinct accounts engaged' },
-          { icon: 'group', label: 'Net follows', value: `${kpis.netFollows >= 0 ? '+' : ''}${kpis.netFollows}`, caption: 'Last 30 days' },
-          { icon: 'favorite', label: 'Engagement', value: `${kpis.engagementRatePercent.toFixed(1)}%`, caption: 'Likes + comments / reach' },
-          { icon: 'forum', label: 'Interactions', value: abbreviate(kpis.totalLikes + kpis.totalComments), caption: `${kpis.totalPosts} posts` },
+          { icon: 'visibility', label: t('label.reach', 'Reach'), value: abbreviate(kpis.reach), caption: t('label.reach-caption', 'Distinct accounts engaged') },
+          {
+            icon: 'group',
+            label: t('label.net-follows', 'Net follows'),
+            value: `${kpis.netFollows >= 0 ? '+' : ''}${kpis.netFollows}`,
+            caption: t('label.last-30-days', 'Last 30 days'),
+          },
+          {
+            icon: 'favorite',
+            label: t('label.engagement', 'Engagement'),
+            value: `${kpis.engagementRatePercent.toFixed(1)}%`,
+            caption: t('label.engagement-caption', 'Likes + comments / reach'),
+          },
+          {
+            icon: 'forum',
+            label: t('label.interactions', 'Interactions'),
+            value: abbreviate(kpis.totalLikes + kpis.totalComments),
+            caption: `${kpis.totalPosts} ${t('label.posts', 'posts')}`,
+          },
         ]);
         this._engagement.set(
           engagement.map(
@@ -111,15 +129,18 @@ export class AnalyticsService {
             }),
           ),
         );
+        const unknown = this.translate.t('label.unknown', 'Unknown');
         this._byContentType.set(
-          byContentType.map(
-            (t): BarDatum => ({ label: (t.key && CONTENT_TYPE_LABELS[t.key]) ?? t.key ?? 'Unknown', value: t.count, display: abbreviate(t.count) }),
-          ),
+          byContentType.map((c): BarDatum => {
+            const meta = c.key ? CONTENT_TYPE_LABEL_KEYS[c.key] : undefined;
+            return { label: meta ? this.translate.t(meta[0], meta[1]) : (c.key ?? unknown), value: c.count, display: abbreviate(c.count) };
+          }),
         );
         this._byAccountType.set(
-          byAccountType.map(
-            (t): BarDatum => ({ label: (t.key && ACCOUNT_TYPE_LABELS[t.key]) ?? t.key ?? 'Unknown', value: t.count, display: abbreviate(t.count) }),
-          ),
+          byAccountType.map((a): BarDatum => {
+            const meta = a.key ? ACCOUNT_TYPE_LABEL_KEYS[a.key] : undefined;
+            return { label: meta ? this.translate.t(meta[0], meta[1]) : (a.key ?? unknown), value: a.count, display: abbreviate(a.count) };
+          }),
         );
       }),
       map(() => undefined),

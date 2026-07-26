@@ -38,8 +38,50 @@ class IdentityProvisioningAdapter implements IdentityProvisioningGateway {
     }
   }
 
+  @Override
+  public ProvisionedAccount provisionSyncedPartyAccount(
+      String name,
+      String handle,
+      String email,
+      String avatarUrl,
+      String documentType,
+      String rawDocumentNumber,
+      String externalSource,
+      String externalId) {
+    try {
+      IdentityAccountResponse response =
+          restClient
+              .post()
+              .uri("/accounts/provision-synced")
+              .body(
+                  new ProvisionSyncedAccountRequest(
+                      "party", name, handle, email, avatarUrl, documentType, rawDocumentNumber, externalSource, externalId))
+              .retrieve()
+              .body(IdentityAccountResponse.class);
+      if (response == null) {
+        throw new IdentityProvisioningException("Identity Service returned an empty response sync-provisioning " + handle);
+      }
+      return new ProvisionedAccount(response.id(), response.name(), response.handle());
+    } catch (RestClientResponseException e) {
+      throw new IdentityProvisioningException("Identity Service rejected sync-provisioning " + handle + ": " + e.getResponseBodyAsString(), e);
+    } catch (RestClientException e) {
+      throw new IdentityProvisioningException("Identity Service unreachable while sync-provisioning " + handle, e);
+    }
+  }
+
   private record ProvisionAccountRequest(
       String accountType, String name, String handle, String email, String password, String documentType, String documentNumber) {}
+
+  private record ProvisionSyncedAccountRequest(
+      String accountType,
+      String name,
+      String handle,
+      String email,
+      String avatarUrl,
+      String documentType,
+      String documentNumber,
+      String externalSource,
+      String externalId) {}
 
   private record IdentityAccountResponse(java.util.UUID id, String name, String handle) {}
 }

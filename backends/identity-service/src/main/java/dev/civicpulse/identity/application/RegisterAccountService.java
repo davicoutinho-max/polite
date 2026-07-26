@@ -48,16 +48,9 @@ public class RegisterAccountService implements RegisterAccountUseCase {
   @Override
   @Transactional
   public Account provisionAccount(AccountType accountType, RegisterAccountCommand command) {
-    if (accountRepository.existsByEmail(command.email())) {
-      throw new DuplicateAccountException("email");
-    }
-    if (accountRepository.existsByHandle(command.handle())) {
-      throw new DuplicateAccountException("handle");
-    }
-
+    DocumentType documentType = command.documentType();
     String documentNumberHash = null;
     byte[] documentNumberEncrypted = null;
-    DocumentType documentType = command.documentType();
 
     if (accountType != AccountType.ADMIN) {
       // Mirrors the frontend's br-documents.ts rule exactly: a digit-count check, not a full
@@ -67,10 +60,29 @@ public class RegisterAccountService implements RegisterAccountUseCase {
         throw new InvalidDocumentNumberException(documentType == null ? DocumentType.CPF : documentType);
       }
       documentNumberHash = documentCipher.hash(digitsOnly);
-      if (accountRepository.existsByDocumentNumberHash(documentNumberHash)) {
-        throw new DuplicateAccountException(documentType.code().toUpperCase());
+
+      // Checked before email/handle uniqueness on purpose: a real politician/party registering
+      // with the same CPF/CNPJ a government-data sync already used to build an unclaimed profile
+      // (see Account.registerSynced) must claim that profile, not get rejected by its own
+      // synced email/handle already being "taken" — see Account.claim's javadoc.
+      var existingByDocument = accountRepository.findByDocumentNumberHash(documentNumberHash);
+      if (existingByDocument.isPresent()) {
+        Account existing = existingByDocument.get();
+        if (!existing.isSynced()) {
+          throw new DuplicateAccountException(documentType.code().toUpperCase());
+        }
+        existing.claim(passwordHasher.hash(command.rawPassword()), clock.instant());
+        return accountRepository.save(existing);
       }
+
       documentNumberEncrypted = documentCipher.encrypt(digitsOnly);
+    }
+
+    if (accountRepository.existsByEmail(command.email())) {
+      throw new DuplicateAccountException("email");
+    }
+    if (accountRepository.existsByHandle(command.handle())) {
+      throw new DuplicateAccountException("handle");
     }
 
     Instant now = clock.instant();

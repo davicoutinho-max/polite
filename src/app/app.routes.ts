@@ -37,9 +37,14 @@ export const routes: Routes = [
           import('./features/participation/participation-page').then((m) => m.ParticipationPage),
       },
       {
-        path: 'assistant',
-        title: 'Ask AI — CivicPulse',
-        loadComponent: () => import('./features/assistant/assistant-page').then((m) => m.AssistantPage),
+        path: 'bills',
+        title: 'Bills — CivicPulse',
+        loadComponent: () => import('./features/bills/bills-page').then((m) => m.BillsPage),
+      },
+      {
+        path: 'bills/:source/:id',
+        title: 'Bill — CivicPulse',
+        loadComponent: () => import('./features/bills/bill-detail/bill-detail').then((m) => m.BillDetailPage),
       },
       {
         path: 'fundraising',

@@ -51,6 +51,20 @@
 .quick-form__field input {
   width: 100%;
 }
+.quick-form__field select {
+  width: 100%;
+  font: inherit;
+  font-weight: 400;
+  padding: var(--cp-space-sm) var(--cp-space-md);
+  border-radius: var(--cp-radius);
+  border: 1px solid var(--cp-outline-variant);
+  background: var(--cp-surface-container-lowest);
+  color: var(--cp-on-surface);
+}
+.quick-form__field input[type='file'] {
+  font-size: 12px;
+  color: var(--cp-on-surface-variant);
+}
 .quick-form__error {
   display: flex; align-items: center; gap: var(--cp-space-xs);
   margin: 0; font-size: 13px; color: var(--cp-error);

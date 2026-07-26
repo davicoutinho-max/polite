@@ -2,7 +2,10 @@ package dev.civicpulse.platformconfig.adapter.in.web;
 
 import dev.civicpulse.platformconfig.adapter.in.web.dto.PartyRegistryResponse;
 import dev.civicpulse.platformconfig.adapter.in.web.dto.RegisterPartyRequest;
+import dev.civicpulse.platformconfig.adapter.in.web.dto.SyncPartyRequest;
 import dev.civicpulse.platformconfig.application.port.in.RegisterPartyUseCase;
+import dev.civicpulse.platformconfig.application.port.in.SyncPartyUseCase;
+import dev.civicpulse.platformconfig.application.port.in.SyncPartyUseCase.SyncPartyCommand;
 import dev.civicpulse.platformconfig.application.port.out.PartyRegistryRepository;
 import dev.civicpulse.platformconfig.domain.exception.PartyRegistryEntryNotFoundException;
 import jakarta.validation.Valid;
@@ -22,10 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class PartyRegistryController {
 
   private final RegisterPartyUseCase registerPartyUseCase;
+  private final SyncPartyUseCase syncPartyUseCase;
   private final PartyRegistryRepository partyRegistryRepository;
 
-  public PartyRegistryController(RegisterPartyUseCase registerPartyUseCase, PartyRegistryRepository partyRegistryRepository) {
+  public PartyRegistryController(
+      RegisterPartyUseCase registerPartyUseCase, SyncPartyUseCase syncPartyUseCase, PartyRegistryRepository partyRegistryRepository) {
     this.registerPartyUseCase = registerPartyUseCase;
+    this.syncPartyUseCase = syncPartyUseCase;
     this.partyRegistryRepository = partyRegistryRepository;
   }
 
@@ -45,6 +51,24 @@ public class PartyRegistryController {
             request.documentNumber());
     PartyRegistryResponse body = PartyRegistryResponse.from(entry);
     return ResponseEntity.created(URI.create("/parties/" + body.id())).body(body);
+  }
+
+  /** Internal-only: not routed to the public internet by the Gateway. Called by
+   * government-sync-service — see SyncPartyUseCase. */
+  @PostMapping("/sync")
+  public PartyRegistryResponse sync(@Valid @RequestBody SyncPartyRequest request) {
+    var entry =
+        syncPartyUseCase.syncParty(
+            new SyncPartyCommand(
+                request.name(),
+                request.acronym(),
+                request.number(),
+                request.logoUrl(),
+                request.documentType(),
+                request.documentNumber(),
+                request.externalSource(),
+                request.externalId()));
+    return PartyRegistryResponse.from(entry);
   }
 
   @GetMapping("/{id}")

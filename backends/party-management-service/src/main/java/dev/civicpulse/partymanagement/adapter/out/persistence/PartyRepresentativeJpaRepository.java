@@ -9,6 +9,8 @@ interface PartyRepresentativeJpaRepository extends JpaRepository<PartyRepresenta
 
   Optional<PartyRepresentativeJpaEntity> findByPartyIdAndPoliticianAccountId(UUID partyId, UUID politicianAccountId);
 
+  Optional<PartyRepresentativeJpaEntity> findByPoliticianAccountId(UUID politicianAccountId);
+
   boolean existsByPartyIdAndPoliticianAccountId(UUID partyId, UUID politicianAccountId);
 
   List<PartyRepresentativeJpaEntity> findByPartyId(UUID partyId);

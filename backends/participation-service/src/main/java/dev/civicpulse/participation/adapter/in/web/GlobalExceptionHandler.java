@@ -3,9 +3,11 @@ package dev.civicpulse.participation.adapter.in.web;
 import dev.civicpulse.participation.domain.exception.AlreadySignedException;
 import dev.civicpulse.participation.domain.exception.AlreadyVotedException;
 import dev.civicpulse.participation.domain.exception.ConsultationNotFoundException;
+import dev.civicpulse.participation.domain.exception.InvalidCpfException;
 import dev.civicpulse.participation.domain.exception.PetitionNotFoundException;
 import dev.civicpulse.participation.domain.exception.SurveyNotFoundException;
 import dev.civicpulse.participation.domain.exception.SurveyOptionNotFoundException;
+import dev.civicpulse.participation.domain.exception.VerificationFailedException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -44,6 +46,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AlreadyVotedException.class)
   public ProblemDetail handleAlreadyVoted(AlreadyVotedException ex) {
     return problem(HttpStatus.CONFLICT, "Already voted", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidCpfException.class)
+  public ProblemDetail handleInvalidCpf(InvalidCpfException ex) {
+    return problem(HttpStatus.BAD_REQUEST, "Invalid CPF", ex.getMessage());
+  }
+
+  @ExceptionHandler(VerificationFailedException.class)
+  public ProblemDetail handleVerificationFailed(VerificationFailedException ex) {
+    return problem(HttpStatus.BAD_REQUEST, "Verification failed", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

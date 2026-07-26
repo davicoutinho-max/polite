@@ -57,6 +57,15 @@ public class AccountJpaEntity {
   @Column(name = "avatar_url")
   private String avatarUrl;
 
+  // Nullable, only ever populated together — see V2__add_external_sync_tracking.sql's partial
+  // unique index. Presence of externalSource marks a government-data-sync-provisioned account
+  // (see Account.registerSynced) as opposed to a real signup.
+  @Column(name = "external_source")
+  private String externalSource;
+
+  @Column(name = "external_id")
+  private String externalId;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -80,6 +89,8 @@ public class AccountJpaEntity {
       boolean verified,
       Instant anonymizedAt,
       String avatarUrl,
+      String externalSource,
+      String externalId,
       Instant createdAt,
       Instant updatedAt) {
     this.id = id;
@@ -94,6 +105,8 @@ public class AccountJpaEntity {
     this.verified = verified;
     this.anonymizedAt = anonymizedAt;
     this.avatarUrl = avatarUrl;
+    this.externalSource = externalSource;
+    this.externalId = externalId;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -144,6 +157,14 @@ public class AccountJpaEntity {
 
   public String getAvatarUrl() {
     return avatarUrl;
+  }
+
+  public String getExternalSource() {
+    return externalSource;
+  }
+
+  public String getExternalId() {
+    return externalId;
   }
 
   public Instant getCreatedAt() {

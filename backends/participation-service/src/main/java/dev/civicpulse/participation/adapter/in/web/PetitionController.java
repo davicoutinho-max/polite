@@ -1,10 +1,14 @@
 package dev.civicpulse.participation.adapter.in.web;
 
+import dev.civicpulse.participation.adapter.in.web.dto.ConfirmSignatureRequest;
 import dev.civicpulse.participation.adapter.in.web.dto.CreatePetitionRequest;
 import dev.civicpulse.participation.adapter.in.web.dto.PetitionResponse;
-import dev.civicpulse.participation.adapter.in.web.dto.SignPetitionRequest;
+import dev.civicpulse.participation.adapter.in.web.dto.StartSignatureRequest;
+import dev.civicpulse.participation.adapter.in.web.dto.StartSignatureResponse;
 import dev.civicpulse.participation.application.port.in.GetPetitionUseCase;
 import dev.civicpulse.participation.application.port.in.ManagePetitionUseCase;
+import dev.civicpulse.participation.application.port.in.StartSignatureCommand;
+import dev.civicpulse.participation.domain.model.PetitionType;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -32,7 +36,18 @@ public class PetitionController {
 
   @PostMapping
   public ResponseEntity<PetitionResponse> create(@Valid @RequestBody CreatePetitionRequest request) {
-    var petition = managePetitionUseCase.create(request.title(), request.summary(), request.category(), request.goal(), request.deadline());
+    var petition =
+        managePetitionUseCase.create(
+            request.title(),
+            request.summary(),
+            request.category(),
+            request.goal(),
+            request.deadline(),
+            request.imageUrl(),
+            request.videoUrl(),
+            request.fileUrl(),
+            request.fileName(),
+            PetitionType.fromCode(request.petitionType()));
     PetitionResponse body = PetitionResponse.from(petition);
     return ResponseEntity.created(URI.create("/petitions/" + body.id())).body(body);
   }
@@ -47,9 +62,26 @@ public class PetitionController {
     return getPetitionUseCase.list(page, pageSize).stream().map(PetitionResponse::from).toList();
   }
 
-  @PostMapping("/{id}/signatures")
-  public ResponseEntity<Void> sign(@PathVariable UUID id, @Valid @RequestBody SignPetitionRequest request) {
-    managePetitionUseCase.sign(id, request.citizenAccountId());
+  @PostMapping("/{id}/signatures/start")
+  public StartSignatureResponse startSignature(@PathVariable UUID id, @Valid @RequestBody StartSignatureRequest request) {
+    var command =
+        new StartSignatureCommand(
+            request.fullName(),
+            request.cpf(),
+            request.birthDate(),
+            request.city(),
+            request.state(),
+            request.verificationMethod(),
+            request.contact(),
+            request.electoralData(),
+            request.eSignatureConsent(),
+            request.typedSignature());
+    return StartSignatureResponse.from(managePetitionUseCase.startSignature(id, request.citizenAccountId(), command));
+  }
+
+  @PostMapping("/{id}/signatures/confirm")
+  public ResponseEntity<Void> confirmSignature(@PathVariable UUID id, @Valid @RequestBody ConfirmSignatureRequest request) {
+    managePetitionUseCase.confirmSignature(id, request.citizenAccountId(), request.verificationId(), request.code());
     return ResponseEntity.noContent().build();
   }
 

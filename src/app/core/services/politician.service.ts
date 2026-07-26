@@ -13,6 +13,7 @@ import {
   TeamMember,
   TransparencyReport,
 } from '../models';
+import { TranslateService } from './translate.service';
 import { DirectoryService } from './directory.service';
 
 const FALLBACK_AVATAR =
@@ -28,13 +29,21 @@ const PLATFORM_ICONS: Record<string, string> = {
   tiktok: 'music_note',
 };
 
-export const STATUS_TAGS: Record<string, StatusTag> = {
-  filed: { label: 'Filed', severity: 'neutral' },
-  in_committee: { label: 'In Committee', severity: 'warning' },
-  floor_vote: { label: 'Floor Vote', severity: 'info' },
-  passed: { label: 'Approved', severity: 'success' },
-  rejected: { label: 'Rejected', severity: 'danger' },
+const STATUS_TAG_META: Record<string, [string, string, StatusTag['severity']]> = {
+  filed: ['label.bill-status-filed', 'Filed', 'neutral'],
+  in_committee: ['label.bill-status-in-committee', 'In Committee', 'warning'],
+  floor_vote: ['label.bill-status-floor-vote', 'Floor Vote', 'info'],
+  passed: ['label.bill-status-approved', 'Approved', 'success'],
+  rejected: ['label.bill-status-rejected', 'Rejected', 'danger'],
 };
+
+/** `status` is a stable backend enum code (legislative-item status) — always safe to translate
+ * for display, unlike feed-service's post tags which are literal text posted to and persisted by
+ * the backend as-is. */
+export function statusTag(translate: TranslateService, status: string): StatusTag {
+  const meta = STATUS_TAG_META[status];
+  return meta ? { label: translate.t(meta[0], meta[1]), severity: meta[2] } : { label: status, severity: 'neutral' };
+}
 
 export const STATUS_PROGRESS: Record<string, number> = {
   filed: 25,
@@ -195,6 +204,7 @@ interface CareerMilestoneResponseDto {
 export class PoliticianService {
   private readonly http = inject(HttpClient);
   private readonly directory = inject(DirectoryService);
+  private readonly translate = inject(TranslateService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/legislative`;
 
   private readonly _politician = signal<Politician>(EMPTY_POLITICIAN);
@@ -277,7 +287,7 @@ export class PoliticianService {
           reference: i.reference,
           title: i.title,
           summary: i.summary ?? '',
-          status: STATUS_TAGS[i.status] ?? { label: i.status, severity: 'neutral' as const },
+          status: statusTag(this.translate, i.status),
           date: i.itemDate,
         });
         const projectItems = items.filter((i) => i.category === 'project');

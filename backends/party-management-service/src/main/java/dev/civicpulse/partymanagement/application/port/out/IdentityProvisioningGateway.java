@@ -14,5 +14,19 @@ public interface IdentityProvisioningGateway {
   ProvisionedAccount provisionPoliticianAccount(
       String name, String handle, String email, String rawPassword, String documentType, String rawDocumentNumber);
 
+  /** Government-data-sync path (see government-sync-service) — the politician is a real deputy/
+   * senator who never signed up, so there is no password; idempotent by
+   * {@code (externalSource, externalId)} on Identity's side (re-syncing updates instead of
+   * duplicating). */
+  ProvisionedAccount provisionSyncedPoliticianAccount(
+      String name,
+      String handle,
+      String email,
+      String avatarUrl,
+      String documentType,
+      String rawDocumentNumber,
+      String externalSource,
+      String externalId);
+
   record ProvisionedAccount(UUID accountId, String name, String handle) {}
 }

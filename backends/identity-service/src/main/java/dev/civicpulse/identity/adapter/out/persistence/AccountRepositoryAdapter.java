@@ -39,6 +39,11 @@ class AccountRepositoryAdapter implements AccountRepository {
   }
 
   @Override
+  public Optional<Account> findByExternalSourceAndExternalId(String externalSource, String externalId) {
+    return jpaRepository.findByExternalSourceAndExternalId(externalSource, externalId).map(mapper::toDomain);
+  }
+
+  @Override
   public boolean existsByEmail(String email) {
     return jpaRepository.existsByEmail(email);
   }
@@ -51,5 +56,10 @@ class AccountRepositoryAdapter implements AccountRepository {
   @Override
   public boolean existsByDocumentNumberHash(String documentNumberHash) {
     return jpaRepository.existsByDocumentNumberHash(documentNumberHash);
+  }
+
+  @Override
+  public Optional<Account> findByDocumentNumberHash(String documentNumberHash) {
+    return jpaRepository.findByDocumentNumberHash(documentNumberHash).map(mapper::toDomain);
   }
 }

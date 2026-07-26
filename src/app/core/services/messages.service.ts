@@ -465,7 +465,7 @@ export class MessagesService {
         id: politician.id,
         name: politician.name,
         handle: politician.handle,
-        avatarUrl: politician.avatarUrl,
+        avatarUrl: politician.avatarUrl ?? '',
         verified: politician.verified,
         role: politician.office,
       };
@@ -474,7 +474,7 @@ export class MessagesService {
     }
     const party = this.directory.parties().find((p) => p.id === accountId);
     if (party) {
-      const summary: UserSummary = { id: party.id, name: party.name, avatarUrl: party.logoUrl, verified: true, role: 'Official channel' };
+      const summary: UserSummary = { id: party.id, name: party.name, avatarUrl: party.logoUrl ?? '', verified: true, role: 'Official channel' };
       this.participantCache.set(accountId, summary);
       return of(summary);
     }

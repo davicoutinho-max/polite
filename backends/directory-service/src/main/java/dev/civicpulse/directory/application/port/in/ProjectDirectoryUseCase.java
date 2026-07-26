@@ -13,8 +13,11 @@ public interface ProjectDirectoryUseCase {
    * itself doesn't carry them. No-ops for non-politician account types. */
   void onAccountRegistered(UUID accountId, String accountType);
 
-  /** {@code RepresentativeLinked} — carries the office/role title, state, and party linkage. */
-  void onRepresentativeLinked(UUID politicianAccountId, UUID partyId, String roleTitle, String state, Instant linkedAt);
+  /** {@code RepresentativeLinked} — carries the office/role title, state, and party linkage.
+   * {@code govLevel} (a {@code gov_level_options} code) is null except when published by
+   * government-sync-service — the two admin-driven flows leave the projection's existing level
+   * untouched. */
+  void onRepresentativeLinked(UUID politicianAccountId, UUID partyId, String roleTitle, String state, String govLevel, Instant linkedAt);
 
   /** {@code PoliticianRegistered} — published by Party Management at registration time;
    * updates the party linkage if the projection already exists. */

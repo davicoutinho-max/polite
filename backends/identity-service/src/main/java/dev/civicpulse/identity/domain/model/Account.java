@@ -26,6 +26,8 @@ public final class Account {
   private boolean verified;
   private Instant anonymizedAt;
   private String avatarUrl;
+  private String externalSource;
+  private String externalId;
   private final Instant createdAt;
   private Instant updatedAt;
 
@@ -42,6 +44,8 @@ public final class Account {
       boolean verified,
       Instant anonymizedAt,
       String avatarUrl,
+      String externalSource,
+      String externalId,
       Instant createdAt,
       Instant updatedAt) {
     this.id = Objects.requireNonNull(id);
@@ -56,6 +60,8 @@ public final class Account {
     this.verified = verified;
     this.anonymizedAt = anonymizedAt;
     this.avatarUrl = avatarUrl;
+    this.externalSource = externalSource;
+    this.externalId = externalId;
     this.createdAt = Objects.requireNonNull(createdAt);
     this.updatedAt = Objects.requireNonNull(updatedAt);
 
@@ -92,6 +98,48 @@ public final class Account {
         false,
         null,
         null,
+        null,
+        null,
+        now,
+        now);
+  }
+
+  /** Registers an account on behalf of a real person/organization who never signed up —
+   * provisioned by a government-data sync job (see government-sync-service), not by the account
+   * holder. There is no password to store (reusing {@link #anonymize}'s existing convention of an
+   * empty, never-matchable hash rather than relaxing the domain's non-null invariant); login is
+   * explicitly refused for any account carrying an {@code externalSource} — see
+   * AuthenticateService. {@code externalSource}/{@code externalId} together are the sync job's
+   * idempotency key (e.g. "CAMARA_DEPUTADO"/"204379") so re-running it updates instead of
+   * duplicating. */
+  public static Account registerSynced(
+      AccountId id,
+      AccountType accountType,
+      String name,
+      String handle,
+      String email,
+      DocumentType documentType,
+      String documentNumberHash,
+      byte[] documentNumberEncrypted,
+      String avatarUrl,
+      String externalSource,
+      String externalId,
+      Instant now) {
+    return new Account(
+        id,
+        accountType,
+        name,
+        handle,
+        email,
+        "",
+        documentType,
+        documentNumberHash,
+        documentNumberEncrypted,
+        false,
+        null,
+        avatarUrl,
+        Objects.requireNonNull(externalSource, "externalSource"),
+        Objects.requireNonNull(externalId, "externalId"),
         now,
         now);
   }
@@ -111,6 +159,8 @@ public final class Account {
       boolean verified,
       Instant anonymizedAt,
       String avatarUrl,
+      String externalSource,
+      String externalId,
       Instant createdAt,
       Instant updatedAt) {
     return new Account(
@@ -126,6 +176,8 @@ public final class Account {
         verified,
         anonymizedAt,
         avatarUrl,
+        externalSource,
+        externalId,
         createdAt,
         updatedAt);
   }
@@ -154,6 +206,43 @@ public final class Account {
 
   public boolean isAnonymized() {
     return anonymizedAt != null;
+  }
+
+  /** True for accounts provisioned by a government-data sync job rather than a real signup —
+   * these can never log in (see {@link #registerSynced}). */
+  public boolean isSynced() {
+    return externalSource != null;
+  }
+
+  /** Refreshes the display fields a re-sync might have changed (official photo, name spelling).
+   * No-op for anything else — a synced account never gains a password or document through this
+   * path. */
+  public void updateSyncedProfile(String name, String avatarUrl, Instant now) {
+    this.name = requireNonBlank(name, "name");
+    this.avatarUrl = avatarUrl;
+    this.updatedAt = now;
+  }
+
+  /** Grants real login access to a profile that a government-data sync created (see
+   * {@link #registerSynced}) — the "someone registers with the same CPF/CNPJ a synced profile was
+   * built from" flow: rather than creating a second, duplicate profile for the same real person,
+   * {@code RegisterAccountService} attaches credentials to this one instead. Name/handle/email are
+   * deliberately left untouched (the government-sourced official identity, not whatever the
+   * claimer typed, remains the profile's public data) — this method only ever changes whether the
+   * account can log in. Clearing {@code externalSource}/{@code externalId} is what actually flips
+   * {@link #isSynced()} to false (the login guard in AuthenticateService keys off that, not off
+   * password presence alone) and, as a side effect, makes this record invisible to future sync
+   * runs' {@code findByExternalSourceAndExternalId} lookup — deliberately: once claimed, a real
+   * owner controls this profile, and the sync job re-provisioning/overwriting their photo or name
+   * on its next run would be the wrong behavior, not a bug. */
+  public void claim(String passwordHash, Instant now) {
+    if (!isSynced()) {
+      throw new IllegalStateException("only a synced account can be claimed");
+    }
+    this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
+    this.externalSource = null;
+    this.externalId = null;
+    this.updatedAt = now;
   }
 
   private static String requireNonBlank(String value, String field) {
@@ -209,6 +298,14 @@ public final class Account {
 
   public Optional<String> avatarUrl() {
     return Optional.ofNullable(avatarUrl);
+  }
+
+  public Optional<String> externalSource() {
+    return Optional.ofNullable(externalSource);
+  }
+
+  public Optional<String> externalId() {
+    return Optional.ofNullable(externalId);
   }
 
   public Instant createdAt() {

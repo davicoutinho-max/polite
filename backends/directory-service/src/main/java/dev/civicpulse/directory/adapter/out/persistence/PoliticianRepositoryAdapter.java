@@ -45,8 +45,8 @@ class PoliticianRepositoryAdapter implements PoliticianRepository {
 
   @Override
   @Transactional
-  public void assignOffice(UUID accountId, String office, String state, Instant now) {
-    jpaRepository.assignOffice(accountId, office, state, now);
+  public void assignOffice(UUID accountId, String office, String state, GovLevel level, Instant now) {
+    jpaRepository.assignOffice(accountId, office, state, level, now);
   }
 
   @Override

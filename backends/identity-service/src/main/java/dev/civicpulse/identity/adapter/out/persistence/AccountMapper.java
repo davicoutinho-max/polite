@@ -21,6 +21,8 @@ class AccountMapper {
         entity.isVerified(),
         entity.getAnonymizedAt(),
         entity.getAvatarUrl(),
+        entity.getExternalSource(),
+        entity.getExternalId(),
         entity.getCreatedAt(),
         entity.getUpdatedAt());
   }
@@ -39,6 +41,8 @@ class AccountMapper {
         account.verified(),
         account.anonymizedAt().orElse(null),
         account.avatarUrl().orElse(null),
+        account.externalSource().orElse(null),
+        account.externalId().orElse(null),
         account.createdAt(),
         account.updatedAt());
   }

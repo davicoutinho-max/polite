@@ -267,7 +267,7 @@ export class PartyService {
       })
       .subscribe({
         next: () => {
-          const rep: PartyRepresentative = { id: candidate.id, name: candidate.name, role: candidate.office, avatarUrl: candidate.avatarUrl };
+          const rep: PartyRepresentative = { id: candidate.id, name: candidate.name, role: candidate.office, avatarUrl: candidate.avatarUrl ?? '' };
           this._party.update((party) =>
             party.representatives.some((r) => r.id === candidate.id) ? party : { ...party, representatives: [...party.representatives, rep] },
           );

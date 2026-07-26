@@ -34,11 +34,11 @@ public class RouteConfig {
   public RouteLocator routes(RouteLocatorBuilder builder, ServiceUris uris) {
     return builder
         .routes()
-        // --- identity-service: /accounts/provision is structurally unreachable (see class javadoc) ---
+        // --- identity-service: /accounts/provision(-synced) is structurally unreachable (see class javadoc) ---
         .route(
             "identity-accounts-provision-blocked",
             r ->
-                r.path("/api/identity/accounts/provision")
+                r.path("/api/identity/accounts/provision", "/api/identity/accounts/provision-synced")
                     .filters(
                         f ->
                             f.filter(
@@ -58,6 +58,34 @@ public class RouteConfig {
                     .filters(f -> f.stripPrefix(2))
                     .uri(uris.identityUri()))
         .route("identity-auth", r -> r.path("/api/identity/auth/**").filters(f -> f.stripPrefix(2)).uri(uris.identityUri()))
+        // --- government-sync-only endpoints: same "structurally unreachable" treatment as
+        // /accounts/provision above — party-management's /politicians/sync and platform's
+        // /parties/sync must be blocked ahead of their services' own blanket /** routes below,
+        // since those would otherwise happily proxy them through to any caller. ---
+        .route(
+            "party-management-sync-blocked",
+            r ->
+                r.path("/api/party-management/politicians/sync")
+                    .filters(
+                        f ->
+                            f.filter(
+                                (exchange, chain) -> {
+                                  exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                                  return exchange.getResponse().setComplete();
+                                }))
+                    .uri(uris.partyManagementUri()))
+        .route(
+            "platform-parties-sync-blocked",
+            r ->
+                r.path("/api/platform/parties/sync")
+                    .filters(
+                        f ->
+                            f.filter(
+                                (exchange, chain) -> {
+                                  exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                                  return exchange.getResponse().setComplete();
+                                }))
+                    .uri(uris.platformUri()))
         // --- the remaining 13 services: one straightforward prefix-strip route each ---
         .route("directory", r -> r.path("/api/directory/**").filters(f -> f.stripPrefix(2)).uri(uris.directoryUri()))
         .route("party-management", r -> r.path("/api/party-management/**").filters(f -> f.stripPrefix(2)).uri(uris.partyManagementUri()))

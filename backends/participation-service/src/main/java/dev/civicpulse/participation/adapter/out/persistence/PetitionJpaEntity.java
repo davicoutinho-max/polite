@@ -28,9 +28,36 @@ public class PetitionJpaEntity {
 
   private LocalDate deadline;
 
+  @Column(name = "image_url")
+  private String imageUrl;
+
+  @Column(name = "video_url")
+  private String videoUrl;
+
+  @Column(name = "file_url")
+  private String fileUrl;
+
+  @Column(name = "file_name")
+  private String fileName;
+
+  @Column(name = "petition_type", nullable = false)
+  private String petitionType;
+
   protected PetitionJpaEntity() {}
 
-  public PetitionJpaEntity(UUID id, String title, String summary, String category, int goal, int signaturesCount, LocalDate deadline) {
+  public PetitionJpaEntity(
+      UUID id,
+      String title,
+      String summary,
+      String category,
+      int goal,
+      int signaturesCount,
+      LocalDate deadline,
+      String imageUrl,
+      String videoUrl,
+      String fileUrl,
+      String fileName,
+      String petitionType) {
     this.id = id;
     this.title = title;
     this.summary = summary;
@@ -38,6 +65,11 @@ public class PetitionJpaEntity {
     this.goal = goal;
     this.signaturesCount = signaturesCount;
     this.deadline = deadline;
+    this.imageUrl = imageUrl;
+    this.videoUrl = videoUrl;
+    this.fileUrl = fileUrl;
+    this.fileName = fileName;
+    this.petitionType = petitionType;
   }
 
   public UUID getId() {
@@ -66,5 +98,25 @@ public class PetitionJpaEntity {
 
   public LocalDate getDeadline() {
     return deadline;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public String getVideoUrl() {
+    return videoUrl;
+  }
+
+  public String getFileUrl() {
+    return fileUrl;
+  }
+
+  public String getFileName() {
+    return fileName;
+  }
+
+  public String getPetitionType() {
+    return petitionType;
   }
 }

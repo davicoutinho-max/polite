@@ -1,0 +1,132 @@
+@if (loading()) {
+  <div class="bill-detail">
+    <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+  </div>
+} @else if (notFound() || !bill()) {
+  <div class="bill-detail">
+    <a class="bill-detail__back" routerLink="/bills">
+      <ui-icon name="arrow_back" [size]="18" />
+      {{ 'button.back-to-bills' | translate: 'Back to Bills' }}
+    </a>
+    <ui-empty
+      icon="gavel"
+      [title]="'empty.bill-not-found.title' | translate: 'Bill not found'"
+      [description]="'empty.bill-not-found.desc' | translate: 'This bill could not be loaded from the official open-data service.'"
+    />
+  </div>
+} @else {
+  @let b = bill()!;
+  <div class="bill-detail">
+    <a class="bill-detail__back" routerLink="/bills">
+      <ui-icon name="arrow_back" [size]="18" />
+      {{ 'button.back-to-bills' | translate: 'Back to Bills' }}
+    </a>
+
+    <app-page-header [title]="b.identification" [subtitle]="b.typeLabel" icon="gavel" />
+
+    <ui-card padding="lg" class="bill-detail__summary">
+      <div class="bill-detail__tags">
+        @if (b.typeLabel) {
+          <ui-tag [label]="b.typeLabel" severity="secondary" [uppercase]="true" />
+        }
+        <ui-tag [label]="b.source === 'camara' ? ('label.chamber-of-deputies' | translate: 'Chamber of Deputies') : ('label.federal-senate' | translate: 'Federal Senate')" severity="neutral" />
+        @if (b.presentedDate) {
+          <span class="bill-detail__date">
+            <ui-icon name="calendar_month" [size]="16" />
+            {{ b.presentedDate }}
+          </span>
+        }
+      </div>
+
+      <p class="bill-detail__summary-text">{{ b.fullSummary || b.summary }}</p>
+
+      @if (b.author) {
+        <p class="bill-detail__meta"><strong>{{ 'label.author' | translate: 'Author' }}:</strong> {{ b.author }}</p>
+      }
+      @if (b.keywords) {
+        <p class="bill-detail__meta"><strong>{{ 'label.keywords' | translate: 'Keywords' }}:</strong> {{ b.keywords }}</p>
+      }
+
+      <div class="bill-detail__actions">
+        <a class="bill-detail__link bill-detail__link--filled" [href]="b.officialUrl" target="_blank" rel="noopener">
+          <ui-icon name="open_in_new" [size]="18" />
+          {{ 'button.view-official-page' | translate: 'View official page' }}
+        </a>
+        @if (b.fullTextUrl) {
+          <a class="bill-detail__link" [href]="b.fullTextUrl" target="_blank" rel="noopener">
+            <ui-icon name="description" [size]="18" />
+            {{ 'button.view-full-text' | translate: 'View full text' }}
+          </a>
+        }
+      </div>
+    </ui-card>
+
+    <section class="bill-detail__section">
+      <h2 class="bill-detail__section-title">{{ 'label.current-status' | translate: 'Current status' }}</h2>
+      @if (b.currentStatusDescription) {
+        <ui-card padding="md">
+          <p class="bill-detail__status-desc">{{ b.currentStatusDescription }}</p>
+          <div class="bill-detail__status-meta">
+            @if (b.currentStatusLocation) {
+              <ui-tag [label]="b.currentStatusLocation" severity="info" />
+            }
+            @if (b.currentStatusDate) {
+              <span class="bill-detail__date">
+                <ui-icon name="calendar_month" [size]="16" />
+                {{ b.currentStatusDate }}
+              </span>
+            }
+          </div>
+        </ui-card>
+      } @else {
+        <ui-empty
+          icon="hourglass_empty"
+          [title]="'empty.no-status.title' | translate: 'No status recorded'"
+          [description]="'empty.no-status-for-bill' | translate: 'This source does not report a current processing status for this bill.'"
+        />
+      }
+    </section>
+
+    <section class="bill-detail__section">
+      <h2 class="bill-detail__section-title">{{ 'label.voting-status' | translate: 'Voting status' }}</h2>
+      @if (votingLoading()) {
+        <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+      } @else if (votingRecords().length === 0) {
+        <ui-empty
+          icon="how_to_vote"
+          [title]="'empty.no-votes.title' | translate: 'No recorded votes'"
+          [description]="'empty.no-votes-for-bill' | translate: 'No plenary or committee votes have been recorded for this bill in the official open-data service.'"
+        />
+      } @else {
+        <div class="bill-detail__votes">
+          @for (record of votingRecords(); track record.id) {
+            <ui-card padding="md" class="vote-record">
+              <div class="vote-record__head">
+                <ui-tag
+                  [label]="record.approved === true ? ('label.approved' | translate: 'Approved') : record.approved === false ? ('label.rejected' | translate: 'Rejected') : ('label.registered' | translate: 'Registered')"
+                  [severity]="record.approved === true ? 'success' : record.approved === false ? 'danger' : 'neutral'"
+                />
+                <span class="bill-detail__date">
+                  <ui-icon name="calendar_month" [size]="16" />
+                  {{ record.date }}
+                </span>
+                @if (record.location) {
+                  <ui-tag [label]="record.location" severity="neutral" />
+                }
+              </div>
+              <p class="vote-record__desc">{{ record.description }}</p>
+              @if (record.tally; as tally) {
+                <div class="vote-record__tally">
+                  <span class="vote-record__tally-item vote-record__tally-item--yes">{{ 'label.yes' | translate: 'Yes' }}: {{ tally.yes }}</span>
+                  <span class="vote-record__tally-item vote-record__tally-item--no">{{ 'label.no' | translate: 'No' }}: {{ tally.no }}</span>
+                  <span class="vote-record__tally-item">{{ 'label.abstain' | translate: 'Abstain' }}: {{ tally.abstain }}</span>
+                  <span class="vote-record__tally-item">{{ 'label.absent' | translate: 'Absent' }}: {{ tally.absent }}</span>
+                </div>
+              }
+            </ui-card>
+          }
+        </div>
+      }
+    </section>
+  </div>
+}

@@ -3,6 +3,8 @@ package dev.civicpulse.platformconfig.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +18,7 @@ import dev.civicpulse.platformconfig.domain.model.PartyRegistryEntry;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,10 +46,11 @@ class RegisterPartyServiceTest {
   @Test
   void registersPartyAndPublishesEvent() {
     UUID accountId = UUID.randomUUID();
-    when(partyRegistryRepository.existsByAcronym("PROG")).thenReturn(false);
-    when(partyRegistryRepository.existsByNumber(13)).thenReturn(false);
     when(identityProvisioningGateway.provisionPartyAccount("Progressive Party", "progressive", "party@example.com", "s3cret!", "cnpj", "11222333000181"))
         .thenReturn(new ProvisionedAccount(accountId, "Progressive Party", "progressive"));
+    when(partyRegistryRepository.findById(accountId)).thenReturn(Optional.empty());
+    when(partyRegistryRepository.existsByAcronym("PROG")).thenReturn(false);
+    when(partyRegistryRepository.existsByNumber(13)).thenReturn(false);
     when(partyRegistryRepository.save(any(PartyRegistryEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     PartyRegistryEntry result =
@@ -64,6 +68,10 @@ class RegisterPartyServiceTest {
 
   @Test
   void rejectsDuplicateAcronym() {
+    UUID accountId = UUID.randomUUID();
+    when(identityProvisioningGateway.provisionPartyAccount(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new ProvisionedAccount(accountId, "Progressive Party", "progressive"));
+    when(partyRegistryRepository.findById(accountId)).thenReturn(Optional.empty());
     when(partyRegistryRepository.existsByAcronym("PROG")).thenReturn(true);
 
     assertThatThrownBy(
@@ -73,11 +81,37 @@ class RegisterPartyServiceTest {
 
   @Test
   void rejectsDuplicateNumber() {
+    UUID accountId = UUID.randomUUID();
+    when(identityProvisioningGateway.provisionPartyAccount(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new ProvisionedAccount(accountId, "Progressive Party", "progressive"));
+    when(partyRegistryRepository.findById(accountId)).thenReturn(Optional.empty());
     when(partyRegistryRepository.existsByAcronym("PROG")).thenReturn(false);
     when(partyRegistryRepository.existsByNumber(13)).thenReturn(true);
 
     assertThatThrownBy(
             () -> service.registerParty("Progressive Party", "PROG", 13, null, null, "progressive", "party@example.com", "s3cret!", "cnpj", "11222333000181"))
         .isInstanceOf(DuplicatePartyRegistrationException.class);
+  }
+
+  @Test
+  void claimingAnAlreadySyncedPartyAccountReturnsItsExistingRegistryEntryUnchanged() {
+    // Identity turns this into a claim (same CNPJ as an already-synced party account — see
+    // Account.claim) when it recognizes the document number; government-sync-service's registry
+    // row for it already exists and must not be duplicated or silently renamed/renumbered.
+    UUID accountId = UUID.randomUUID();
+    PartyRegistryEntry existing = PartyRegistryEntry.register(accountId, "Progressistas", "PROG", 981866, null, null, NOW);
+    when(identityProvisioningGateway.provisionPartyAccount(any(), any(), any(), any(), any(), any()))
+        .thenReturn(new ProvisionedAccount(accountId, "Progressive Party", "progressive"));
+    when(partyRegistryRepository.findById(accountId)).thenReturn(Optional.of(existing));
+
+    PartyRegistryEntry result =
+        service.registerParty(
+            "Progressive Party", "PROG", 13, "Jane Doe", "Progressivism", "progressive", "party@example.com", "s3cret!", "cnpj", "11222333000181");
+
+    assertThat(result).isSameAs(existing);
+    verify(partyRegistryRepository, never()).existsByAcronym(any());
+    verify(partyRegistryRepository, never()).existsByNumber(anyInt());
+    verify(partyRegistryRepository, never()).save(any());
+    verify(eventPublisher, never()).publish(any());
   }
 }

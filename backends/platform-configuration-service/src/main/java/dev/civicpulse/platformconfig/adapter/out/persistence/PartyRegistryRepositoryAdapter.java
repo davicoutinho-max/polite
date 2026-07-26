@@ -29,6 +29,11 @@ class PartyRegistryRepositoryAdapter implements PartyRegistryRepository {
   }
 
   @Override
+  public Optional<PartyRegistryEntry> findByAcronym(String acronym) {
+    return jpaRepository.findByAcronym(acronym).map(mapper::toDomain);
+  }
+
+  @Override
   public boolean existsByAcronym(String acronym) {
     return jpaRepository.existsByAcronym(acronym);
   }

@@ -11,6 +11,9 @@ public interface PartyRegistryRepository {
 
   Optional<PartyRegistryEntry> findById(UUID id);
 
+  /** Upsert-by-acronym lookup for the government-data sync flow — see SyncPartyUseCase. */
+  Optional<PartyRegistryEntry> findByAcronym(String acronym);
+
   boolean existsByAcronym(String acronym);
 
   boolean existsByNumber(int number);

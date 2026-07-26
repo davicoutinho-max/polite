@@ -10,6 +10,7 @@ import dev.civicpulse.directory.application.port.out.AccountLookupGateway;
 import dev.civicpulse.directory.application.port.out.AccountLookupGateway.AccountSummary;
 import dev.civicpulse.directory.application.port.out.PartyRepository;
 import dev.civicpulse.directory.application.port.out.PoliticianRepository;
+import dev.civicpulse.directory.domain.model.GovLevel;
 import dev.civicpulse.directory.domain.model.Party;
 import dev.civicpulse.directory.domain.model.PartySpectrum;
 import dev.civicpulse.directory.domain.model.Politician;
@@ -79,10 +80,10 @@ class ProjectDirectoryServiceTest {
     when(partyRepository.findById(partyId))
         .thenReturn(Optional.of(Party.project(partyId, "Progressive Party", "PROG", 13, null, PartySpectrum.CENTER_LEFT, null, null, null, NOW)));
 
-    service.onRepresentativeLinked(accountId, partyId, "Deputy", "São Paulo", NOW);
+    service.onRepresentativeLinked(accountId, partyId, "Deputy", "São Paulo", "federal", NOW);
 
     verify(politicianRepository).assignParty(accountId, partyId, "PROG", NOW);
-    verify(politicianRepository).assignOffice(accountId, "Deputy", "São Paulo", NOW);
+    verify(politicianRepository).assignOffice(accountId, "Deputy", "São Paulo", GovLevel.FEDERAL, NOW);
     verify(politicianRepository, never()).save(any());
   }
 
@@ -98,7 +99,7 @@ class ProjectDirectoryServiceTest {
     service.onPoliticianRegistered(accountId, partyId, NOW);
 
     verify(politicianRepository).assignParty(accountId, partyId, "PROG", NOW);
-    verify(politicianRepository, never()).assignOffice(any(), any(), any(), any());
+    verify(politicianRepository, never()).assignOffice(any(), any(), any(), any(), any());
   }
 
   @Test

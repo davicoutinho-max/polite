@@ -44,7 +44,7 @@ export class NewConversationPicker {
       id: p.id,
       name: p.name,
       handle: p.handle,
-      avatarUrl: p.avatarUrl,
+      avatarUrl: p.avatarUrl ?? '',
       verified: p.verified,
       role: [p.office, p.partyAcronym].filter(Boolean).join(' · '),
     }));
@@ -52,7 +52,7 @@ export class NewConversationPicker {
       id: p.id,
       name: p.name,
       handle: p.acronym,
-      avatarUrl: p.logoUrl,
+      avatarUrl: p.logoUrl ?? '',
       verified: true,
       role: 'Party',
     }));

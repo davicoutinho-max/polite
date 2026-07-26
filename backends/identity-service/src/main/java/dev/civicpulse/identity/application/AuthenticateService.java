@@ -56,7 +56,10 @@ public class AuthenticateService implements AuthenticateUseCase {
     Account account =
         accountRepository.findByEmail(command.email()).orElseThrow(InvalidCredentialsException::new);
 
-    if (account.isAnonymized() || !passwordHasher.matches(command.rawPassword(), account.passwordHash())) {
+    // isSynced() must short-circuit before passwordHasher.matches() the same way isAnonymized()
+    // already does — a synced account's passwordHash is an empty, never-set string (see
+    // Account.registerSynced), not a real hash to compare against.
+    if (account.isAnonymized() || account.isSynced() || !passwordHasher.matches(command.rawPassword(), account.passwordHash())) {
       throw new InvalidCredentialsException();
     }
 

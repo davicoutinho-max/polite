@@ -107,3 +107,16 @@ Backend service ports run 8081, 8082, 8083... sequentially per service —
 (see the table above) and will fail to bind if reused. elections-service
 was the 10th service and took `8091` instead of `8090` for this reason;
 keep skipping 8090 for any future service in the sequence.
+
+`government-sync-service` (port `8100`, the 15th service) is the one
+exception to "one database per service" above — it's a stateless
+orchestrator with no persistence of its own, only outbound REST calls to
+the Câmara/Senado open-data APIs and to the internal `/politicians/sync`,
+`/parties/sync`, `/accounts/provision-synced` endpoints (party-management,
+platform-configuration, identity respectively) that do the actual
+upserting. See its `SyncFederalLegislatureService` for the sync
+orchestration and `FederalSyncScheduler` for the daily cron
+(`POST /sync/federal/run` triggers the same sync on demand — reachable
+directly on `:8100`, not routed through the Gateway, since the platform
+has no permission-gating infrastructure yet to safely expose a
+"resync everything" endpoint to the internet).

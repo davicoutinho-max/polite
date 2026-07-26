@@ -9,7 +9,7 @@ export interface PoliticianSummary {
   readonly id: string;
   readonly name: string;
   readonly handle: string;
-  readonly avatarUrl: string;
+  readonly avatarUrl: string | null;
   readonly verified: boolean;
   readonly office: string;
   readonly level: GovLevel;
@@ -26,7 +26,7 @@ export interface PartySummary {
   readonly name: string;
   readonly acronym: string;
   readonly number: number;
-  readonly logoUrl: string;
+  readonly logoUrl: string | null;
   readonly spectrum: PartySpectrum;
   readonly ideology: string;
   readonly members: number;

@@ -13,6 +13,10 @@ public interface PartyRepresentativeRepository {
 
   Optional<PartyRepresentative> findByPartyIdAndPoliticianAccountId(UUID partyId, UUID politicianAccountId);
 
+  /** Global lookup, regardless of party — used by the sync flow to detect a party switch (a
+   * politician linked to a different party than the one the sync run is currently processing). */
+  Optional<PartyRepresentative> findByPoliticianAccountId(UUID politicianAccountId);
+
   boolean existsByPartyIdAndPoliticianAccountId(UUID partyId, UUID politicianAccountId);
 
   List<PartyRepresentative> findByPartyId(UUID partyId);

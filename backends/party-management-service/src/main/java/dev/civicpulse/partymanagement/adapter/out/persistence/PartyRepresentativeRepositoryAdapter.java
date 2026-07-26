@@ -34,6 +34,11 @@ class PartyRepresentativeRepositoryAdapter implements PartyRepresentativeReposit
   }
 
   @Override
+  public Optional<PartyRepresentative> findByPoliticianAccountId(UUID politicianAccountId) {
+    return jpaRepository.findByPoliticianAccountId(politicianAccountId).map(mapper::toDomain);
+  }
+
+  @Override
   public boolean existsByPartyIdAndPoliticianAccountId(UUID partyId, UUID politicianAccountId) {
     return jpaRepository.existsByPartyIdAndPoliticianAccountId(partyId, politicianAccountId);
   }

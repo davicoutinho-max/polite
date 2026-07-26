@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -52,10 +53,10 @@ class RegisterAccountServiceTest {
     RegisterAccountCommand command =
         new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
 
+    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.empty());
     when(accountRepository.existsByEmail("jane@example.com")).thenReturn(false);
     when(accountRepository.existsByHandle("janedoe")).thenReturn(false);
-    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
-    when(accountRepository.existsByDocumentNumberHash("cpf-hash")).thenReturn(false);
     when(documentCipher.encrypt("12345678901")).thenReturn(new byte[] {9, 9, 9});
     when(passwordHasher.hash("s3cret!")).thenReturn("hashed-password");
     when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -73,22 +74,26 @@ class RegisterAccountServiceTest {
   }
 
   @Test
-  void rejectsDuplicateEmailBeforeTouchingDocumentCipher() {
+  void rejectsDuplicateEmailWhenNoSyncedProfileToClaimExists() {
     RegisterAccountCommand command =
         new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
+    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.empty());
     when(accountRepository.existsByEmail("jane@example.com")).thenReturn(true);
 
     assertThatThrownBy(() -> service.registerCitizen(command))
         .isInstanceOf(DuplicateAccountException.class)
         .satisfies(ex -> assertThat(((DuplicateAccountException) ex).field()).isEqualTo("email"));
 
-    verifyNoInteractions(documentCipher, passwordHasher, eventPublisher);
+    verifyNoInteractions(passwordHasher, eventPublisher);
   }
 
   @Test
   void rejectsDuplicateHandle() {
     RegisterAccountCommand command =
         new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
+    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.empty());
     when(accountRepository.existsByEmail(anyString())).thenReturn(false);
     when(accountRepository.existsByHandle("janedoe")).thenReturn(true);
 
@@ -101,26 +106,75 @@ class RegisterAccountServiceTest {
   void rejectsCpfWithWrongDigitCount() {
     RegisterAccountCommand command =
         new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123");
-    when(accountRepository.existsByEmail(anyString())).thenReturn(false);
-    when(accountRepository.existsByHandle(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> service.registerCitizen(command)).isInstanceOf(InvalidDocumentNumberException.class);
+
+    verifyNoInteractions(accountRepository, passwordHasher, eventPublisher);
+  }
+
+  @Test
+  void rejectsDuplicateDocumentNumberHashWhenExistingAccountIsNotSynced() {
+    RegisterAccountCommand command =
+        new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
+    Account existing =
+        Account.register(
+            dev.civicpulse.identity.domain.model.AccountId.generate(),
+            AccountType.CITIZEN,
+            "Existing Owner",
+            "existing-owner",
+            "existing@example.com",
+            "some-hash",
+            DocumentType.CPF,
+            "cpf-hash",
+            new byte[] {1},
+            NOW);
+    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.of(existing));
+
+    assertThatThrownBy(() -> service.registerCitizen(command))
+        .isInstanceOf(DuplicateAccountException.class)
+        .satisfies(ex -> assertThat(((DuplicateAccountException) ex).field()).isEqualTo("CPF"));
 
     verifyNoInteractions(passwordHasher, eventPublisher);
   }
 
   @Test
-  void rejectsDuplicateDocumentNumberHash() {
+  void claimsExistingSyncedAccountInsteadOfCreatingADuplicate() {
     RegisterAccountCommand command =
-        new RegisterAccountCommand("Jane Doe", "janedoe", "jane@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
-    when(accountRepository.existsByEmail(anyString())).thenReturn(false);
-    when(accountRepository.existsByHandle(anyString())).thenReturn(false);
+        new RegisterAccountCommand(
+            "Acácio Favacho", "acacio-favacho", "acacio@example.com", "s3cret!", DocumentType.CPF, "123.456.789-01");
+    Account synced =
+        Account.registerSynced(
+            dev.civicpulse.identity.domain.model.AccountId.generate(),
+            AccountType.POLITICIAN,
+            "Acácio Favacho",
+            "acacio-favacho-dep-204379",
+            "dep.acaciofavacho@camara.leg.br",
+            DocumentType.CPF,
+            "cpf-hash",
+            new byte[] {1},
+            "http://photo",
+            "CAMARA_DEPUTADO",
+            "204379",
+            NOW);
     when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
-    when(accountRepository.existsByDocumentNumberHash("cpf-hash")).thenReturn(true);
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.of(synced));
+    when(passwordHasher.hash("s3cret!")).thenReturn("hashed-password");
+    when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    assertThatThrownBy(() -> service.registerCitizen(command))
-        .isInstanceOf(DuplicateAccountException.class)
-        .satisfies(ex -> assertThat(((DuplicateAccountException) ex).field()).isEqualTo("CPF"));
+    Account result = service.provisionAccount(AccountType.POLITICIAN, command);
+
+    assertThat(result.id()).isEqualTo(synced.id());
+    assertThat(result.isSynced()).isFalse();
+    assertThat(result.externalSource()).isEmpty();
+    assertThat(result.passwordHash()).isEqualTo("hashed-password");
+    // The government-sourced identity wins, not whatever the claimer typed — see Account.claim.
+    assertThat(result.email()).isEqualTo("dep.acaciofavacho@camara.leg.br");
+    assertThat(result.handle()).isEqualTo("acacio-favacho-dep-204379");
+
+    verifyNoInteractions(eventPublisher);
+    verify(accountRepository, never()).existsByEmail(anyString());
+    verify(accountRepository, never()).existsByHandle(anyString());
   }
 
   @Test
