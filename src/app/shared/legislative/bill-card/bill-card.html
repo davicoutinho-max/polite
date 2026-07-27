@@ -115,6 +115,7 @@
 
     <form class="ask-ai__composer" (submit)="askFreeText(); $event.preventDefault()">
       <input
+        pInputText
         type="text"
         [ngModel]="askAiQuestion()"
         (ngModelChange)="askAiQuestion.set($event)"

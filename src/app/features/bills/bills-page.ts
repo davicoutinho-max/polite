@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { LEGISLATIVE_BILL_TYPES, LegislativeBillSummary } from '../../core/models';
+import { FilterOption } from '../../core/services/directory.service';
 import { LegislativeOpenDataService } from '../../core/services/legislative-open-data.service';
 import { TranslateService } from '../../core/services/translate.service';
 import { BillCard } from '../../shared/legislative/bill-card/bill-card';
@@ -22,7 +24,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-bills-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputText, PageHeader, BillCard, UiButton, UiIcon, TranslatePipe],
+  imports: [FormsModule, InputText, Select, PageHeader, BillCard, UiButton, UiIcon, TranslatePipe],
   templateUrl: './bills-page.html',
   styleUrl: './bills-page.scss',
 })
@@ -30,7 +32,12 @@ export class BillsPage {
   private readonly legislativeOpenData = inject(LegislativeOpenDataService);
   private readonly translate = inject(TranslateService);
 
-  protected readonly billTypes = LEGISLATIVE_BILL_TYPES;
+  protected readonly billTypes = LEGISLATIVE_BILL_TYPES.map((t) => ({ code: t.code, label: this.translate.t(`bill-type.${t.code}`, t.label) }));
+
+  protected readonly typeFilterOptions: FilterOption[] = [
+    { value: 'all', label: this.translate.t('label.all-bill-types', 'All types') },
+    ...this.billTypes.map((t) => ({ value: t.code, label: t.label })),
+  ];
 
   /** 'all' shows every type's section (the original default); picking one type narrows both the
    * default grouped view and any active search down to just that type — no extra API calls, since

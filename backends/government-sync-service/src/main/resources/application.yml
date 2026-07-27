@@ -29,6 +29,8 @@ government-sync:
     base-url: ${PLATFORM_CONFIGURATION_SERVICE_BASE_URL:http://localhost:8084}
   legislative-service:
     base-url: ${LEGISLATIVE_SERVICE_BASE_URL:http://localhost:8096}
+  elections-service:
+    base-url: ${ELECTIONS_SERVICE_BASE_URL:http://localhost:8091}
 
 logging:
   pattern:

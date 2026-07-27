@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { FormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
@@ -29,6 +30,7 @@ const MODES: UiTab[] = [
     FormsModule,
     TextareaModule,
     ToggleSwitchModule,
+    FileUpload,
     InputText,
     Select,
     DatePicker,
@@ -116,8 +118,8 @@ export class PostComposer {
     this.mode.set(id as PostComposerMode);
   }
 
-  protected onImageSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onImageSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
     if (file) {
       this.imageFile.set(file);
     }
@@ -127,8 +129,8 @@ export class PostComposer {
     this.imageFile.set(null);
   }
 
-  protected onFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onFileSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
     if (file) {
       this.attachedFile.set(file);
     }

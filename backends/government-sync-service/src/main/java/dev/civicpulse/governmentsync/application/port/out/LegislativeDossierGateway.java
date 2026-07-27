@@ -13,7 +13,12 @@ import java.util.UUID;
  * SyncFederalLegislatureService), since the next day's run will find the stub already there. */
 public interface LegislativeDossierGateway {
 
-  void enrichDossier(UUID politicianAccountId, String education, String email);
+  void enrichDossier(UUID politicianAccountId, String education, String email, String phone, String officeDetail);
 
   void addSocialLinks(UUID politicianAccountId, List<String> urls);
+
+  /** Idempotent by (role, period) — a re-run of the same day's sync must not pile up duplicate
+   * mandate rows. {@code role}/{@code period} null or blank is treated as "nothing to sync" (e.g.
+   * Câmara's {@code ultimoStatus.data} was null), same convention as {@link #enrichDossier}. */
+  void syncMandate(UUID politicianAccountId, String role, String period, boolean current);
 }

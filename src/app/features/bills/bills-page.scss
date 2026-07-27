@@ -25,14 +25,7 @@
   input { flex: 1; min-width: 200px; }
 }
 
-.bills-page__type-filter {
-  padding: 0 var(--cp-space-md);
-  border: 1px solid var(--cp-outline-variant);
-  border-radius: var(--cp-radius);
-  background: var(--cp-surface-container-lowest);
-  color: var(--cp-on-surface);
-  font-size: 14px;
-}
+.bills-page__type-filter { min-width: 160px; }
 
 .bills-page__status {
   margin: 0 0 var(--cp-space-lg);

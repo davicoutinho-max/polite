@@ -21,12 +21,16 @@
       name="keyword"
       [placeholder]="'label.search-bills-placeholder' | translate: 'Optional: search by topic, e.g. saúde, educação…'"
     />
-    <select class="bills-page__type-filter" [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event)" name="typeFilter">
-      <option value="all">{{ 'label.all-bill-types' | translate: 'All types' }}</option>
-      @for (type of billTypes; track type.code) {
-        <option [value]="type.code">{{ type.label }}</option>
-      }
-    </select>
+    <p-select
+      class="bills-page__type-filter"
+      [options]="typeFilterOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="selectedType()"
+      (ngModelChange)="selectedType.set($event)"
+      name="typeFilter"
+      appendTo="body"
+    />
     <ui-button [label]="'button.search' | translate: 'Search'" icon="search" variant="filled" type="submit" [disabled]="loading()" />
     @if (isSearching()) {
       <ui-button [label]="'button.clear' | translate: 'Clear'" icon="close" variant="text" type="button" (click)="clearSearch()" />

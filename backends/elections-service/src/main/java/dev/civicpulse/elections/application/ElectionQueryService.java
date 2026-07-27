@@ -3,10 +3,12 @@ package dev.civicpulse.elections.application;
 import dev.civicpulse.elections.application.port.in.GetElectionUseCase;
 import dev.civicpulse.elections.application.port.out.ElectionCandidacyRepository;
 import dev.civicpulse.elections.application.port.out.ElectionRepository;
+import dev.civicpulse.elections.application.port.out.ElectionResultRepository;
 import dev.civicpulse.elections.application.port.out.PoliticianDirectoryGateway;
 import dev.civicpulse.elections.application.port.out.PoliticianDirectoryGateway.PoliticianSummary;
 import dev.civicpulse.elections.domain.exception.ElectionNotFoundException;
 import dev.civicpulse.elections.domain.model.Election;
+import dev.civicpulse.elections.domain.model.ElectionResult;
 import dev.civicpulse.elections.domain.model.ElectionScope;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -21,16 +23,19 @@ public class ElectionQueryService implements GetElectionUseCase {
 
   private final ElectionRepository electionRepository;
   private final ElectionCandidacyRepository electionCandidacyRepository;
+  private final ElectionResultRepository electionResultRepository;
   private final PoliticianDirectoryGateway politicianDirectoryGateway;
   private final Clock clock;
 
   public ElectionQueryService(
       ElectionRepository electionRepository,
       ElectionCandidacyRepository electionCandidacyRepository,
+      ElectionResultRepository electionResultRepository,
       PoliticianDirectoryGateway politicianDirectoryGateway,
       Clock clock) {
     this.electionRepository = electionRepository;
     this.electionCandidacyRepository = electionCandidacyRepository;
+    this.electionResultRepository = electionResultRepository;
     this.politicianDirectoryGateway = politicianDirectoryGateway;
     this.clock = clock;
   }
@@ -64,5 +69,14 @@ public class ElectionQueryService implements GetElectionUseCase {
         .filter(Optional::isPresent)
         .map(Optional::get)
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ElectionResult> listResults(UUID electionId) {
+    if (electionRepository.findById(electionId).isEmpty()) {
+      throw new ElectionNotFoundException(electionId);
+    }
+    return electionResultRepository.findByElectionId(electionId);
   }
 }

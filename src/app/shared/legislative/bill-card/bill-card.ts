@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { InputText } from 'primeng/inputtext';
 import { LegislativeBillSummary, LegislativeTimelineEntry } from '../../../core/models';
 import { LegislativeOpenDataService } from '../../../core/services/legislative-open-data.service';
 import { TranslatePipe } from '../../pipes/translate.pipe';
@@ -36,7 +37,7 @@ const ASK_AI_PROMPTS: AskAiPrompt[] = [
 @Component({
   selector: 'app-bill-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, UiCard, UiTag, UiButton, UiIcon, UiDialog, TranslatePipe],
+  imports: [FormsModule, RouterLink, InputText, UiCard, UiTag, UiButton, UiIcon, UiDialog, TranslatePipe],
   templateUrl: './bill-card.html',
   styleUrl: './bill-card.scss',
 })
@@ -56,7 +57,7 @@ export class BillCard {
       return;
     }
     this.historyLoading.set(true);
-    this.legislativeOpenData.getTimeline(this.bill()).subscribe({
+    this.legislativeOpenData.getTimeline(this.bill().source, this.bill().id).subscribe({
       next: (entries) => {
         this.historyLoading.set(false);
         this.timeline.set(entries);

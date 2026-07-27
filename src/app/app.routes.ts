@@ -112,6 +112,12 @@ export const routes: Routes = [
           import('./features/elections/election-detail/election-detail').then((m) => m.ElectionDetailPage),
       },
       {
+        path: 'elections/:id/vote',
+        title: 'Register my vote — CivicPulse',
+        loadComponent: () =>
+          import('./features/elections/vote-register/vote-register').then((m) => m.VoteRegisterPage),
+      },
+      {
         path: 'party/:id',
         title: 'Party — CivicPulse',
         loadComponent: () => import('./features/party/party-page').then((m) => m.PartyPage),

@@ -45,4 +45,9 @@ class ElectionRepositoryAdapter implements ElectionRepository {
   public List<Election> findUpcoming(LocalDate from, int page, int pageSize) {
     return jpaRepository.findUpcoming(from, PageRequest.of(page, pageSize)).stream().map(mapper::toDomain).toList();
   }
+
+  @Override
+  public Optional<Election> findByScopeAndElectionDateAndLocation(ElectionScope scope, LocalDate electionDate, String location) {
+    return jpaRepository.findByScopeAndElectionDateAndLocation(scope, electionDate, location).map(mapper::toDomain);
+  }
 }

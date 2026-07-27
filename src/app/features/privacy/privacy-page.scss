@@ -42,31 +42,6 @@
 .privacy__consent-label { font-size: 14px; font-weight: 600; color: var(--cp-on-surface); }
 .privacy__consent-desc { font-size: 12px; line-height: 17px; color: var(--cp-on-surface-variant); }
 
-.privacy__switch {
-  flex-shrink: 0;
-  width: 44px;
-  height: 24px;
-  padding: 2px;
-  border: none;
-  border-radius: var(--cp-radius-full);
-  background: var(--cp-surface-container-highest);
-  cursor: pointer;
-  transition: background 0.2s ease;
-
-  &--on { background: var(--cp-secondary); }
-  &--locked { opacity: 0.5; cursor: not-allowed; }
-  &:focus-visible { outline: 2px solid var(--cp-secondary); outline-offset: 2px; }
-}
-.privacy__switch-knob {
-  display: block;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--cp-radius-full);
-  background: var(--cp-surface-container-lowest);
-  transition: transform 0.2s ease;
-}
-.privacy__switch--on .privacy__switch-knob { transform: translateX(20px); }
-
 .privacy__action-row {
   display: flex;
   align-items: center;

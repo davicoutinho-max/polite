@@ -28,20 +28,53 @@ class LegislativeDossierAdapter implements LegislativeDossierGateway {
   }
 
   @Override
-  public void enrichDossier(UUID politicianAccountId, String education, String email) {
-    if ((education == null || education.isBlank()) && (email == null || email.isBlank())) {
+  public void enrichDossier(UUID politicianAccountId, String education, String email, String phone, String officeDetail) {
+    if (isBlank(education) && isBlank(email) && isBlank(phone) && isBlank(officeDetail)) {
       return;
     }
     try {
       restClient
           .put()
           .uri("/politicians/{id}/dossier", politicianAccountId)
-          .body(new UpdateDossierRequest(education, null, null, email, null, null))
+          .body(new UpdateDossierRequest(education, null, null, email, phone, officeDetail))
           .retrieve()
           .toBodilessEntity();
     } catch (RestClientException e) {
       log.debug("Dossier enrichment skipped for {} (likely not projected yet): {}", politicianAccountId, e.getMessage());
     }
+  }
+
+  @Override
+  public void syncMandate(UUID politicianAccountId, String role, String period, boolean current) {
+    if (isBlank(role) || isBlank(period)) {
+      return;
+    }
+    List<MandateResponse> existing;
+    try {
+      MandateResponse[] response = restClient.get().uri("/politicians/{id}/mandates", politicianAccountId).retrieve().body(MandateResponse[].class);
+      existing = response == null ? List.of() : java.util.Arrays.asList(response);
+    } catch (RestClientException e) {
+      log.debug("Could not read existing mandates for {}, skipping mandate sync this run: {}", politicianAccountId, e.getMessage());
+      return;
+    }
+    boolean alreadyOnFile = existing.stream().anyMatch(m -> role.equals(m.role()) && period.equals(m.period()));
+    if (alreadyOnFile) {
+      return;
+    }
+    try {
+      restClient
+          .post()
+          .uri("/politicians/{id}/mandates", politicianAccountId)
+          .body(new AddMandateRequest(role, period, current))
+          .retrieve()
+          .toBodilessEntity();
+    } catch (RestClientException e) {
+      log.debug("Mandate sync skipped for {} ({}): {}", politicianAccountId, role, e.getMessage());
+    }
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
   }
 
   @Override
@@ -121,4 +154,8 @@ class LegislativeDossierAdapter implements LegislativeDossierGateway {
   private record AddSocialLinkRequest(String platform, String label, String handle, String url) {}
 
   private record SocialLinkResponse(UUID id, String platform, String label, String handle, String url) {}
+
+  private record AddMandateRequest(String role, String period, boolean current) {}
+
+  private record MandateResponse(UUID id, String role, String period, boolean current) {}
 }

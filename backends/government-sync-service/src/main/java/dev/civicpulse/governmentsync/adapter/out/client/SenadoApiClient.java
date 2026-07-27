@@ -26,16 +26,23 @@ class SenadoApiClient implements SenadoGateway {
       return List.of();
     }
     return response.lista().parlamentares().parlamentar().stream()
-        .map(ParlamentarDto::identificacao)
         .map(
-            id ->
-                new SenadoSenator(
-                    id.codigoParlamentar(),
-                    id.nomeParlamentar(),
-                    id.siglaPartidoParlamentar(),
-                    id.ufParlamentar(),
-                    id.urlFotoParlamentar(),
-                    id.emailParlamentar()))
+            p -> {
+              IdentificacaoParlamentarDto id = p.identificacao();
+              List<TelefoneDto> telefones = id.telefones() == null ? null : id.telefones().telefone();
+              String phone = telefones == null || telefones.isEmpty() ? null : telefones.get(0).numero();
+              LegislaturaDto primeiraLegislatura = p.mandato() == null ? null : p.mandato().primeiraLegislatura();
+              String mandateStartDate = primeiraLegislatura == null ? null : primeiraLegislatura.dataInicio();
+              return new SenadoSenator(
+                  id.codigoParlamentar(),
+                  id.nomeParlamentar(),
+                  id.siglaPartidoParlamentar(),
+                  id.ufParlamentar(),
+                  id.urlFotoParlamentar(),
+                  id.emailParlamentar(),
+                  phone,
+                  mandateStartDate);
+            })
         .toList();
   }
 
@@ -45,7 +52,9 @@ class SenadoApiClient implements SenadoGateway {
 
   private record Parlamentares(@JsonProperty("Parlamentar") List<ParlamentarDto> parlamentar) {}
 
-  private record ParlamentarDto(@JsonProperty("IdentificacaoParlamentar") IdentificacaoParlamentarDto identificacao) {}
+  private record ParlamentarDto(
+      @JsonProperty("IdentificacaoParlamentar") IdentificacaoParlamentarDto identificacao,
+      @JsonProperty("Mandato") MandatoDto mandato) {}
 
   private record IdentificacaoParlamentarDto(
       @JsonProperty("CodigoParlamentar") String codigoParlamentar,
@@ -53,5 +62,14 @@ class SenadoApiClient implements SenadoGateway {
       @JsonProperty("UrlFotoParlamentar") String urlFotoParlamentar,
       @JsonProperty("EmailParlamentar") String emailParlamentar,
       @JsonProperty("SiglaPartidoParlamentar") String siglaPartidoParlamentar,
-      @JsonProperty("UfParlamentar") String ufParlamentar) {}
+      @JsonProperty("UfParlamentar") String ufParlamentar,
+      @JsonProperty("Telefones") TelefonesDto telefones) {}
+
+  private record TelefonesDto(@JsonProperty("Telefone") List<TelefoneDto> telefone) {}
+
+  private record TelefoneDto(@JsonProperty("NumeroTelefone") String numero) {}
+
+  private record MandatoDto(@JsonProperty("PrimeiraLegislaturaDoMandato") LegislaturaDto primeiraLegislatura) {}
+
+  private record LegislaturaDto(@JsonProperty("DataInicio") String dataInicio) {}
 }

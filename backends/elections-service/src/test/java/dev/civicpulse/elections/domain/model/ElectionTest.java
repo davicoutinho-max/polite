@@ -14,26 +14,27 @@ class ElectionTest {
     UUID id = UUID.randomUUID();
     LocalDate date = LocalDate.of(2026, 10, 4);
 
-    Election election = Election.create(id, "Eleicoes Municipais 2026", ElectionScope.MUNICIPAL, date, "desc");
+    Election election = Election.create(id, "Eleicoes Municipais 2026", ElectionScope.MUNICIPAL, date, "Some City", "desc");
 
     assertThat(election.id()).isEqualTo(id);
     assertThat(election.title()).isEqualTo("Eleicoes Municipais 2026");
     assertThat(election.scope()).isEqualTo(ElectionScope.MUNICIPAL);
     assertThat(election.electionDate()).isEqualTo(date);
+    assertThat(election.location()).contains("Some City");
     assertThat(election.description()).contains("desc");
   }
 
   @Test
   void createRejectsBlankTitle() {
-    assertThatThrownBy(() -> Election.create(UUID.randomUUID(), " ", ElectionScope.NACIONAL, LocalDate.now(), null))
+    assertThatThrownBy(() -> Election.create(UUID.randomUUID(), " ", ElectionScope.NACIONAL, LocalDate.now(), null, null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void equalityIsBasedOnId() {
     UUID id = UUID.randomUUID();
-    Election a = Election.create(id, "a", ElectionScope.NACIONAL, LocalDate.now(), null);
-    Election b = Election.reconstitute(id, "b", ElectionScope.ESTADUAL, LocalDate.now().plusDays(1), "x");
+    Election a = Election.create(id, "a", ElectionScope.NACIONAL, LocalDate.now(), null, null);
+    Election b = Election.reconstitute(id, "b", ElectionScope.ESTADUAL, LocalDate.now().plusDays(1), null, "x");
 
     assertThat(a).isEqualTo(b);
     assertThat(a.hashCode()).isEqualTo(b.hashCode());

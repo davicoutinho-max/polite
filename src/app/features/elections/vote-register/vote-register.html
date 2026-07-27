@@ -1,0 +1,90 @@
+@if (election(); as e) {
+  <div class="vote-register">
+    <a class="vote-register__back" [routerLink]="['/elections', id()]">
+      <ui-icon name="arrow_back" [size]="18" />
+      {{ 'button.back-to-election' | translate: 'Back to election' }}
+    </a>
+
+    <div class="vote-register__hero">
+      <div class="vote-register__hero-icon">
+        <ui-icon name="how_to_vote" [size]="28" />
+      </div>
+      <div>
+        <h1 class="vote-register__title">{{ 'label.register-my-vote' | translate: 'Register my vote' }}</h1>
+        <p class="vote-register__election-name">{{ e.title }}</p>
+      </div>
+    </div>
+
+    <div class="vote-register__disclaimer">
+      <ui-icon name="lock" [size]="16" />
+      <span>{{
+        'label.vote-disclaimer'
+          | translate
+            : 'Personal and unofficial record. Voting in Brazil is secret — this does not replace or represent your official ballot.'
+      }}</span>
+    </div>
+
+    @if (!isAuthenticated()) {
+      <ui-empty
+        icon="lock"
+        [title]="'empty.sign-in-required.title' | translate: 'Sign in to register your vote'"
+        [description]="'empty.sign-in-required-vote' | translate: 'Create an account or sign in to keep a personal record of who you voted for.'"
+      />
+    } @else if (ballots().length) {
+      <div class="vote-register__ballots">
+        @for (ballot of ballots(); track ballot.office) {
+          <ui-card padding="lg" class="ballot">
+            <div class="ballot__office">{{ ballot.office }}</div>
+
+            @if (!isEditing(ballot.office)) {
+              <div class="ballot__confirmed">
+                <ui-icon name="check_circle" [size]="24" />
+                <div class="ballot__confirmed-body">
+                  <span class="ballot__confirmed-name">{{ votedFor(ballot.office)?.candidateName }}</span>
+                  @if (votedFor(ballot.office)?.candidatePartyAcronym) {
+                    <span class="ballot__confirmed-party">{{ votedFor(ballot.office)?.candidatePartyAcronym }}</span>
+                  }
+                </div>
+                <button type="button" class="ballot__change" (click)="startEditing(ballot.office)">
+                  {{ 'button.change' | translate: 'Change' }}
+                </button>
+              </div>
+            } @else {
+              <div class="ballot__search">
+                <p-autocomplete
+                  [ngModel]="selectionFor(ballot.office)"
+                  (ngModelChange)="setSelection(ballot.office, $event)"
+                  [suggestions]="suggestionsFor(ballot.office)"
+                  (completeMethod)="search(ballot.office, $event, ballot.candidatePool)"
+                  field="candidateName"
+                  [placeholder]="'label.search-candidate' | translate: 'Search by name…'"
+                  styleClass="ballot__input"
+                  [fluid]="true"
+                />
+                <button type="button" class="ballot__confirm" [disabled]="!canConfirm(ballot.office)" (click)="confirm(ballot.office)">
+                  {{ 'button.confirm-vote' | translate: 'CONFIRM' }}
+                </button>
+              </div>
+            }
+          </ui-card>
+        }
+      </div>
+    } @else {
+      <ui-empty
+        icon="how_to_vote"
+        [title]="'empty.no-offices.title' | translate: 'Nothing to register yet'"
+        [description]="'empty.no-offices-desc' | translate: 'This election has no candidates linked yet.'"
+      />
+    }
+
+    <p class="vote-register__footer">{{ 'label.vote-responsibly' | translate: 'VOTE WITH RESPONSIBILITY' }}</p>
+  </div>
+} @else {
+  <div class="vote-register">
+    <ui-empty
+      icon="ballot"
+      [title]="'empty.election-not-found.title' | translate: 'Election not found'"
+      [description]="'empty.election-not-found.desc' | translate: 'This election may have been removed or the link is incorrect.'"
+    />
+  </div>
+}

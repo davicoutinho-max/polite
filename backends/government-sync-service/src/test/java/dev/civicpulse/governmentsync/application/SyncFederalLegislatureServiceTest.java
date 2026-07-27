@@ -52,9 +52,21 @@ class SyncFederalLegislatureServiceTest {
         .thenReturn(
             List.of(
                 new CamaraDeputy(
-                    "204379", "Acácio Favacho", "MDB", "AP", "http://photo", "dep@camara.leg.br", "12345678901", "Superior", List.of())));
+                    "204379",
+                    "Acácio Favacho",
+                    "MDB",
+                    "AP",
+                    "http://photo",
+                    "dep@camara.leg.br",
+                    "12345678901",
+                    "Superior",
+                    List.of(),
+                    "3215-5504",
+                    "Anexo IV, Sala 504, 5º andar",
+                    "2023-02-01")));
     when(senadoGateway.fetchCurrentSenators())
-        .thenReturn(List.of(new SenadoSenator("5672", "Alan Rick", "MDB", "AC", "http://senphoto", "sen@senado.leg.br")));
+        .thenReturn(
+            List.of(new SenadoSenator("5672", "Alan Rick", "MDB", "AC", "http://senphoto", "sen@senado.leg.br", "3303-6333", "2023-02-01")));
     when(politicianSyncGateway.syncPolitician(eq(mdbId), any())).thenReturn(UUID.randomUUID());
 
     SyncResult result = service.syncFederalLegislature();
@@ -80,7 +92,7 @@ class SyncFederalLegislatureServiceTest {
   void deputyReferencingUnknownPartyIsSkippedNotFatal() {
     when(camaraGateway.fetchAllParties()).thenReturn(List.of());
     when(camaraGateway.fetchAllDeputies())
-        .thenReturn(List.of(new CamaraDeputy("1", "Someone", "GHOST", "SP", null, null, null, null, List.of())));
+        .thenReturn(List.of(new CamaraDeputy("1", "Someone", "GHOST", "SP", null, null, null, null, List.of(), null, null, null)));
     when(senadoGateway.fetchCurrentSenators()).thenReturn(List.of());
 
     SyncResult result = service.syncFederalLegislature();
@@ -97,7 +109,7 @@ class SyncFederalLegislatureServiceTest {
     UUID fallbackPartyId = UUID.randomUUID();
     when(partySyncGateway.syncParty(any())).thenReturn(fallbackPartyId);
     when(senadoGateway.fetchCurrentSenators())
-        .thenReturn(List.of(new SenadoSenator("9", "Small Party Senator", "REDE", "RJ", null, null)));
+        .thenReturn(List.of(new SenadoSenator("9", "Small Party Senator", "REDE", "RJ", null, null, null, null)));
 
     SyncResult result = service.syncFederalLegislature();
 
@@ -118,7 +130,7 @@ class SyncFederalLegislatureServiceTest {
     when(partySyncGateway.syncParty(any())).thenReturn(redeId);
     when(camaraGateway.fetchAllDeputies()).thenReturn(List.of());
     when(senadoGateway.fetchCurrentSenators())
-        .thenReturn(List.of(new SenadoSenator("9", "Some Senator", "REDE", "RJ", null, null)));
+        .thenReturn(List.of(new SenadoSenator("9", "Some Senator", "REDE", "RJ", null, null, null, null)));
 
     service.syncFederalLegislature();
 

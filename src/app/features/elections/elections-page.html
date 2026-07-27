@@ -23,34 +23,44 @@
   </div>
 
   @if (elections().length) {
-    <div class="elections__grid">
-      @for (election of elections(); track election.id) {
-        <ui-card padding="lg" [hover]="true" class="election">
-          <a class="election__link" [routerLink]="['/elections', election.id]">
-            <header class="election__head">
-              <ui-tag [label]="election.scope" [severity]="scopeSeverity(election.scope)" [uppercase]="true" />
-              <span class="election__date">{{ election.date }}</span>
-            </header>
-            <h3 class="election__title">{{ election.title }}</h3>
-            <p class="election__desc">{{ election.description }}</p>
-          </a>
+    @for (year of years(); track year) {
+      <section class="elections__year-section">
+        <h2 class="elections__year-title">{{ year }}</h2>
+        <div class="elections__grid">
+          @for (election of electionsForYear(year); track election.id) {
+            <ui-card padding="lg" [hover]="true" class="election">
+              <a class="election__link" [routerLink]="['/elections', election.id]">
+                <header class="election__head">
+                  <ui-tag [label]="election.scope" [severity]="scopeSeverity(election.scope)" [uppercase]="true" />
+                  <span class="election__date">{{ election.date }}</span>
+                </header>
+                <h3 class="election__title">{{ election.title }}</h3>
+                <p class="election__desc">{{ election.description }}</p>
+              </a>
 
-          @if (candidatesOf(election.id).length) {
-            <div class="election__candidates">
-              @for (candidate of candidatesOf(election.id); track candidate.id) {
-                <a class="candidate" [routerLink]="['/profile', candidate.id]">
-                  <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="28" [ring]="true" />
-                  <span class="candidate__name">{{ candidate.name }}</span>
-                  @if (candidate.partyAcronym) {
-                    <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+              @if (candidatesOf(election.id).length) {
+                <div class="election__candidates">
+                  @for (candidate of previewCandidatesOf(election.id); track candidate.id) {
+                    <a class="candidate" [routerLink]="['/profile', candidate.id]">
+                      <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="28" [ring]="true" />
+                      <span class="candidate__name">{{ candidate.name }}</span>
+                      @if (candidate.partyAcronym) {
+                        <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+                      }
+                    </a>
                   }
-                </a>
+                  @if (remainingCandidateCount(election.id) > 0) {
+                    <a class="candidate candidate--more" [routerLink]="['/elections', election.id]">
+                      +{{ remainingCandidateCount(election.id) }} {{ 'label.more-candidates' | translate: 'more' }}
+                    </a>
+                  }
+                </div>
               }
-            </div>
+            </ui-card>
           }
-        </ui-card>
-      }
-    </div>
+        </div>
+      </section>
+    }
   } @else {
     <ui-empty icon="ballot" [title]="'empty.no-elections.title' | translate: 'No elections found'" [description]="'empty.try-different-scope' | translate: 'Try a different scope filter.'" />
   }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { FileUpload, FileSelectEvent } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
 import { MessagesService } from '../../core/services/messages.service';
 import { ChatMessage, Conversation, MessageAttachmentType } from '../../core/models';
@@ -35,6 +36,7 @@ const EMOJIS: readonly string[] = [
   imports: [
     FormsModule,
     InputText,
+    FileUpload,
     InfiniteScrollDirective,
     UiAvatar,
     UiIcon,
@@ -197,8 +199,8 @@ export class MessagesPage {
     this.renamingGroup.set(false);
   }
 
-  protected onGroupAvatarSelected(conversationId: string, event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onGroupAvatarSelected(conversationId: string, event: FileSelectEvent): void {
+    const file = event.files[0];
     this.showGroupMenu.set(false);
     if (file) {
       this.messages.changeGroupAvatarFile(conversationId, file);
@@ -290,9 +292,8 @@ export class MessagesPage {
   /** Generic attach button — the browser file picker itself lets the user filter by type; the
    * attachment's kind is inferred from the picked file's MIME type rather than requiring a
    * separate control per media kind. */
-  protected onAttachmentSelected(conversationId: string, event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    (event.target as HTMLInputElement).value = '';
+  protected onAttachmentSelected(conversationId: string, event: FileSelectEvent): void {
+    const file = event.files[0];
     if (!file) {
       return;
     }

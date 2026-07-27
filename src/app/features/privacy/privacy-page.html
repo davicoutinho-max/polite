@@ -17,19 +17,12 @@
               <span class="privacy__consent-label">{{ consent.label }}</span>
               <span class="privacy__consent-desc">{{ consent.description }}</span>
             </div>
-            <button
-              type="button"
-              class="privacy__switch"
-              role="switch"
-              [class.privacy__switch--on]="consent.enabled"
-              [class.privacy__switch--locked]="consent.locked"
-              [attr.aria-checked]="consent.enabled"
-              [attr.aria-label]="consent.label"
+            <p-toggleswitch
+              [ngModel]="consent.enabled"
               [disabled]="consent.locked"
-              (click)="toggle(consent.id)"
-            >
-              <span class="privacy__switch-knob"></span>
-            </button>
+              [attr.aria-label]="consent.label"
+              (ngModelChange)="toggle(consent.id)"
+            />
           </li>
         }
       </ul>

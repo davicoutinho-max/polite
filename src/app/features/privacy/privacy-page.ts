@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { PrivacyService } from '../../core/services/privacy.service';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
@@ -10,7 +12,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 @Component({
   selector: 'app-privacy-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeader, UiSection, UiIcon, UiButton, TranslatePipe],
+  imports: [FormsModule, ToggleSwitch, PageHeader, UiSection, UiIcon, UiButton, TranslatePipe],
   templateUrl: './privacy-page.html',
   styleUrl: './privacy-page.scss',
 })

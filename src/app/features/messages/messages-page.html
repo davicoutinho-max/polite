@@ -89,18 +89,17 @@
                 <button type="button" class="thread__menu-item" (click)="startRenameGroup(peerName(conversation))">
                   <ui-icon name="edit" [size]="18" /><span>{{ 'button.rename-group' | translate: 'Rename group' }}</span>
                 </button>
-                <button type="button" class="thread__menu-item" (click)="groupAvatarInput.click()">
-                  <ui-icon name="photo_camera" [size]="18" /><span>{{ 'button.change-group-photo' | translate: 'Change group photo' }}</span>
-                </button>
+                <p-fileupload
+                  mode="basic"
+                  accept="image/*"
+                  [auto]="true"
+                  chooseIcon="pi pi-camera"
+                  styleClass="thread__menu-item thread__menu-item--upload"
+                  [chooseLabel]="'button.change-group-photo' | translate: 'Change group photo'"
+                  (onSelect)="onGroupAvatarSelected(conversation.id, $event)"
+                />
               </div>
             }
-            <input
-              #groupAvatarInput
-              type="file"
-              accept="image/*"
-              class="thread__hidden-input"
-              (change)="onGroupAvatarSelected(conversation.id, $event)"
-            />
           </div>
         }
       </header>
@@ -213,13 +212,14 @@
         </div>
       } @else {
         <form class="composer" (submit)="$event.preventDefault(); onSend()">
-          <ui-icon-button
-            icon="attach_file"
-            [ariaLabel]="'button.attach-file' | translate: 'Attach file'"
-            [iconSize]="20"
-            (click)="attachmentInput.click()"
+          <p-fileupload
+            mode="basic"
+            [auto]="true"
+            chooseIcon="pi pi-paperclip"
+            [chooseLabel]="''"
+            styleClass="composer__attach-upload"
+            (onSelect)="onAttachmentSelected(conversation.id, $event)"
           />
-          <input #attachmentInput type="file" class="composer__hidden-input" (change)="onAttachmentSelected(conversation.id, $event)" />
 
           <div class="composer__emoji">
             <ui-icon-button

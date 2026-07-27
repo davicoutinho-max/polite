@@ -9,6 +9,9 @@ public interface SenadoGateway {
 
   /** No CPF field exists anywhere in this API (confirmed against the live current-senators
    * endpoint) — every senator requires the synthetic-document fallback, unlike deputies where
-   * it's only needed for the occasional lookup failure. */
-  record SenadoSenator(String externalId, String name, String partyAcronym, String state, String photoUrl, String email) {}
+   * it's only needed for the occasional lookup failure. {@code phone}/{@code mandateStartDate}
+   * come from the same list response (Telefones/Mandato.PrimeiraLegislaturaDoMandato.DataInicio)
+   * — no separate per-senator detail call needed, unlike Câmara's deputies. */
+  record SenadoSenator(
+      String externalId, String name, String partyAcronym, String state, String photoUrl, String email, String phone, String mandateStartDate) {}
 }

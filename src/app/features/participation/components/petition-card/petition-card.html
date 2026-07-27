@@ -138,55 +138,52 @@
       <form class="sign-form" (submit)="submitSignatureForm(); $event.preventDefault()">
         <label class="sign-form__field">
           <span>{{ 'label.full-name' | translate: 'Full name' }}</span>
-          <input type="text" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+          <input pInputText type="text" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
         </label>
         <label class="sign-form__field">
           <span>{{ 'label.cpf' | translate: 'CPF' }}</span>
-          <input type="text" [ngModel]="cpf()" (ngModelChange)="cpf.set($event)" name="cpf" placeholder="000.000.000-00" />
+          <input pInputText type="text" [ngModel]="cpf()" (ngModelChange)="cpf.set($event)" name="cpf" placeholder="000.000.000-00" />
         </label>
         <div class="sign-form__row">
           <label class="sign-form__field">
             <span>{{ 'label.birth-date' | translate: 'Birth date' }}</span>
-            <input type="date" [ngModel]="birthDate()" (ngModelChange)="birthDate.set($event)" name="birthDate" />
+            <p-datepicker dateFormat="dd/mm/yy" [ngModel]="birthDate()" (ngModelChange)="birthDate.set($event)" name="birthDate" appendTo="body" />
           </label>
           <label class="sign-form__field">
             <span>{{ 'label.city' | translate: 'City' }}</span>
-            <input type="text" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
+            <input pInputText type="text" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
           </label>
           <label class="sign-form__field">
             <span>{{ 'label.state' | translate: 'State' }}</span>
-            <input type="text" [ngModel]="state()" (ngModelChange)="state.set($event)" name="state" maxlength="2" />
+            <input pInputText type="text" [ngModel]="state()" (ngModelChange)="state.set($event)" name="state" maxlength="2" />
           </label>
         </div>
 
         @if (isPopularInitiative()) {
           <label class="sign-form__field">
             <span>{{ 'label.electoral-data' | translate: 'Electoral data (título de eleitor)' }}</span>
-            <input type="text" [ngModel]="electoralData()" (ngModelChange)="electoralData.set($event)" name="electoralData" />
+            <input pInputText type="text" [ngModel]="electoralData()" (ngModelChange)="electoralData.set($event)" name="electoralData" />
           </label>
         }
 
         <div class="sign-form__row">
           <label class="sign-form__field">
             <span>{{ 'label.verification-method' | translate: 'Verify by' }}</span>
-            <select [ngModel]="verificationMethod()" (ngModelChange)="verificationMethod.set($event)" name="verificationMethod">
-              <option value="sms">{{ 'label.sms' | translate: 'SMS' }}</option>
-              <option value="email">{{ 'label.email' | translate: 'E-mail' }}</option>
-            </select>
+            <p-select [options]="verificationMethodOptions" optionLabel="label" optionValue="value" [ngModel]="verificationMethod()" (ngModelChange)="verificationMethod.set($event)" name="verificationMethod" appendTo="body" />
           </label>
           <label class="sign-form__field sign-form__field--grow">
             <span>{{ verificationMethod() === 'sms' ? ('label.phone' | translate: 'Phone number') : ('label.email' | translate: 'E-mail') }}</span>
-            <input type="text" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" />
+            <input pInputText type="text" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" />
           </label>
         </div>
 
         <label class="sign-form__field">
           <span>{{ 'label.typed-signature' | translate: 'Type your full legal name as your electronic signature' }}</span>
-          <input type="text" [ngModel]="typedSignature()" (ngModelChange)="typedSignature.set($event)" name="typedSignature" />
+          <input pInputText type="text" [ngModel]="typedSignature()" (ngModelChange)="typedSignature.set($event)" name="typedSignature" />
         </label>
 
         <label class="sign-form__checkbox">
-          <input type="checkbox" [ngModel]="eSignatureConsent()" (ngModelChange)="eSignatureConsent.set($event)" name="eSignatureConsent" />
+          <p-checkbox [binary]="true" [ngModel]="eSignatureConsent()" (ngModelChange)="eSignatureConsent.set($event)" name="eSignatureConsent" />
           <span>{{ 'hint.esignature-consent' | translate: 'I agree this typed name is a valid electronic signature for this petition.' }}</span>
         </label>
 
@@ -214,7 +211,7 @@
         </p>
         <label class="sign-form__field">
           <span>{{ 'label.verification-code' | translate: 'Verification code' }}</span>
-          <input type="text" inputmode="numeric" [ngModel]="codeInput()" (ngModelChange)="codeInput.set($event)" name="codeInput" />
+          <p-inputotp [length]="6" [integerOnly]="true" [ngModel]="codeInput()" (ngModelChange)="codeInput.set($event)" name="codeInput" />
         </label>
         @if (signError()) {
           <p class="sign-form__error">{{ signError() }}</p>

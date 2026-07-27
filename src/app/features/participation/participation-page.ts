@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { FileUpload, FileSelectEvent } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { ParticipationService } from '../../core/services/participation.service';
 import { SessionService } from '../../core/services/session.service';
@@ -21,7 +23,20 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 @Component({
   selector: 'app-participation-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputText, PageHeader, UiTabs, UiIcon, UiButton, PetitionCard, ConsultationCard, SurveyCard, TranslatePipe],
+  imports: [
+    FormsModule,
+    InputText,
+    Select,
+    FileUpload,
+    PageHeader,
+    UiTabs,
+    UiIcon,
+    UiButton,
+    PetitionCard,
+    ConsultationCard,
+    SurveyCard,
+    TranslatePipe,
+  ],
   templateUrl: './participation-page.html',
   styleUrl: './participation-page.scss',
 })
@@ -68,6 +83,10 @@ export class ParticipationPage {
   protected readonly petitionGoal = signal(100);
   protected readonly petitionDeadline = signal('');
   protected readonly petitionType = signal<PetitionType>('verified_support');
+  protected readonly petitionTypeOptions = [
+    { value: 'verified_support' as PetitionType, label: this.translate.t('label.verified-support', 'Verified Support') },
+    { value: 'popular_initiative' as PetitionType, label: this.translate.t('label.popular-initiative', 'Popular Initiative') },
+  ];
   protected readonly petitionImageFile = signal<File | null>(null);
   protected readonly petitionVideoFile = signal<File | null>(null);
   protected readonly petitionAttachedFile = signal<File | null>(null);
@@ -97,22 +116,22 @@ export class ParticipationPage {
     this.surveyOptions.update((list) => (list.length > 2 ? list.filter((_, i) => i !== index) : list));
   }
 
-  protected onPetitionImageSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onPetitionImageSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
     if (file) {
       this.petitionImageFile.set(file);
     }
   }
 
-  protected onPetitionVideoSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onPetitionVideoSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
     if (file) {
       this.petitionVideoFile.set(file);
     }
   }
 
-  protected onPetitionFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  protected onPetitionFileSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
     if (file) {
       this.petitionAttachedFile.set(file);
     }

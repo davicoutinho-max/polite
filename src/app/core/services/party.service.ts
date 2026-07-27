@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { catchError, Observable, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   FiliationRequestSummary,
@@ -143,9 +143,9 @@ export class PartyService {
       directoryPoliticians: this.directory.reloadPoliticians(),
       directoryParties: this.directory.reloadParties(),
     }).pipe(
-      map(({ profile, offices, events, representatives }): Party => {
+      switchMap(({ profile, offices, events, representatives }) => {
         const summary = this.directory.parties().find((p) => p.id === partyId);
-        return {
+        const base = {
           id: partyId,
           name: summary?.name ?? '',
           acronym: summary?.acronym ?? '',
@@ -171,8 +171,10 @@ export class PartyService {
               tag: { label: e.tagLabel ?? '', severity: (e.tagSeverity as TagSeverity) ?? 'neutral' },
             }),
           ),
-          representatives: representatives.map((r) => this.toRepresentative(r)),
         };
+        return (representatives.length ? forkJoin(representatives.map((r) => this.resolveRepresentative(r))) : of([])).pipe(
+          map((reps): Party => ({ ...base, representatives: reps })),
+        );
       }),
       tap((party) => this._party.set(party)),
     );
@@ -326,14 +328,26 @@ export class PartyService {
       );
   }
 
-  private toRepresentative(r: RepresentativeResponseDto): PartyRepresentative {
-    const politician = this.directory.politicians().find((p) => p.id === r.politicianAccountId);
-    return {
-      id: r.politicianAccountId,
-      name: politician?.name ?? 'Unknown',
-      role: r.roleTitle ?? politician?.office ?? '',
-      avatarUrl: politician?.avatarUrl || FALLBACK_AVATAR,
-    };
+  /** Resolves a representative against the already-loaded directory cache first; on a cache miss
+   * (the id fell outside the directory page or hadn't synced yet when the cache was built) falls
+   * back to fetching that one politician directly rather than ever showing "Unknown" — see
+   * DirectoryService's DIRECTORY_PAGE_SIZE javadoc for why cache misses can happen at all. */
+  private resolveRepresentative(r: RepresentativeResponseDto): Observable<PartyRepresentative> {
+    const cached = this.directory.politicians().find((p) => p.id === r.politicianAccountId);
+    if (cached) {
+      return of({ id: r.politicianAccountId, name: cached.name, role: r.roleTitle ?? cached.office ?? '', avatarUrl: cached.avatarUrl || FALLBACK_AVATAR });
+    }
+    return this.directory.getPolitician(r.politicianAccountId).pipe(
+      map(
+        (p): PartyRepresentative => ({
+          id: r.politicianAccountId,
+          name: p.name,
+          role: r.roleTitle ?? p.office ?? '',
+          avatarUrl: p.avatarUrl || FALLBACK_AVATAR,
+        }),
+      ),
+      catchError(() => of({ id: r.politicianAccountId, name: 'Unknown', role: r.roleTitle ?? '', avatarUrl: FALLBACK_AVATAR })),
+    );
   }
 
   private resolveCitizen(accountId: string): Observable<{ name: string; avatarUrl: string }> {

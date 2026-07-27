@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LegislativeBillDetail, LegislativeSource, LegislativeVotingRecord } from '../../../core/models';
+import { LegislativeBillDetail, LegislativeSource, LegislativeTimelineEntry, LegislativeVotingRecord } from '../../../core/models';
 import { LegislativeOpenDataService } from '../../../core/services/legislative-open-data.service';
 import { TranslateService } from '../../../core/services/translate.service';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
@@ -36,6 +36,9 @@ export class BillDetailPage implements OnInit {
   protected readonly votingLoading = signal(true);
   protected readonly votingRecords = signal<LegislativeVotingRecord[]>([]);
 
+  protected readonly timelineLoading = signal(true);
+  protected readonly timeline = signal<LegislativeTimelineEntry[]>([]);
+
   ngOnInit(): void {
     this.legislativeOpenData.getBillDetail(this.source(), this.id()).subscribe({
       next: (detail) => {
@@ -56,6 +59,16 @@ export class BillDetailPage implements OnInit {
       error: () => {
         this.votingLoading.set(false);
         this.votingRecords.set([]);
+      },
+    });
+    this.legislativeOpenData.getTimeline(this.source(), this.id()).subscribe({
+      next: (entries) => {
+        this.timelineLoading.set(false);
+        this.timeline.set(entries);
+      },
+      error: () => {
+        this.timelineLoading.set(false);
+        this.timeline.set([]);
       },
     });
   }

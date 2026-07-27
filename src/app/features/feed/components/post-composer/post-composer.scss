@@ -225,6 +225,16 @@
   }
 }
 
+// p-fileupload (basic mode, icon-only) standing in for the old hidden-input + icon-button pair —
+// reset it to look like the ui-icon-buttons it sits next to in .composer__tools.
+.composer__tool-upload {
+  ::ng-deep .p-button {
+    width: 40px; height: 40px; padding: 0; border: none; border-radius: var(--cp-radius-full);
+    background: transparent; color: var(--cp-secondary);
+  }
+  ::ng-deep .p-button:hover { background: var(--cp-surface-container-low); }
+}
+
 /* On narrow screens the Post button spans the full width below the tools. */
 @media (max-width: 520px) {
   .composer__actions {

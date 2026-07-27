@@ -47,6 +47,23 @@
   color: var(--cp-on-surface-variant);
 }
 
+.election-detail__vote-cta {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  margin-top: var(--cp-space-xs);
+  padding: 10px 18px;
+  border-radius: var(--cp-radius);
+  background: var(--cp-secondary);
+  color: var(--cp-on-secondary, #fff);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  &:hover { opacity: 0.9; }
+}
+
 .election-detail__section-title {
   margin: 0 0 var(--cp-space-md);
   font-size: 18px;
@@ -78,3 +95,59 @@
 .candidate-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .candidate-card__name { font-size: 14px; font-weight: 700; color: var(--cp-on-surface); }
 .candidate-card__office { font-size: 12px; color: var(--cp-on-surface-variant); }
+
+.results-office { margin-bottom: var(--cp-space-md); }
+.results-office__title {
+  margin: 0 0 var(--cp-space-sm);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cp-on-surface);
+}
+.results-office__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.results-office__toggle {
+  margin-top: var(--cp-space-sm);
+  padding: var(--cp-space-xs) 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cp-secondary);
+  cursor: pointer;
+  &:hover { text-decoration: underline; }
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  padding: var(--cp-space-xs) var(--cp-space-sm);
+  border-radius: var(--cp-radius);
+  &--elected { background: var(--cp-surface-container-low); }
+}
+.result-row__rank {
+  min-width: 28px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cp-on-surface-variant);
+}
+.result-row__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cp-on-surface);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+.result-row__votes {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cp-on-surface-variant);
+}

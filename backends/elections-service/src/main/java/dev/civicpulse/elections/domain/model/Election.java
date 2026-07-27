@@ -13,22 +13,25 @@ public final class Election {
   private final String title;
   private final ElectionScope scope;
   private final LocalDate electionDate;
+  private final String location;
   private final String description;
 
-  private Election(UUID id, String title, ElectionScope scope, LocalDate electionDate, String description) {
+  private Election(UUID id, String title, ElectionScope scope, LocalDate electionDate, String location, String description) {
     this.id = Objects.requireNonNull(id);
     this.title = requireNonBlank(title);
     this.scope = Objects.requireNonNull(scope);
     this.electionDate = Objects.requireNonNull(electionDate);
+    this.location = location;
     this.description = description;
   }
 
-  public static Election create(UUID id, String title, ElectionScope scope, LocalDate electionDate, String description) {
-    return new Election(id, title, scope, electionDate, description);
+  public static Election create(UUID id, String title, ElectionScope scope, LocalDate electionDate, String location, String description) {
+    return new Election(id, title, scope, electionDate, location, description);
   }
 
-  public static Election reconstitute(UUID id, String title, ElectionScope scope, LocalDate electionDate, String description) {
-    return new Election(id, title, scope, electionDate, description);
+  public static Election reconstitute(
+      UUID id, String title, ElectionScope scope, LocalDate electionDate, String location, String description) {
+    return new Election(id, title, scope, electionDate, location, description);
   }
 
   private static String requireNonBlank(String value) {
@@ -56,6 +59,10 @@ public final class Election {
 
   public Optional<String> description() {
     return Optional.ofNullable(description);
+  }
+
+  public Optional<String> location() {
+    return Optional.ofNullable(location);
   }
 
   @Override

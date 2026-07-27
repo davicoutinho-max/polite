@@ -110,7 +110,18 @@
   font: inherit; font-size: 14px; color: var(--cp-on-surface); cursor: pointer; text-align: left;
 }
 .thread__menu-item:hover { background: var(--cp-surface-container-low); }
-.thread__hidden-input { display: none; }
+
+// p-fileupload (basic mode) renders its own <button> — reset PrimeNG's default chrome so it
+// blends into this menu the same way the plain <button> items around it do.
+.thread__menu-item--upload {
+  width: 100%;
+  ::ng-deep .p-button {
+    display: flex; align-items: center; gap: var(--cp-space-sm); width: 100%;
+    padding: var(--cp-space-sm); border: none; background: transparent; border-radius: var(--cp-radius);
+    font: inherit; font-size: 14px; color: var(--cp-on-surface); justify-content: flex-start;
+  }
+  ::ng-deep .p-button:hover { background: var(--cp-surface-container-low); }
+}
 
 .thread__body { flex: 1; overflow-y: auto; padding: var(--cp-space-lg); display: flex; flex-direction: column; gap: var(--cp-space-sm); }
 
@@ -187,7 +198,17 @@
   flex-shrink: 0; transition: opacity 0.15s ease;
 }
 .composer__send:disabled { opacity: 0.5; cursor: not-allowed; }
-.composer__hidden-input { display: none; }
+
+// p-fileupload (basic mode, icon-only) standing in for the old hidden-input + icon-button pair —
+// reset it to look like the plain icon buttons around it in the composer row.
+.composer__attach-upload {
+  flex-shrink: 0;
+  ::ng-deep .p-button {
+    width: 40px; height: 40px; padding: 0; border: none; border-radius: var(--cp-radius-full);
+    background: transparent; color: var(--cp-on-surface-variant);
+  }
+  ::ng-deep .p-button:hover { background: var(--cp-surface-container-low); }
+}
 
 /* ---- Emoji picker ---- */
 .composer__emoji { position: relative; flex-shrink: 0; }

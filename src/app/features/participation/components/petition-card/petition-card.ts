@@ -1,5 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Checkbox } from 'primeng/checkbox';
+import { DatePicker } from 'primeng/datepicker';
+import { InputOtp } from 'primeng/inputotp';
+import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { LegislativeBillSummary, Petition, StartPetitionSignatureCommand } from '../../../../core/models';
 import { LegislativeOpenDataService } from '../../../../core/services/legislative-open-data.service';
 import { ParticipationService } from '../../../../core/services/participation.service';
@@ -29,7 +34,23 @@ const BILLS_PAGE_SIZE = 8;
 @Component({
   selector: 'app-petition-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiCard, UiTag, UiButton, UiProgress, UiIcon, UiDialog, BillCard, CompactNumberPipe, TranslatePipe],
+  imports: [
+    FormsModule,
+    InputText,
+    DatePicker,
+    Select,
+    Checkbox,
+    InputOtp,
+    UiCard,
+    UiTag,
+    UiButton,
+    UiProgress,
+    UiIcon,
+    UiDialog,
+    BillCard,
+    CompactNumberPipe,
+    TranslatePipe,
+  ],
   templateUrl: './petition-card.html',
   styleUrl: './petition-card.scss',
 })
@@ -65,10 +86,14 @@ export class PetitionCard {
 
   protected readonly fullName = signal('');
   protected readonly cpf = signal('');
-  protected readonly birthDate = signal('');
+  protected readonly birthDate = signal<Date | null>(null);
   protected readonly city = signal('');
   protected readonly state = signal('');
   protected readonly verificationMethod = signal<'sms' | 'email'>('sms');
+  protected readonly verificationMethodOptions = [
+    { value: 'sms' as const, label: this.translate.t('label.sms', 'SMS') },
+    { value: 'email' as const, label: this.translate.t('label.email', 'E-mail') },
+  ];
   protected readonly contact = signal('');
   protected readonly electoralData = signal('');
   protected readonly eSignatureConsent = signal(false);
@@ -132,7 +157,7 @@ export class PetitionCard {
     const account = this.session.account();
     this.fullName.set(account.name ?? '');
     this.cpf.set('');
-    this.birthDate.set('');
+    this.birthDate.set(null);
     this.city.set('');
     this.state.set('');
     this.verificationMethod.set('sms');
@@ -164,10 +189,15 @@ export class PetitionCard {
     this.signError.set('');
     this.signSubmitting.set(true);
 
+    const birthDate = this.birthDate();
+    const isoBirthDate = birthDate
+      ? `${birthDate.getFullYear()}-${String(birthDate.getMonth() + 1).padStart(2, '0')}-${String(birthDate.getDate()).padStart(2, '0')}`
+      : null;
+
     const command: StartPetitionSignatureCommand = {
       fullName: this.fullName().trim(),
       cpf: this.cpf().trim(),
-      birthDate: this.birthDate() || null,
+      birthDate: isoBirthDate,
       city: this.city().trim() || null,
       state: this.state().trim() || null,
       verificationMethod: this.verificationMethod(),

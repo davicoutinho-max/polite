@@ -197,8 +197,8 @@ export class LegislativeOpenDataService {
     return [...camara, ...senado].sort((a, b) => (b.presentedDate ?? '').localeCompare(a.presentedDate ?? ''));
   }
 
-  getTimeline(bill: LegislativeBillSummary): Observable<LegislativeTimelineEntry[]> {
-    return bill.source === 'camara' ? this.getCamaraTimeline(bill.id) : this.getSenadoTimeline(bill.id);
+  getTimeline(source: LegislativeSource, id: string): Observable<LegislativeTimelineEntry[]> {
+    return source === 'camara' ? this.getCamaraTimeline(id) : this.getSenadoTimeline(id);
   }
 
   private fetchCamara(params: Record<string, string | number>): Observable<LegislativeBillSummary[]> {

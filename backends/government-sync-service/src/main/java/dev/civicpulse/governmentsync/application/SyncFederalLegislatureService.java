@@ -102,8 +102,12 @@ public class SyncFederalLegislatureService implements SyncFederalLegislatureUseC
                     deputy.state(),
                     "federal"));
         // Best-effort, see LegislativeDossierGateway's javadoc — never counted as a sync failure.
-        legislativeDossierGateway.enrichDossier(politicianAccountId, deputy.education(), deputy.email());
+        legislativeDossierGateway.enrichDossier(politicianAccountId, deputy.education(), deputy.email(), deputy.phone(), deputy.officeDetail());
         legislativeDossierGateway.addSocialLinks(politicianAccountId, deputy.socialLinks());
+        String mandateStartYear = mandateYear(deputy.mandateStartDate());
+        if (mandateStartYear != null) {
+          legislativeDossierGateway.syncMandate(politicianAccountId, "Deputado Federal", mandateStartYear + "–presente", true);
+        }
         deputiesSynced++;
       } catch (Exception e) {
         log.warn("Failed to sync deputy {}: {}", deputy.name(), e.getMessage());
@@ -126,19 +130,26 @@ public class SyncFederalLegislatureService implements SyncFederalLegislatureUseC
         }
         String documentNumber = DocumentNumberFallback.synthesize("SENADO_SENADOR:" + senator.externalId(), 11);
         String email = senator.email() != null ? senator.email() : "sen" + senator.externalId() + "@sync.gov.br";
-        politicianSyncGateway.syncPolitician(
-            partyId,
-            new SyncPoliticianCommand(
-                senator.name(),
-                HandleSlugGenerator.slugify(senator.name(), "sen-" + senator.externalId()),
-                email,
-                senator.photoUrl(),
-                documentNumber,
-                "SENADO_SENADOR",
-                senator.externalId(),
-                "Senador",
-                senator.state(),
-                "federal"));
+        UUID politicianAccountId =
+            politicianSyncGateway.syncPolitician(
+                partyId,
+                new SyncPoliticianCommand(
+                    senator.name(),
+                    HandleSlugGenerator.slugify(senator.name(), "sen-" + senator.externalId()),
+                    email,
+                    senator.photoUrl(),
+                    documentNumber,
+                    "SENADO_SENADOR",
+                    senator.externalId(),
+                    "Senador",
+                    senator.state(),
+                    "federal"));
+        // Best-effort, see LegislativeDossierGateway's javadoc — never counted as a sync failure.
+        legislativeDossierGateway.enrichDossier(politicianAccountId, null, senator.email(), senator.phone(), null);
+        String mandateStartYear = mandateYear(senator.mandateStartDate());
+        if (mandateStartYear != null) {
+          legislativeDossierGateway.syncMandate(politicianAccountId, "Senador", mandateStartYear + "–presente", true);
+        }
         senatorsSynced++;
       } catch (Exception e) {
         log.warn("Failed to sync senator {}: {}", senator.name(), e.getMessage());
@@ -164,5 +175,12 @@ public class SyncFederalLegislatureService implements SyncFederalLegislatureUseC
 
   private static String digitsOnly(String value) {
     return value == null ? "" : value.replaceAll("\\D", "");
+  }
+
+  /** Extracts the year from an ISO date like "2023-02-01" (Câmara's {@code ultimoStatus.data} /
+   * Senado's {@code Mandato.PrimeiraLegislaturaDoMandato.DataInicio}) — null when the source field
+   * itself was absent, so callers skip the mandate sync entirely rather than push a garbage period. */
+  private static String mandateYear(String isoDate) {
+    return isoDate != null && isoDate.length() >= 4 ? isoDate.substring(0, 4) : null;
   }
 }

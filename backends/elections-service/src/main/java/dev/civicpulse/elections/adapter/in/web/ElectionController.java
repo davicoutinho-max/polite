@@ -3,7 +3,10 @@ package dev.civicpulse.elections.adapter.in.web;
 import dev.civicpulse.elections.adapter.in.web.dto.CandidateResponse;
 import dev.civicpulse.elections.adapter.in.web.dto.CreateElectionRequest;
 import dev.civicpulse.elections.adapter.in.web.dto.ElectionResponse;
+import dev.civicpulse.elections.adapter.in.web.dto.ElectionResultResponse;
 import dev.civicpulse.elections.adapter.in.web.dto.NominateCandidateRequest;
+import dev.civicpulse.elections.adapter.in.web.dto.SyncElectionRequest;
+import dev.civicpulse.elections.adapter.in.web.dto.SyncElectionResultsRequest;
 import dev.civicpulse.elections.application.port.in.GetElectionUseCase;
 import dev.civicpulse.elections.application.port.in.ManageElectionUseCase;
 import dev.civicpulse.elections.domain.model.Election;
@@ -45,6 +48,16 @@ public class ElectionController {
     return ResponseEntity.created(URI.create("/elections/" + body.id())).body(body);
   }
 
+  /** Internal-only: not routed to the public internet by the Gateway (see gateway-service's
+   * RouteConfig) — called by government-sync-service's TSE-based state/municipal sync. */
+  @PostMapping("/sync")
+  public ElectionResponse sync(@Valid @RequestBody SyncElectionRequest request) {
+    Election election =
+        manageElectionUseCase.syncElection(
+            request.title(), ElectionScope.fromCode(request.scope()), request.electionDate(), request.location(), request.description());
+    return ElectionResponse.from(election);
+  }
+
   @GetMapping("/{id}")
   public ElectionResponse getById(@PathVariable UUID id) {
     return ElectionResponse.from(getElectionUseCase.getById(id));
@@ -71,5 +84,25 @@ public class ElectionController {
   @GetMapping("/{id}/candidacies")
   public List<CandidateResponse> listCandidates(@PathVariable UUID id) {
     return getElectionUseCase.listCandidates(id).stream().map(CandidateResponse::from).toList();
+  }
+
+  /** Internal-only, same convention as {@code /sync} above — called by government-sync-service
+   * once per office/race after computing the full ranked TSE result for it. */
+  @PostMapping("/{id}/results/sync")
+  public ResponseEntity<Void> syncResults(@PathVariable UUID id, @Valid @RequestBody SyncElectionResultsRequest request) {
+    List<ManageElectionUseCase.ResultInput> inputs =
+        request.results().stream()
+            .map(
+                r ->
+                    new ManageElectionUseCase.ResultInput(
+                        r.externalId(), r.candidateName(), r.partyAcronym(), r.votes(), r.rank(), r.elected(), r.politicianAccountId()))
+            .toList();
+    manageElectionUseCase.syncElectionResults(id, request.office(), inputs);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}/results")
+  public List<ElectionResultResponse> listResults(@PathVariable UUID id) {
+    return getElectionUseCase.listResults(id).stream().map(ElectionResultResponse::from).toList();
   }
 }

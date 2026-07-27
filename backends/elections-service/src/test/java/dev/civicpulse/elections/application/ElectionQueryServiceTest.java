@@ -7,11 +7,13 @@ import static org.mockito.Mockito.when;
 
 import dev.civicpulse.elections.application.port.out.ElectionCandidacyRepository;
 import dev.civicpulse.elections.application.port.out.ElectionRepository;
+import dev.civicpulse.elections.application.port.out.ElectionResultRepository;
 import dev.civicpulse.elections.application.port.out.PoliticianDirectoryGateway;
 import dev.civicpulse.elections.application.port.out.PoliticianDirectoryGateway.PoliticianSummary;
 import dev.civicpulse.elections.domain.exception.ElectionNotFoundException;
 import dev.civicpulse.elections.domain.model.Election;
 import dev.civicpulse.elections.domain.model.ElectionCandidacy;
+import dev.civicpulse.elections.domain.model.ElectionResult;
 import dev.civicpulse.elections.domain.model.ElectionScope;
 import java.time.Clock;
 import java.time.Instant;
@@ -33,6 +35,7 @@ class ElectionQueryServiceTest {
 
   @Mock private ElectionRepository electionRepository;
   @Mock private ElectionCandidacyRepository electionCandidacyRepository;
+  @Mock private ElectionResultRepository electionResultRepository;
   @Mock private PoliticianDirectoryGateway politicianDirectoryGateway;
 
   private ElectionQueryService service;
@@ -40,7 +43,8 @@ class ElectionQueryServiceTest {
   @BeforeEach
   void setUp() {
     service =
-        new ElectionQueryService(electionRepository, electionCandidacyRepository, politicianDirectoryGateway, Clock.fixed(NOW, ZoneOffset.UTC));
+        new ElectionQueryService(
+            electionRepository, electionCandidacyRepository, electionResultRepository, politicianDirectoryGateway, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
@@ -85,7 +89,7 @@ class ElectionQueryServiceTest {
     UUID electionId = UUID.randomUUID();
     UUID resolvableId = UUID.randomUUID();
     UUID goneId = UUID.randomUUID();
-    Election election = Election.create(electionId, "title", ElectionScope.NACIONAL, LocalDate.now(), null);
+    Election election = Election.create(electionId, "title", ElectionScope.NACIONAL, LocalDate.now(), null, null);
     when(electionRepository.findById(electionId)).thenReturn(Optional.of(election));
     when(electionCandidacyRepository.findByElectionId(electionId))
         .thenReturn(List.of(ElectionCandidacy.nominate(electionId, resolvableId), ElectionCandidacy.nominate(electionId, goneId)));
@@ -97,5 +101,26 @@ class ElectionQueryServiceTest {
 
     assertThat(candidates).hasSize(1);
     assertThat(candidates.get(0).accountId()).isEqualTo(resolvableId);
+  }
+
+  @Test
+  void listResultsThrowsWhenElectionMissing() {
+    UUID electionId = UUID.randomUUID();
+    when(electionRepository.findById(electionId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.listResults(electionId)).isInstanceOf(ElectionNotFoundException.class);
+  }
+
+  @Test
+  void listResultsDelegatesToRepository() {
+    UUID electionId = UUID.randomUUID();
+    Election election = Election.create(electionId, "title", ElectionScope.ESTADUAL, LocalDate.now(), "SE", null);
+    when(electionRepository.findById(electionId)).thenReturn(Optional.of(election));
+    ElectionResult result = ElectionResult.create(UUID.randomUUID(), electionId, "Governador", "1", "Jane Doe", "PRO", 5000L, 1, true, null);
+    when(electionResultRepository.findByElectionId(electionId)).thenReturn(List.of(result));
+
+    List<ElectionResult> results = service.listResults(electionId);
+
+    assertThat(results).containsExactly(result);
   }
 }

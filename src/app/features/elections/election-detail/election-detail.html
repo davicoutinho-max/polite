@@ -17,12 +17,50 @@
         </span>
       </div>
       <p class="election-detail__desc">{{ e.description }}</p>
+      <a class="election-detail__vote-cta" [routerLink]="['/elections', e.id, 'vote']">
+        <ui-icon name="how_to_vote" [size]="18" />
+        {{ 'button.register-my-vote' | translate: 'Register my vote' }}
+      </a>
     </ui-card>
 
-    <section class="election-detail__candidates">
-      <h2 class="election-detail__section-title">{{ 'label.candidates' | translate: 'Candidates' }}</h2>
+    <section class="election-detail__results">
+      <h2 class="election-detail__section-title">{{ 'label.results' | translate: 'Results' }}</h2>
 
-      @if (candidates().length) {
+      @if (resultsByOffice().length) {
+        @for (group of resultsByOffice(); track group.office) {
+          <ui-card padding="lg" class="results-office">
+            <h3 class="results-office__title">{{ group.office }}</h3>
+            <div class="results-office__list">
+              @for (candidate of previewOf(group.candidates, group.office); track candidate.id) {
+                <div class="result-row" [class.result-row--elected]="candidate.elected">
+                  <span class="result-row__rank">{{ candidate.rank }}º</span>
+                  @if (candidate.politicianAccountId) {
+                    <a class="result-row__name" [routerLink]="['/profile', candidate.politicianAccountId]">{{ candidate.candidateName }}</a>
+                  } @else {
+                    <span class="result-row__name">{{ candidate.candidateName }}</span>
+                  }
+                  @if (candidate.partyAcronym) {
+                    <ui-tag [label]="candidate.partyAcronym" severity="neutral" />
+                  }
+                  <span class="result-row__votes">{{ candidate.votes | number }}</span>
+                  @if (candidate.elected) {
+                    <ui-tag [label]="'label.elected' | translate: 'Elected'" severity="success" />
+                  }
+                </div>
+              }
+            </div>
+            @if (hasMore(group.candidates)) {
+              <button class="results-office__toggle" type="button" (click)="toggleExpanded(group.office)">
+                {{
+                  isExpanded(group.office)
+                    ? ('label.show-less' | translate: 'Show less')
+                    : ('label.show-all-candidates' | translate: 'Show all') + ' (' + group.candidates.length + ')'
+                }}
+              </button>
+            }
+          </ui-card>
+        }
+      } @else if (candidates().length) {
         <div class="election-detail__grid">
           @for (candidate of candidates(); track candidate.id) {
             <a class="candidate-card" [routerLink]="['/profile', candidate.id]">

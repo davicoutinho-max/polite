@@ -95,6 +95,22 @@ public class RouteConfig {
         .route("feed", r -> r.path("/api/feed/**").filters(f -> f.stripPrefix(2)).uri(uris.feedUri()))
         .route("live", r -> r.path("/api/live/**").filters(f -> f.stripPrefix(2)).uri(uris.liveUri()))
         .route("fundraising", r -> r.path("/api/fundraising/**").filters(f -> f.stripPrefix(2)).uri(uris.fundraisingUri()))
+        // --- government-sync-only endpoints: same "structurally unreachable" treatment as
+        // /accounts/provision above — elections-service's /elections/sync and
+        // /elections/{id}/results/sync must both be blocked ahead of the general elections route
+        // below. ---
+        .route(
+            "elections-sync-blocked",
+            r ->
+                r.path("/api/elections/elections/sync", "/api/elections/elections/*/results/sync")
+                    .filters(
+                        f ->
+                            f.filter(
+                                (exchange, chain) -> {
+                                  exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                                  return exchange.getResponse().setComplete();
+                                }))
+                    .uri(uris.electionsUri()))
         .route("elections", r -> r.path("/api/elections/**").filters(f -> f.stripPrefix(2)).uri(uris.electionsUri()))
         .route("participation", r -> r.path("/api/participation/**").filters(f -> f.stripPrefix(2)).uri(uris.participationUri()))
         .route("messaging", r -> r.path("/api/messaging/**").filters(f -> f.stripPrefix(2)).uri(uris.messagingUri()))

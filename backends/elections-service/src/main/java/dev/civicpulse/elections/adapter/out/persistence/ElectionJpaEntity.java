@@ -23,15 +23,18 @@ public class ElectionJpaEntity {
   @Column(name = "election_date", nullable = false)
   private LocalDate electionDate;
 
+  private String location;
+
   private String description;
 
   protected ElectionJpaEntity() {}
 
-  public ElectionJpaEntity(UUID id, String title, ElectionScope scope, LocalDate electionDate, String description) {
+  public ElectionJpaEntity(UUID id, String title, ElectionScope scope, LocalDate electionDate, String location, String description) {
     this.id = id;
     this.title = title;
     this.scope = scope;
     this.electionDate = electionDate;
+    this.location = location;
     this.description = description;
   }
 
@@ -49,6 +52,10 @@ public class ElectionJpaEntity {
 
   public LocalDate getElectionDate() {
     return electionDate;
+  }
+
+  public String getLocation() {
+    return location;
   }
 
   public String getDescription() {

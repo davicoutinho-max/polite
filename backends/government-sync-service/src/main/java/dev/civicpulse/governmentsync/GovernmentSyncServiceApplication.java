@@ -1,6 +1,7 @@
 package dev.civicpulse.governmentsync;
 
 import dev.civicpulse.governmentsync.adapter.out.client.CamaraServiceProperties;
+import dev.civicpulse.governmentsync.adapter.out.client.ElectionsServiceProperties;
 import dev.civicpulse.governmentsync.adapter.out.client.LegislativeServiceProperties;
 import dev.civicpulse.governmentsync.adapter.out.client.PartyManagementServiceProperties;
 import dev.civicpulse.governmentsync.adapter.out.client.PlatformConfigurationServiceProperties;
@@ -19,7 +20,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
   PartyManagementServiceProperties.class,
   PlatformConfigurationServiceProperties.class,
   TseServiceProperties.class,
-  LegislativeServiceProperties.class
+  LegislativeServiceProperties.class,
+  ElectionsServiceProperties.class
 })
 public class GovernmentSyncServiceApplication {
 

@@ -8,11 +8,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.civicpulse.governmentsync.application.port.in.SyncStateAndMunicipalUseCase.SyncResult;
+import dev.civicpulse.governmentsync.application.port.out.ElectionSyncGateway;
 import dev.civicpulse.governmentsync.application.port.out.PartySyncGateway;
 import dev.civicpulse.governmentsync.application.port.out.PoliticianSyncGateway;
 import dev.civicpulse.governmentsync.application.port.out.PoliticianSyncGateway.SyncPoliticianCommand;
 import dev.civicpulse.governmentsync.application.port.out.TseElectionDataGateway;
 import dev.civicpulse.governmentsync.application.port.out.TseElectionDataGateway.TseElectedCandidate;
+import dev.civicpulse.governmentsync.application.port.out.TseElectionDataGateway.TseElectionResult;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,12 +31,15 @@ class SyncStateAndMunicipalServiceTest {
   @Mock private TseElectionDataGateway tseElectionDataGateway;
   @Mock private PartySyncGateway partySyncGateway;
   @Mock private PoliticianSyncGateway politicianSyncGateway;
+  @Mock private ElectionSyncGateway electionSyncGateway;
 
   private SyncStateAndMunicipalService service;
 
   @BeforeEach
   void setUp() {
-    service = new SyncStateAndMunicipalService(tseElectionDataGateway, partySyncGateway, politicianSyncGateway);
+    service = new SyncStateAndMunicipalService(tseElectionDataGateway, partySyncGateway, politicianSyncGateway, electionSyncGateway);
+    when(tseElectionDataGateway.fetchElectionResults(ArgumentMatchers.anyInt(), any(), ArgumentMatchers.anySet(), ArgumentMatchers.anyBoolean()))
+        .thenReturn(List.of());
   }
 
   @Test
@@ -103,5 +108,38 @@ class SyncStateAndMunicipalServiceTest {
 
     assertThat(result.failures()).isEqualTo(1);
     assertThat(result.stateSynced()).isZero();
+  }
+
+  @Test
+  void electionResultsAreGroupedByRaceAndPushedWithPoliticianIdForWinnersOnly() {
+    UUID winnerId = UUID.randomUUID();
+    when(tseElectionDataGateway.fetchElectedCandidates(eq(2022), eq("SE"), ArgumentMatchers.anySet()))
+        .thenReturn(
+            List.of(new TseElectedCandidate("1", "WINNER", "WINNER", "Governador", "PSD", 55, "Partido Social Democrático", "SE", "SE")));
+    when(tseElectionDataGateway.fetchElectedCandidates(eq(2024), eq("SE"), ArgumentMatchers.anySet())).thenReturn(List.of());
+    when(tseElectionDataGateway.fetchElectionResults(eq(2022), eq("SE"), ArgumentMatchers.anySet(), eq(false)))
+        .thenReturn(
+            List.of(
+                new TseElectionResult("1", "WINNER", "WINNER", "Governador", "PSD", 55, "Partido Social Democrático", "SE", "SE", 5000L, 1, true),
+                new TseElectionResult("2", "LOSER", "LOSER", "Governador", "PP", 11, "Progressistas", "SE", "SE", 3000L, 2, false)));
+    when(partySyncGateway.syncParty(any())).thenReturn(winnerId);
+    when(politicianSyncGateway.syncPolitician(any(), any())).thenReturn(winnerId);
+
+    service.syncStateAndMunicipal("SE");
+
+    verify(electionSyncGateway)
+        .syncElectionResults(
+            any(),
+            eq("estadual"),
+            any(),
+            eq("SE"),
+            eq("Governador"),
+            ArgumentMatchers.argThat(
+                candidates ->
+                    candidates.size() == 2
+                        && candidates.get(0).externalId().equals("1")
+                        && candidates.get(0).politicianAccountId().equals(winnerId)
+                        && candidates.get(1).externalId().equals("2")
+                        && candidates.get(1).politicianAccountId() == null));
   }
 }

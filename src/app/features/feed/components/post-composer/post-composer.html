@@ -162,14 +162,11 @@
       />
     </label>
 
-    <input #imageInput type="file" accept="image/*" class="composer__hidden-input" (change)="onImageSelected($event)" />
-    <input #fileInput type="file" class="composer__hidden-input" (change)="onFileSelected($event)" />
-
     <div class="composer__actions">
       <div class="composer__tools">
-        <ui-icon-button icon="image" ariaLabel="Add image" [iconSize]="20" [fill]="!!imageFile()" (click)="imageInput.click()" />
+        <p-fileupload mode="basic" accept="image/*" [auto]="true" chooseIcon="pi pi-image" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onImageSelected($event)" />
         <ui-icon-button icon="poll" ariaLabel="Add poll" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
-        <ui-icon-button icon="attach_file" ariaLabel="Attach file" [iconSize]="20" [fill]="!!attachedFile()" (click)="fileInput.click()" />
+        <p-fileupload mode="basic" [auto]="true" chooseIcon="pi pi-paperclip" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onFileSelected($event)" />
       </div>
       <ui-button label="Post" variant="filled" [disabled]="!canPublish() || submitting()" (click)="onPublish()" />
     </div>

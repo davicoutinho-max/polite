@@ -61,23 +61,20 @@
           </label>
           <label class="quick-form__field">
             <span>{{ 'label.petition-type' | translate: 'Signature type' }}</span>
-            <select [ngModel]="petitionType()" (ngModelChange)="petitionType.set($event)" name="petitionType">
-              <option value="verified_support">{{ 'label.verified-support' | translate: 'Verified Support' }}</option>
-              <option value="popular_initiative">{{ 'label.popular-initiative' | translate: 'Popular Initiative' }}</option>
-            </select>
+            <p-select [options]="petitionTypeOptions" optionLabel="label" optionValue="value" [ngModel]="petitionType()" (ngModelChange)="petitionType.set($event)" name="petitionType" appendTo="body" />
           </label>
           <div class="quick-form__row">
             <label class="quick-form__field quick-form__field--grow">
               <span>{{ 'label.image-optional' | translate: 'Image (optional)' }}</span>
-              <input type="file" accept="image/*" (change)="onPetitionImageSelected($event)" />
+              <p-fileupload mode="basic" accept="image/*" chooseIcon="pi pi-image" [chooseLabel]="'label.image-optional' | translate: 'Image (optional)'" [auto]="true" (onSelect)="onPetitionImageSelected($event)" />
             </label>
             <label class="quick-form__field quick-form__field--grow">
               <span>{{ 'label.video-optional' | translate: 'Video (optional)' }}</span>
-              <input type="file" accept="video/*" (change)="onPetitionVideoSelected($event)" />
+              <p-fileupload mode="basic" accept="video/*" chooseIcon="pi pi-video" [chooseLabel]="'label.video-optional' | translate: 'Video (optional)'" [auto]="true" (onSelect)="onPetitionVideoSelected($event)" />
             </label>
             <label class="quick-form__field quick-form__field--grow">
               <span>{{ 'label.file-optional' | translate: 'File (optional)' }}</span>
-              <input type="file" (change)="onPetitionFileSelected($event)" />
+              <p-fileupload mode="basic" chooseIcon="pi pi-paperclip" [chooseLabel]="'label.file-optional' | translate: 'File (optional)'" [auto]="true" (onSelect)="onPetitionFileSelected($event)" />
             </label>
           </div>
         }

@@ -21,6 +21,15 @@ public interface TseElectionDataGateway {
    * returned. */
   List<TseElectedCandidate> fetchElectedCandidates(int year, String uf, Set<String> cargoFilter);
 
+  /** Every candidate TSE reported for the given cargos — not just the winners {@link
+   * #fetchElectedCandidates} returns — with real vote counts ({@code QT_VOTOS_NOMINAIS}, summed
+   * across every município/zona row for the same candidate) and a rank computed within each race.
+   * {@code groupByMunicipality} controls how "one race" is defined: {@code true} for municipal
+   * cargos (Prefeito/Vereador — each município elects its own, so ranking must not mix
+   * municípios); {@code false} for state cargos (Governador/Deputado Estadual/Deputado Distrital —
+   * one statewide race per cargo, votes summed across every município the candidate appears in). */
+  List<TseElectionResult> fetchElectionResults(int year, String uf, Set<String> cargoFilter, boolean groupByMunicipality);
+
   /** {@code municipality} is only meaningful for municipal cargos (a Vereador's own city); for
    * state cargos it's whatever município happened to appear last while deduplicating rows across
    * the state — callers must use {@code uf}, not {@code municipality}, as the location for those. */
@@ -34,4 +43,23 @@ public interface TseElectionDataGateway {
       String partyName,
       String uf,
       String municipality) {}
+
+  /** {@code rank} is 1-indexed within the race this candidate belongs to (see {@code
+   * groupByMunicipality} above) — rank 1 is the top vote-getter in that race, not necessarily
+   * "elected" (a majoritarian race like Governador/Prefeito has rank 1 == elected, but a
+   * proportional-representation race like Deputado Estadual/Vereador does not — {@code elected}
+   * is TSE's own verdict via {@code CD_SIT_TOT_TURNO}, independent of rank). */
+  record TseElectionResult(
+      String externalId,
+      String legalName,
+      String ballotName,
+      String cargo,
+      String partyAcronym,
+      Integer partyNumber,
+      String partyName,
+      String uf,
+      String municipality,
+      long votes,
+      int rank,
+      boolean elected) {}
 }

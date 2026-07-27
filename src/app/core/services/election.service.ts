@@ -2,13 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Election, ElectionCandidateSummary, ElectionScope } from '../models';
+import { Election, ElectionCandidateSummary, ElectionResult, ElectionScope, PersonalVote } from '../models';
 
 interface ElectionResponseDto {
   readonly id: string;
   readonly title: string;
   readonly scope: string;
   readonly electionDate: string;
+  readonly location: string | null;
   readonly description: string | null;
 }
 
@@ -18,6 +19,26 @@ interface CandidateResponseDto {
   readonly avatarUrl: string | null;
   readonly office: string | null;
   readonly partyAcronym: string | null;
+}
+
+interface ResultResponseDto {
+  readonly id: string;
+  readonly office: string;
+  readonly candidateName: string;
+  readonly partyAcronym: string | null;
+  readonly votes: number;
+  readonly rank: number;
+  readonly elected: boolean;
+  readonly politicianAccountId: string | null;
+}
+
+interface PersonalVoteResponseDto {
+  readonly id: string;
+  readonly office: string;
+  readonly candidateName: string;
+  readonly candidatePartyAcronym: string | null;
+  readonly politicianAccountId: string | null;
+  readonly castAt: string;
 }
 
 function capitalizeScope(scope: string): ElectionScope {
@@ -39,6 +60,12 @@ export class ElectionService {
 
   private readonly _candidatesByElection = signal<Map<string, ElectionCandidateSummary[]>>(new Map());
 
+  /** Unlike candidates (eagerly preloaded for every election in {@link reload}), results are
+   * loaded lazily per-election on demand — a single state election alone can carry 300+ rows
+   * (every Deputado Estadual candidate, not just winners), so preloading them for every election
+   * up front the way candidates are would be wasteful. */
+  private readonly _resultsByElection = signal<Map<string, ElectionResult[]>>(new Map());
+
   readonly upcomingCount = computed(() => this._elections().filter((e) => this.isUpcoming(e)).length);
   readonly totalCandidates = computed(() => {
     const ids = new Set<string>();
@@ -56,6 +83,10 @@ export class ElectionService {
     return upcoming[0]?.date ?? '—';
   });
 
+  /** Most recent year first — matches how a citizen naturally thinks about "the 2024 elections",
+   * "the 2022 elections", etc. rather than a flat scope-only filter. */
+  readonly years = computed(() => [...new Set(this._elections().map((e) => e.year))].sort((a, b) => b - a));
+
   constructor() {
     this.reload().subscribe();
   }
@@ -69,6 +100,8 @@ export class ElectionService {
             title: e.title,
             scope: capitalizeScope(e.scope),
             date: formatDate(e.electionDate),
+            year: Number(e.electionDate.slice(0, 4)),
+            location: e.location,
             description: e.description ?? '',
           }),
         ),
@@ -98,6 +131,92 @@ export class ElectionService {
 
   candidatesOf(electionId: string): ElectionCandidateSummary[] {
     return this._candidatesByElection().get(electionId) ?? [];
+  }
+
+  loadResults(electionId: string): Observable<ElectionResult[]> {
+    return this.http.get<ResultResponseDto[]>(`${this.apiBase}/elections/${electionId}/results`).pipe(
+      map((list) =>
+        list.map(
+          (r): ElectionResult => ({
+            id: r.id,
+            office: r.office,
+            candidateName: r.candidateName,
+            partyAcronym: r.partyAcronym ?? '',
+            votes: r.votes,
+            rank: r.rank,
+            elected: r.elected,
+            politicianAccountId: r.politicianAccountId,
+          }),
+        ),
+      ),
+      tap((results) => this._resultsByElection.update((map) => new Map(map).set(electionId, results))),
+    );
+  }
+
+  resultsOf(electionId: string): ElectionResult[] {
+    return this._resultsByElection().get(electionId) ?? [];
+  }
+
+  private readonly _myVotesByElection = signal<Map<string, PersonalVote[]>>(new Map());
+
+  loadMyVotes(electionId: string): Observable<PersonalVote[]> {
+    return this.http.get<PersonalVoteResponseDto[]>(`${this.apiBase}/elections/${electionId}/my-votes`).pipe(
+      map((list) =>
+        list.map(
+          (v): PersonalVote => ({
+            id: v.id,
+            office: v.office,
+            candidateName: v.candidateName,
+            candidatePartyAcronym: v.candidatePartyAcronym ?? '',
+            politicianAccountId: v.politicianAccountId,
+            castAt: v.castAt,
+          }),
+        ),
+      ),
+      tap((votes) => this._myVotesByElection.update((map) => new Map(map).set(electionId, votes))),
+    );
+  }
+
+  myVotesOf(electionId: string): PersonalVote[] {
+    return this._myVotesByElection().get(electionId) ?? [];
+  }
+
+  /** Personal/unofficial only — see PersonalVote's javadoc. Idempotent per {@code office}:
+   * registering again for the same office updates the citizen's existing pick. */
+  registerMyVote(
+    electionId: string,
+    office: string,
+    candidateName: string,
+    candidatePartyAcronym: string | null,
+    politicianAccountId: string | null,
+  ): Observable<PersonalVote> {
+    return this.http
+      .post<PersonalVoteResponseDto>(`${this.apiBase}/elections/${electionId}/my-votes`, {
+        office,
+        candidateName,
+        candidatePartyAcronym,
+        politicianAccountId,
+      })
+      .pipe(
+        map(
+          (v): PersonalVote => ({
+            id: v.id,
+            office: v.office,
+            candidateName: v.candidateName,
+            candidatePartyAcronym: v.candidatePartyAcronym ?? '',
+            politicianAccountId: v.politicianAccountId,
+            castAt: v.castAt,
+          }),
+        ),
+        tap((vote) =>
+          this._myVotesByElection.update((map) => {
+            const next = new Map(map);
+            const existing = (next.get(electionId) ?? []).filter((v) => v.office !== office);
+            next.set(electionId, [...existing, vote]);
+            return next;
+          }),
+        ),
+      );
   }
 
   byId(electionId: string): Election | undefined {

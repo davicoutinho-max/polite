@@ -106,3 +106,19 @@
 }
 .vote-record__tally-item--yes { color: var(--cp-success, #2e7d32); }
 .vote-record__tally-item--no { color: var(--cp-danger, #c62828); }
+
+// Same timeline visual as bill-card's "View history" dialog (shared/legislative/bill-card) — kept
+// as a duplicate rather than extracted into a shared component, matching this codebase's existing
+// pattern of small, page-scoped styles over premature sharing.
+.timeline { display: flex; flex-direction: column; }
+.timeline__item { display: flex; gap: var(--cp-space-md); }
+.timeline__marker { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 3px; }
+.timeline__dot { width: 12px; height: 12px; border-radius: var(--cp-radius-full); background: var(--cp-outline-variant); flex-shrink: 0; }
+.timeline__dot--current { background: var(--cp-secondary); box-shadow: 0 0 0 3px var(--cp-secondary-container); }
+.timeline__line { flex: 1; width: 2px; min-height: var(--cp-space-lg); background: var(--cp-outline-variant); margin: 4px 0; }
+.timeline__content { flex: 1; padding-bottom: var(--cp-space-lg); }
+.timeline__date { display: block; font-size: 12px; font-weight: 700; color: var(--cp-on-surface); margin-bottom: 2px; }
+.timeline__description {
+  margin: 0; font-size: 13px; color: var(--cp-on-surface-variant); line-height: 18px;
+  em { font-style: normal; opacity: 0.8; }
+}

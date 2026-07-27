@@ -88,6 +88,43 @@
     </section>
 
     <section class="bill-detail__section">
+      <h2 class="bill-detail__section-title">{{ 'label.processing-timeline' | translate: 'Processing timeline' }}</h2>
+      @if (timelineLoading()) {
+        <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+      } @else if (timeline().length === 0) {
+        <ui-empty
+          icon="history"
+          [title]="'empty.no-history.title' | translate: 'No processing history'"
+          [description]="'empty.no-history-for-bill' | translate: 'No tramitação history is available for this bill in the official open-data service.'"
+        />
+      } @else {
+        <ui-card padding="lg">
+          <div class="timeline">
+            @for (entry of timeline(); track $index; let isFirst = $first; let isLast = $last) {
+              <div class="timeline__item">
+                <div class="timeline__marker">
+                  <span class="timeline__dot" [class.timeline__dot--current]="isFirst"></span>
+                  @if (!isLast) {
+                    <span class="timeline__line"></span>
+                  }
+                </div>
+                <div class="timeline__content">
+                  <span class="timeline__date">{{ entry.date }}</span>
+                  <p class="timeline__description">
+                    {{ entry.description }}
+                    @if (entry.location) {
+                      <em> — {{ entry.location }}</em>
+                    }
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        </ui-card>
+      }
+    </section>
+
+    <section class="bill-detail__section">
       <h2 class="bill-detail__section-title">{{ 'label.voting-status' | translate: 'Voting status' }}</h2>
       @if (votingLoading()) {
         <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>

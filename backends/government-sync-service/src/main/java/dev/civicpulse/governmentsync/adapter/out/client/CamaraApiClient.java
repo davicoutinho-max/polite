@@ -44,9 +44,25 @@ class CamaraApiClient implements CamaraGateway {
       String cpf = detail == null ? null : detail.cpf();
       String education = detail == null ? null : detail.escolaridade();
       List<String> socialLinks = detail == null || detail.redeSocial() == null ? List.of() : detail.redeSocial();
+      UltimoStatusDto status = detail == null ? null : detail.ultimoStatus();
+      GabineteDto gabinete = status == null ? null : status.gabinete();
+      String phone = blankToNull(gabinete == null ? null : gabinete.telefone());
+      String officeDetail = buildOfficeDetail(gabinete);
+      String mandateStartDate = status == null ? null : status.data();
       deputies.add(
           new CamaraDeputy(
-              String.valueOf(dto.id()), dto.nome(), dto.siglaPartido(), dto.siglaUf(), dto.urlFoto(), dto.email(), cpf, education, socialLinks));
+              String.valueOf(dto.id()),
+              dto.nome(),
+              dto.siglaPartido(),
+              dto.siglaUf(),
+              dto.urlFoto(),
+              dto.email(),
+              cpf,
+              education,
+              socialLinks,
+              phone,
+              officeDetail,
+              mandateStartDate));
     }
     return deputies;
   }
@@ -69,6 +85,34 @@ class CamaraApiClient implements CamaraGateway {
       log.warn("Câmara deputy detail lookup failed for id {}: {}", id, e.getMessage());
       return null;
     }
+  }
+
+  /** Builds a human-readable office location string (e.g. "Anexo IV, Sala 504, 5º andar") from
+   * whatever gabinete fields Câmara actually populated — confirmed blank for out-of-mandate
+   * deputies, so callers must tolerate a null/empty result. */
+  private static String buildOfficeDetail(GabineteDto gabinete) {
+    if (gabinete == null) {
+      return null;
+    }
+    List<String> parts = new ArrayList<>();
+    if (notBlank(gabinete.predio())) {
+      parts.add("Anexo " + gabinete.predio());
+    }
+    if (notBlank(gabinete.sala())) {
+      parts.add("Sala " + gabinete.sala());
+    }
+    if (notBlank(gabinete.andar())) {
+      parts.add(gabinete.andar() + "º andar");
+    }
+    return parts.isEmpty() ? null : String.join(", ", parts);
+  }
+
+  private static boolean notBlank(String value) {
+    return value != null && !value.isBlank();
+  }
+
+  private static String blankToNull(String value) {
+    return notBlank(value) ? value : null;
   }
 
   private <T, R> List<T> fetchAllPages(String path, Class<R> responseType, Function<R, List<T>> itemsExtractor) {
@@ -106,5 +150,9 @@ class CamaraApiClient implements CamaraGateway {
 
   private record DeputadoDetailEnvelope(DeputadoDetailDto dados) {}
 
-  private record DeputadoDetailDto(String cpf, String escolaridade, List<String> redeSocial) {}
+  private record DeputadoDetailDto(String cpf, String escolaridade, List<String> redeSocial, UltimoStatusDto ultimoStatus) {}
+
+  private record UltimoStatusDto(String data, GabineteDto gabinete) {}
+
+  private record GabineteDto(String predio, String sala, String andar, String telefone) {}
 }

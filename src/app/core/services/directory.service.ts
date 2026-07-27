@@ -7,8 +7,15 @@ import { SessionService } from './session.service';
 
 /** Loading a single large page once and filtering/sorting client-side (same pattern used
  * throughout this pass — see legislative-service's demo-scale reasoning) rather than wiring
- * server-side pagination through every directory page's filter UI. */
-const DIRECTORY_PAGE_SIZE = 500;
+ * server-side pagination through every directory page's filter UI.
+ *
+ * Must stay above the real total politician count or the tail silently disappears from every
+ * screen that looks politicians up by id (e.g. party representative lists showing "Unknown") —
+ * happened for real once state/municipal TSE sync pushed a single state past 500 rows (513
+ * federal deputies alone already exceeded the old limit). 10000 covers federal + every state's
+ * state/municipal elected officials for the foreseeable sync scope; this is still a stopgap
+ * until the directory pages get real server-side pagination. */
+const DIRECTORY_PAGE_SIZE = 10000;
 
 export interface FilterOption {
   readonly value: string;
