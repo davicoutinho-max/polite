@@ -24,6 +24,21 @@
 
     <app-page-header [title]="b.identification" [subtitle]="b.typeLabel" icon="gavel" />
 
+    @if (b.author) {
+      <ui-card padding="lg" class="bill-detail__author">
+        <div class="bill-detail__author-icon">
+          <ui-icon name="person" [size]="24" />
+        </div>
+        <div class="bill-detail__author-body">
+          <span class="bill-detail__author-label">{{ 'label.author' | translate: 'Author' }}</span>
+          <span class="bill-detail__author-name">{{ b.author }}</span>
+        </div>
+        @if (b.authorParty) {
+          <ui-tag [label]="b.authorParty" severity="primary" />
+        }
+      </ui-card>
+    }
+
     <ui-card padding="lg" class="bill-detail__summary">
       <div class="bill-detail__tags">
         @if (b.typeLabel) {
@@ -40,9 +55,6 @@
 
       <p class="bill-detail__summary-text">{{ b.fullSummary || b.summary }}</p>
 
-      @if (b.author) {
-        <p class="bill-detail__meta"><strong>{{ 'label.author' | translate: 'Author' }}:</strong> {{ b.author }}</p>
-      }
       @if (b.keywords) {
         <p class="bill-detail__meta"><strong>{{ 'label.keywords' | translate: 'Keywords' }}:</strong> {{ b.keywords }}</p>
       }
@@ -58,6 +70,7 @@
             {{ 'button.view-full-text' | translate: 'View full text' }}
           </a>
         }
+        <app-ask-ai [topicLabel]="askAiTopicLabel()" [askFn]="askAiFn()" [prompts]="askAiPrompts" />
       </div>
     </ui-card>
 

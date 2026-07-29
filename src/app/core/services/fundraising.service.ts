@@ -27,6 +27,12 @@ interface PaymentIntentResponseDto {
   readonly id: string;
 }
 
+interface CheckoutUrlResponseDto {
+  readonly checkoutUrl: string;
+}
+
+export type ContributionGateway = 'pix' | 'card';
+
 @Injectable({ providedIn: 'root' })
 export class FundraisingService {
   private readonly http = inject(HttpClient);
@@ -77,34 +83,30 @@ export class FundraisingService {
       });
   }
 
-  contribute(id: string, amount: number): void {
+  /** Real Asaas Checkout flow — Asaas's own hosted invoice page collects whatever the gateway
+   * needs (Pix QR/copy-paste or a card form), so this backend and frontend never see a card
+   * number. Returns the invoice URL to send the citizen to; the actual "raised" amount only
+   * updates once Asaas's webhook confirms the payment settled (see payments-service's
+   * AsaasWebhookController) — there's no instant/synchronous confirmation for any gateway
+   * anymore, Pix included, since that's how real payment gateways actually work. */
+  startContribution(id: string, amount: number, gateway: ContributionGateway): Observable<string> {
     if (amount <= 0) {
-      return;
+      return of('');
     }
-    const fundraiser = this._fundraisers().find((f) => f.id === id);
-    if (!fundraiser) {
-      return;
-    }
-    this.http
-      .get<FundraiserResponseDto>(`${this.apiBase}/fundraisers/${id}`)
-      .pipe(
-        switchMap((dto) =>
-          this.http.post<PaymentIntentResponseDto>(`${this.paymentsApiBase}/payment-intents`, {
-            purpose: 'fundraising_contribution',
-            referenceId: id,
-            payeeId: dto.organizerAccountId,
-            amountCents: Math.round(amount * 100),
-            gateway: 'pix',
-            idempotencyKey: `contribution-${id}-${Date.now()}`,
-          }),
-        ),
-        switchMap((intent) => this.http.post(`${this.paymentsApiBase}/payment-intents/${intent.id}/capture`, {})),
-        switchMap(() => this.http.get<FundraiserResponseDto>(`${this.apiBase}/fundraisers/${id}`)),
-        switchMap((dto) => this.toFundraiser(dto)),
-      )
-      .subscribe({
-        next: (updated) => this._fundraisers.update((list) => list.map((f) => (f.id === id ? updated : f))),
-      });
+    return this.http.get<FundraiserResponseDto>(`${this.apiBase}/fundraisers/${id}`).pipe(
+      switchMap((dto) =>
+        this.http.post<PaymentIntentResponseDto>(`${this.paymentsApiBase}/payment-intents`, {
+          purpose: 'fundraising_contribution',
+          referenceId: id,
+          payeeId: dto.organizerAccountId,
+          amountCents: Math.round(amount * 100),
+          gateway,
+          idempotencyKey: `contribution-${gateway}-${id}-${Date.now()}`,
+        }),
+      ),
+      switchMap((intent) => this.http.post<CheckoutUrlResponseDto>(`${this.paymentsApiBase}/payment-intents/${intent.id}/checkout-url`, {})),
+      map((session) => session.checkoutUrl),
+    );
   }
 
   categoryMeta(category: FundraiserCategory): FundraiserCategoryMeta {

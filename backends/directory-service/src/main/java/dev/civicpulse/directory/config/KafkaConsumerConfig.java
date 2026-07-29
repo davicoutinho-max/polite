@@ -1,6 +1,7 @@
 package dev.civicpulse.directory.config;
 
 import dev.civicpulse.directory.adapter.in.messaging.dto.AccountRegisteredMessage;
+import dev.civicpulse.directory.adapter.in.messaging.dto.PartyNumberCorrectedMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PartyRegisteredMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PoliticianReassignedMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PoliticianRegisteredMessage;
@@ -28,7 +29,8 @@ public class KafkaConsumerConfig {
           + "RepresentativeLinked:" + RepresentativeLinkedMessage.class.getName() + "," //
           + "PoliticianRegistered:" + PoliticianRegisteredMessage.class.getName() + "," //
           + "PoliticianReassigned:" + PoliticianReassignedMessage.class.getName() + "," //
-          + "PartyRegistered:" + PartyRegisteredMessage.class.getName();
+          + "PartyRegistered:" + PartyRegisteredMessage.class.getName() + "," //
+          + "PartyNumberCorrected:" + PartyNumberCorrectedMessage.class.getName();
 
   @Bean
   public ConsumerFactory<String, Object> consumerFactory(@Value("${spring.kafka.bootstrap-servers}") String bootstrapServers) {

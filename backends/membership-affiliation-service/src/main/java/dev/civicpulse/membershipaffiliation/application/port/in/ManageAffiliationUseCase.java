@@ -1,6 +1,7 @@
 package dev.civicpulse.membershipaffiliation.application.port.in;
 
 import dev.civicpulse.membershipaffiliation.domain.model.Affiliation;
+import dev.civicpulse.membershipaffiliation.domain.model.AffiliationStatusHistoryEntry;
 import dev.civicpulse.membershipaffiliation.domain.model.MembershipCard;
 import java.util.List;
 import java.util.Optional;
@@ -34,4 +35,9 @@ public interface ManageAffiliationUseCase {
 
   /** The digital membership card issued alongside {@link #confirmAffiliation}, if any. */
   Optional<MembershipCard> getCard(UUID affiliationId);
+
+  /** Full audit trail, oldest first — the citizen-facing status timeline reads directly off this
+   * rather than just the affiliation's current status, since {@code fromStatus}/{@code
+   * changedBy}/{@code changedAt} per step is what makes a real timeline instead of a bare badge. */
+  List<AffiliationStatusHistoryEntry> listStatusHistory(UUID affiliationId);
 }

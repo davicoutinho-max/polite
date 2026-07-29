@@ -10,6 +10,7 @@ import { SessionService } from '../../core/services/session.service';
 import { PartySummary } from '../../core/models';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
+import { UiAvatar } from '../../shared/ui/ui-avatar/ui-avatar';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
 import { CompactNumberPipe } from '../../shared/pipes/compact-number.pipe';
@@ -33,6 +34,7 @@ const PAGE_SIZE = 9;
     InputIcon,
     InfiniteScrollDirective,
     PageHeader,
+    UiAvatar,
     UiIcon,
     UiTag,
     CompactNumberPipe,
@@ -83,7 +85,9 @@ export class PartiesPage {
     const sort = this.sort();
     return [...list].sort((a, b) => {
       if (sort === 'name') return a.name.localeCompare(b.name);
-      if (sort === 'founded') return b.founded - a.founded;
+      // Unknown founding years (see PartySummary.founded's javadoc) sink to the end regardless of
+      // sort direction — there's no honest way to call an unknown date "newest".
+      if (sort === 'founded') return (b.founded ?? -Infinity) - (a.founded ?? -Infinity);
       return b.members - a.members;
     });
   });

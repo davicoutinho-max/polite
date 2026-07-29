@@ -11,6 +11,7 @@ import dev.civicpulse.identity.domain.exception.InvalidDocumentNumberException;
 import dev.civicpulse.identity.domain.model.Account;
 import dev.civicpulse.identity.domain.model.AccountId;
 import dev.civicpulse.identity.domain.model.AccountType;
+import dev.civicpulse.identity.domain.model.DocumentNumberValidator;
 import dev.civicpulse.identity.domain.model.DocumentType;
 import java.time.Clock;
 import java.time.Instant;
@@ -53,10 +54,11 @@ public class RegisterAccountService implements RegisterAccountUseCase {
     byte[] documentNumberEncrypted = null;
 
     if (accountType != AccountType.ADMIN) {
-      // Mirrors the frontend's br-documents.ts rule exactly: a digit-count check, not a full
-      // checksum — see InvalidDocumentNumberException's javadoc.
+      // Mirrors the frontend's br-documents.ts check-digit validation exactly (isValidCpf/
+      // isValidCnpj there) — enforced server-side too since a direct API caller never goes
+      // through the frontend's own check. See InvalidDocumentNumberException's javadoc.
       String digitsOnly = command.rawDocumentNumber() == null ? "" : command.rawDocumentNumber().replaceAll("\\D", "");
-      if (documentType == null || digitsOnly.length() != documentType.digitCount()) {
+      if (documentType == null || !DocumentNumberValidator.isValid(documentType, digitsOnly)) {
         throw new InvalidDocumentNumberException(documentType == null ? DocumentType.CPF : documentType);
       }
       documentNumberHash = documentCipher.hash(digitsOnly);

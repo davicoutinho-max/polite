@@ -37,7 +37,6 @@ interface MediaUploadResponseDto {
 
 interface StartSignatureResponseDto {
   readonly verificationId: string;
-  readonly demoCode: string;
   readonly contact: string | null;
   readonly method: string;
 }
@@ -134,9 +133,9 @@ export class ParticipationService {
     return this.http.post<MediaUploadResponseDto>(`${environment.apiBaseUrl}/api/feed/media`, formData);
   }
 
-  /** Step 1 of the DocuSign-like sign flow: captures the tier-specific identity fields and
-   * returns a verification code (stood in for a real SMS/email send — see `demoCode`). Nothing is
-   * recorded as a signature yet. */
+  /** Step 1 of the DocuSign-like sign flow: captures the tier-specific identity fields — a real
+   * verification code is emailed to `command.contact` by participation-service (see
+   * ResendEmailClient), never returned here. Nothing is recorded as a signature yet. */
   startPetitionSignature(petitionId: string, command: StartPetitionSignatureCommand): Observable<PetitionSignatureVerificationStarted> {
     const citizenId = this.citizenId;
     if (!citizenId) {
@@ -147,7 +146,7 @@ export class ParticipationService {
         citizenAccountId: citizenId,
         ...command,
       })
-      .pipe(map((dto) => ({ verificationId: dto.verificationId, demoCode: dto.demoCode, contact: dto.contact, method: dto.method })));
+      .pipe(map((dto) => ({ verificationId: dto.verificationId, contact: dto.contact, method: dto.method })));
   }
 
   /** Step 2: confirms the code and, only then, materializes the real signature. */

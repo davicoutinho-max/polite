@@ -19,6 +19,7 @@ affiliation-request-rejected:3:1
 party-member-status-changed:3:1
 
 party-registered:3:1
+party-number-corrected:3:1
 politician-reassigned:3:1
 language-added:1:1
 language-removed:1:1

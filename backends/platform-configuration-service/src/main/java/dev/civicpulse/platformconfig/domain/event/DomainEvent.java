@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public sealed interface DomainEvent
     permits PartyRegistered,
+        PartyNumberCorrected,
         PoliticianReassigned,
         LanguageAdded,
         LanguageRemoved,

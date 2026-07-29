@@ -20,6 +20,9 @@ export interface PartyRepresentative {
   readonly name: string;
   readonly role: string;
   readonly avatarUrl: string;
+  /** UF or município, when known — without it, a party with many representatives holding the
+   * same office (e.g. 60 "Vereador" entries) reads as an undifferentiated repeated list. */
+  readonly location: string;
 }
 
 export interface Party {
@@ -30,7 +33,8 @@ export interface Party {
   readonly logoUrl: string;
   readonly coverUrl: string;
   readonly ideology: string;
-  readonly foundedYear: number;
+  /** Null when unknown — see PartySummary.founded's javadoc for why this is never faked. */
+  readonly foundedYear: number | null;
   readonly president: string;
   readonly memberCount: number;
   readonly history: string;

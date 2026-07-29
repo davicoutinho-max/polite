@@ -4,14 +4,16 @@ import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
 import { InputOtp } from 'primeng/inputotp';
 import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { Observable } from 'rxjs';
 import { LegislativeBillSummary, Petition, StartPetitionSignatureCommand } from '../../../../core/models';
+import { AiAssistantService } from '../../../../core/services/ai-assistant.service';
 import { LegislativeOpenDataService } from '../../../../core/services/legislative-open-data.service';
 import { ParticipationService } from '../../../../core/services/participation.service';
 import { SessionService } from '../../../../core/services/session.service';
 import { TranslateService } from '../../../../core/services/translate.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { AskAi, AskAiPromptOption } from '../../../../shared/ai/ask-ai/ask-ai';
 import { BillCard } from '../../../../shared/legislative/bill-card/bill-card';
 import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
@@ -20,7 +22,20 @@ import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiProgress } from '../../../../shared/ui/ui-progress/ui-progress';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 
-type SignStep = 'closed' | 'confirm' | 'form' | 'code';
+type SignStep = 'closed' | 'confirm' | 'form' | 'code' | 'done';
+
+/** Order-tracking-style stepper shown at the top of the sign wizard — mirrors the visual language
+ * used for the affiliation and bill-history timelines (done steps green, current step badged). */
+const SIGN_WIZARD_STEPS: ReadonlyArray<{
+  readonly step: Exclude<SignStep, 'closed' | 'done'>;
+  readonly icon: string;
+  readonly labelKey: string;
+  readonly labelDefault: string;
+}> = [
+  { step: 'confirm', icon: 'fact_check', labelKey: 'label.sign-step-confirm', labelDefault: 'Confirm' },
+  { step: 'form', icon: 'edit_document', labelKey: 'label.sign-step-data', labelDefault: 'Your data' },
+  { step: 'code', icon: 'mail', labelKey: 'label.sign-step-verify', labelDefault: 'Verification' },
+];
 
 /** Matches LegislativeOpenDataService's own page size — used here only to guess whether a "load
  * more" click is likely to reveal anything. */
@@ -38,7 +53,6 @@ const BILLS_PAGE_SIZE = 8;
     FormsModule,
     InputText,
     DatePicker,
-    Select,
     Checkbox,
     InputOtp,
     UiCard,
@@ -48,6 +62,7 @@ const BILLS_PAGE_SIZE = 8;
     UiIcon,
     UiDialog,
     BillCard,
+    AskAi,
     CompactNumberPipe,
     TranslatePipe,
   ],
@@ -59,12 +74,35 @@ export class PetitionCard {
   private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
   private readonly legislativeOpenData = inject(LegislativeOpenDataService);
+  private readonly aiAssistant = inject(AiAssistantService);
 
   readonly petition = input.required<Petition>();
 
   protected readonly percent = computed(() => Math.min(100, Math.round((this.petition().signatures / this.petition().goal) * 100)));
 
   protected readonly isPopularInitiative = computed(() => this.petition().petitionType === 'popular_initiative');
+
+  protected readonly askAiFn = computed(
+    () => (question: string): Observable<string> =>
+      this.aiAssistant.askAboutParticipationItem('petition', this.petition().title, this.petition().summary, question),
+  );
+  protected readonly askAiPrompts: AskAiPromptOption[] = [
+    {
+      question: 'Summarize this petition in one or two sentences.',
+      label: this.translate.t('button.ask-ai-summarize', 'Summarize'),
+      icon: 'summarize',
+    },
+    {
+      question: 'Who would this petition affect if it succeeds?',
+      label: this.translate.t('button.ask-ai-who-affected', 'Who is affected?'),
+      icon: 'groups',
+    },
+    {
+      question: 'What happens after this petition reaches its signature goal?',
+      label: this.translate.t('button.ask-ai-whats-next', "What's next?"),
+      icon: 'arrow_forward',
+    },
+  ];
 
   // ---- View details ----
   protected readonly showDetails = signal(false);
@@ -80,6 +118,7 @@ export class PetitionCard {
   private billsPage = 1;
 
   // ---- Sign wizard ----
+  protected readonly signWizardSteps = SIGN_WIZARD_STEPS;
   protected readonly signStep = signal<SignStep>('closed');
   protected readonly signError = signal('');
   protected readonly signSubmitting = signal(false);
@@ -89,18 +128,12 @@ export class PetitionCard {
   protected readonly birthDate = signal<Date | null>(null);
   protected readonly city = signal('');
   protected readonly state = signal('');
-  protected readonly verificationMethod = signal<'sms' | 'email'>('sms');
-  protected readonly verificationMethodOptions = [
-    { value: 'sms' as const, label: this.translate.t('label.sms', 'SMS') },
-    { value: 'email' as const, label: this.translate.t('label.email', 'E-mail') },
-  ];
   protected readonly contact = signal('');
   protected readonly electoralData = signal('');
   protected readonly eSignatureConsent = signal(false);
   protected readonly typedSignature = signal('');
 
   protected readonly verificationId = signal<string | null>(null);
-  protected readonly demoCode = signal('');
   protected readonly codeInput = signal('');
 
   protected openDetails(): void {
@@ -153,6 +186,20 @@ export class PetitionCard {
     });
   }
 
+  protected signWizardStepState(step: Exclude<SignStep, 'closed' | 'done'>): 'done' | 'active' | 'pending' {
+    const order: Exclude<SignStep, 'closed' | 'done'>[] = ['confirm', 'form', 'code'];
+    const current = this.signStep();
+    if (current === 'closed' || current === 'done') {
+      return 'done';
+    }
+    const currentIndex = order.indexOf(current);
+    const stepIndex = order.indexOf(step);
+    if (stepIndex < currentIndex) {
+      return 'done';
+    }
+    return stepIndex === currentIndex ? 'active' : 'pending';
+  }
+
   protected startSignWizard(): void {
     const account = this.session.account();
     this.fullName.set(account.name ?? '');
@@ -160,7 +207,6 @@ export class PetitionCard {
     this.birthDate.set(null);
     this.city.set('');
     this.state.set('');
-    this.verificationMethod.set('sms');
     this.contact.set('');
     this.electoralData.set('');
     this.eSignatureConsent.set(false);
@@ -186,6 +232,10 @@ export class PetitionCard {
       );
       return;
     }
+    if (!this.contact().trim()) {
+      this.signError.set(this.translate.t('error.petition-sign-email-required', 'Enter the email address to receive your verification code.'));
+      return;
+    }
     this.signError.set('');
     this.signSubmitting.set(true);
 
@@ -200,7 +250,7 @@ export class PetitionCard {
       birthDate: isoBirthDate,
       city: this.city().trim() || null,
       state: this.state().trim() || null,
-      verificationMethod: this.verificationMethod(),
+      verificationMethod: 'email',
       contact: this.contact().trim() || null,
       electoralData: this.isPopularInitiative() ? this.electoralData().trim() || null : null,
       eSignatureConsent: this.eSignatureConsent(),
@@ -211,13 +261,17 @@ export class PetitionCard {
       next: (started) => {
         this.signSubmitting.set(false);
         this.verificationId.set(started.verificationId);
-        this.demoCode.set(started.demoCode);
         this.codeInput.set('');
         this.signStep.set('code');
       },
       error: () => {
         this.signSubmitting.set(false);
-        this.signError.set(this.translate.t('error.petition-sign-start-failed', 'Could not start the signature — check your CPF and try again.'));
+        this.signError.set(
+          this.translate.t(
+            'error.petition-sign-start-failed',
+            'Could not start the signature — check your CPF/email, or the verification email service may be temporarily unavailable.',
+          ),
+        );
       },
     });
   }
@@ -232,7 +286,7 @@ export class PetitionCard {
     this.participation.confirmPetitionSignature(this.petition().id, verificationId, this.codeInput().trim()).subscribe({
       next: () => {
         this.signSubmitting.set(false);
-        this.closeSignWizard();
+        this.signStep.set('done');
       },
       error: () => {
         this.signSubmitting.set(false);

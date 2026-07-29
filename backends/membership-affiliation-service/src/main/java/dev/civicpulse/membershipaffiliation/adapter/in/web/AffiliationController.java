@@ -1,6 +1,7 @@
 package dev.civicpulse.membershipaffiliation.adapter.in.web;
 
 import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.AffiliationResponse;
+import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.AffiliationStatusHistoryResponse;
 import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.MembershipCardResponse;
 import dev.civicpulse.membershipaffiliation.adapter.in.web.dto.RequestAffiliationRequest;
 import dev.civicpulse.membershipaffiliation.application.port.in.ManageAffiliationUseCase;
@@ -63,5 +64,10 @@ public class AffiliationController {
   @GetMapping("/{id}/card")
   public ResponseEntity<MembershipCardResponse> getCard(@PathVariable UUID id) {
     return manageAffiliationUseCase.getCard(id).map(card -> ResponseEntity.ok(MembershipCardResponse.from(card))).orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/{id}/history")
+  public List<AffiliationStatusHistoryResponse> getHistory(@PathVariable UUID id) {
+    return manageAffiliationUseCase.listStatusHistory(id).stream().map(AffiliationStatusHistoryResponse::from).toList();
   }
 }

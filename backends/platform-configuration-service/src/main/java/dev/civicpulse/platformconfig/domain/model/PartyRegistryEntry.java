@@ -13,7 +13,7 @@ public final class PartyRegistryEntry {
   private final UUID id;
   private final String name;
   private final String acronym;
-  private final int number;
+  private int number;
   private String president;
   private String ideology;
   private int memberCount;
@@ -61,6 +61,12 @@ public final class PartyRegistryEntry {
 
   public int number() {
     return number;
+  }
+
+  /** See SyncPartyService/PartyNumberCorrected's javadoc — corrects a synthetic placeholder
+   * number once a more authoritative source (TSE) supplies the real one. */
+  public void correctNumber(int number) {
+    this.number = number;
   }
 
   public Optional<String> president() {

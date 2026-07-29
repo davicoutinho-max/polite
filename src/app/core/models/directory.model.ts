@@ -30,7 +30,10 @@ export interface PartySummary {
   readonly spectrum: PartySpectrum;
   readonly ideology: string;
   readonly members: number;
-  readonly founded: number;
+  /** Null when the government source has no founding date on file (confirmed: Câmara's party
+   * endpoint doesn't expose one at all) — never fabricated as "today's year", which used to read
+   * as an obviously wrong founding date for every party synced this way. */
+  readonly founded: number | null;
   readonly president: string;
 }
 

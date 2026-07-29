@@ -23,6 +23,40 @@
       </a>
     </ui-card>
 
+    @if (canNominate()) {
+      <ui-card padding="lg" class="nominate">
+        <h3 class="nominate__title">
+          <ui-icon name="person_add" [size]="18" />
+          {{ 'label.add-pre-candidate' | translate: 'Add a pre-candidate' }}
+        </h3>
+        <p class="nominate__hint">
+          {{ 'hint.add-pre-candidate' | translate: 'Register one of your politicians as a pre-candidate for this upcoming election.' }}
+        </p>
+        <div class="nominate__form">
+          <p-autocomplete
+            [ngModel]="nominationSelection()"
+            (ngModelChange)="nominationSelection.set($event)"
+            [suggestions]="nominationSuggestions()"
+            (completeMethod)="searchPoliticians($event)"
+            field="name"
+            [placeholder]="'label.search-politician' | translate: 'Search by politician name…'"
+            styleClass="nominate__input"
+            [fluid]="true"
+          />
+          <ui-button
+            [label]="'button.add-pre-candidate' | translate: 'Add'"
+            icon="add"
+            variant="filled"
+            [disabled]="!nominationSelection() || nominating()"
+            (click)="nominate()"
+          />
+        </div>
+        @if (nominationError()) {
+          <p class="nominate__error">{{ nominationError() }}</p>
+        }
+      </ui-card>
+    }
+
     <section class="election-detail__results">
       <h2 class="election-detail__section-title">{{ 'label.results' | translate: 'Results' }}</h2>
 

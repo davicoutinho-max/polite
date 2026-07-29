@@ -1,6 +1,7 @@
 package dev.civicpulse.payments.adapter.in.web;
 
 import dev.civicpulse.payments.domain.exception.InvalidPaymentTransitionException;
+import dev.civicpulse.payments.domain.exception.PaymentGatewayUnavailableException;
 import dev.civicpulse.payments.domain.exception.PaymentIntentNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidPaymentTransitionException.class)
   public ProblemDetail handleInvalidTransition(InvalidPaymentTransitionException ex) {
     return problem(HttpStatus.CONFLICT, "Invalid payment transition", ex.getMessage());
+  }
+
+  @ExceptionHandler(PaymentGatewayUnavailableException.class)
+  public ProblemDetail handleGatewayUnavailable(PaymentGatewayUnavailableException ex) {
+    return problem(HttpStatus.SERVICE_UNAVAILABLE, "Payment gateway unavailable", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { Observable } from 'rxjs';
 import { Consultation, ConsultationStance } from '../../../../core/models';
+import { AiAssistantService } from '../../../../core/services/ai-assistant.service';
+import { TranslateService } from '../../../../core/services/translate.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
+import { AskAi, AskAiPromptOption } from '../../../../shared/ai/ask-ai/ask-ai';
 import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
@@ -15,7 +19,7 @@ interface StanceEvent {
 @Component({
   selector: 'app-consultation-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiTag, UiIcon, CompactNumberPipe, TranslatePipe],
+  imports: [UiCard, UiTag, UiIcon, AskAi, CompactNumberPipe, TranslatePipe],
   template: `
     <ui-card [hover]="true" padding="lg">
       <div class="head">
@@ -57,9 +61,12 @@ interface StanceEvent {
 
       <div class="foot">
         <span class="deadline">{{ consultation().deadline }}</span>
-        @if (consultation().stance) {
-          <span class="registered"><ui-icon name="check_circle" [size]="16" [fill]="true" /> {{ 'hint.stance-recorded' | translate: 'Your stance was recorded' }}</span>
-        }
+        <div class="foot__right">
+          @if (consultation().stance) {
+            <span class="registered"><ui-icon name="check_circle" [size]="16" [fill]="true" /> {{ 'hint.stance-recorded' | translate: 'Your stance was recorded' }}</span>
+          }
+          <app-ask-ai [topicLabel]="consultation().title" [askFn]="askAiFn()" [prompts]="askAiPrompts" />
+        </div>
       </div>
     </ui-card>
   `,
@@ -86,13 +93,34 @@ interface StanceEvent {
       margin-top: var(--cp-space-md); padding-top: var(--cp-space-md);
       border-top: 1px solid var(--cp-outline-variant); flex-wrap: wrap;
     }
+    .foot__right { display: flex; align-items: center; gap: var(--cp-space-sm); }
     .deadline { font-size: 12px; font-weight: 600; letter-spacing: 0.03em; color: var(--cp-on-surface-variant); }
     .registered { display: inline-flex; align-items: center; gap: var(--cp-space-xs); font-size: 12px; font-weight: 600; color: var(--cp-on-success-container); }
   `,
 })
 export class ConsultationCard {
+  private readonly aiAssistant = inject(AiAssistantService);
+  private readonly translate = inject(TranslateService);
+
   readonly consultation = input.required<Consultation>();
   readonly stanceChange = output<StanceEvent>();
+
+  protected readonly askAiFn = computed(
+    () => (question: string): Observable<string> =>
+      this.aiAssistant.askAboutParticipationItem('consultation', this.consultation().title, this.consultation().description, question),
+  );
+  protected readonly askAiPrompts: AskAiPromptOption[] = [
+    {
+      question: 'Summarize this consultation in one or two sentences.',
+      label: this.translate.t('button.ask-ai-summarize', 'Summarize'),
+      icon: 'summarize',
+    },
+    {
+      question: 'What are the main arguments for and against this?',
+      label: this.translate.t('button.ask-ai-pros-cons', 'Pros and cons'),
+      icon: 'balance',
+    },
+  ];
 
   protected pick(stance: ConsultationStance): void {
     this.stanceChange.emit({ id: this.consultation().id, stance });

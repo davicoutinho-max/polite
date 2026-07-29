@@ -67,4 +67,22 @@ public class AesDocumentCipherAdapter implements DocumentCipher {
       throw new IllegalStateException("Failed to encrypt document number", e);
     }
   }
+
+  @Override
+  public String decrypt(byte[] encryptedDocumentNumber) {
+    try {
+      ByteBuffer buffer = ByteBuffer.wrap(encryptedDocumentNumber);
+      byte[] iv = new byte[GCM_IV_LENGTH_BYTES];
+      buffer.get(iv);
+      byte[] ciphertext = new byte[buffer.remaining()];
+      buffer.get(ciphertext);
+
+      Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+      cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
+      byte[] plaintext = cipher.doFinal(ciphertext);
+      return new String(plaintext, StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to decrypt document number", e);
+    }
+  }
 }

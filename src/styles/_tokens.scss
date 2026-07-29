@@ -133,7 +133,10 @@
   --cp-tertiary-fixed: #6ffbbe;
   --cp-tertiary-fixed-dim: #4edea3;
   --cp-on-tertiary-fixed: #002113;
-  --cp-on-tertiary-fixed-variant: #00b47d;
+  // Fixed roles intentionally don't invert with the theme (same rule already followed by
+  // primary/secondary's fixed-variant tokens above) — this was mistakenly given a bright dark-mode
+  // shade instead, leaving green-on-green text on the fundraising/admin notice banners.
+  --cp-on-tertiary-fixed-variant: #005236;
 
   // ---- Error ----
   --cp-error: #ffb4ab;

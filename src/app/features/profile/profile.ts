@@ -54,6 +54,7 @@ export class Profile {
   protected readonly activityPosts = computed(() => this.feedService.postsByAuthor(this.politician().id)());
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly canFollow = computed(() => this.session.can('follow'));
+  protected readonly canAffiliate = computed(() => this.session.can('request-affiliation') && !!this.politician().partyId);
   /** Matches the /messages route's own canMatch guard (requirePermission('message')) — showing
    * "Contact" to a visitor sent them into createConversation with no X-Account-Id (400), followed
    * by an unconditional navigate() into a route guard that bounced them straight back to /feed. */

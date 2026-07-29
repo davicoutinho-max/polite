@@ -10,6 +10,15 @@ export interface LegislativeBillSummary {
   readonly summary: string;
   readonly presentedDate: string | null;
   readonly officialUrl: string;
+  /** Primary author's party, resolved lazily on the Bills page after the initial list load (see
+   * LegislativeOpenDataService.resolveAuthorParty) — list endpoints don't carry it themselves.
+   * `undefined` = not resolved yet, `null` = resolved, genuinely unknown (Senado bills, or a
+   * Câmara author lookup that failed). */
+  readonly authorParty?: string | null;
+  /** Primary author's name, resolved lazily alongside `authorParty` (see
+   * LegislativeOpenDataService.resolveAuthorInfo) — list endpoints don't carry it themselves.
+   * `undefined` = not resolved yet, `null` = resolved, genuinely unknown. */
+  readonly authorName?: string | null;
 }
 
 export interface LegislativeTimelineEntry {
@@ -25,6 +34,11 @@ export interface LegislativeTimelineEntry {
 export interface LegislativeBillDetail extends LegislativeBillSummary {
   readonly fullSummary: string | null;
   readonly author: string | null;
+  /** Party (+ state) of the primary author, e.g. "PT-SP" — only resolvable for Câmara bills (an
+   * extra call to the author's own deputy record, since the authors endpoint itself doesn't carry
+   * party); stays null for Senado bills, whose author string already tends to include the party
+   * inline by that API's own convention. */
+  readonly authorParty: string | null;
   readonly currentStatusDescription: string | null;
   readonly currentStatusDate: string | null;
   readonly currentStatusLocation: string | null;

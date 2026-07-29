@@ -30,4 +30,9 @@ public interface ProjectDirectoryUseCase {
    * catalog entry. */
   void onPartyRegistered(
       UUID partyId, String name, String acronym, int number, String president, String ideology, Instant occurredAt);
+
+  /** {@code PartyNumberCorrected} — published by Platform Configuration when a party's synthetic
+   * placeholder number is replaced by its real TSE one. No-ops if the projection doesn't exist
+   * yet (shouldn't happen in practice — a correction always follows an earlier registration). */
+  void onPartyNumberCorrected(UUID partyId, int number);
 }

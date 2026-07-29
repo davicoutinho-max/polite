@@ -2,6 +2,12 @@ spring:
   application:
     name: payments-service
 
+  # Loads payments-service/.env (KEY=VALUE, gitignored — see .env.example) as extra properties, so
+  # the Asaas key below can be edited in a local file instead of exported as a shell env var every
+  # time this service is launched with `java -jar`. Safe if the file doesn't exist.
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/payments_service
     username: ${DB_USERNAME:payments_service_app}
@@ -30,6 +36,15 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+
+payments:
+  asaas:
+    # Real key lives in payments-service/.env (gitignored), never here — see AsaasProperties.
+    api-key: ${ASAAS_API_KEY:}
+    base-url: ${ASAAS_BASE_URL:https://api-sandbox.asaas.com/v3}
+    webhook-token: ${ASAAS_WEBHOOK_TOKEN:}
+  identity-service:
+    base-url: ${IDENTITY_SERVICE_BASE_URL:http://localhost:8081}
 
 server:
   port: ${SERVER_PORT:8086}

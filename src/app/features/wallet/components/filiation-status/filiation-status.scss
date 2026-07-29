@@ -68,8 +68,8 @@
   border: 2px solid transparent;
 }
 
-.step[data-state='done'] .step__marker { background: var(--cp-secondary); color: var(--cp-on-secondary); }
-.step[data-state='done']::before { background: var(--cp-secondary); }
+.step[data-state='done'] .step__marker { background: var(--cp-success, #2e7d32); color: #fff; }
+.step[data-state='done']::before { background: var(--cp-success, #2e7d32); }
 .step[data-state='active'] .step__marker {
   background: var(--cp-secondary-container);
   color: var(--cp-on-secondary-container);
@@ -88,3 +88,4 @@
   background: var(--cp-secondary-container); color: var(--cp-on-secondary-container);
 }
 .step__desc { font-size: 14px; color: var(--cp-on-surface-variant); margin-top: 2px; }
+.step__date { font-size: 12px; color: var(--cp-success, #2e7d32); font-weight: 600; margin-top: 4px; }

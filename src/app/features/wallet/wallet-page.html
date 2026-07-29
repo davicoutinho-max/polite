@@ -13,6 +13,7 @@
         [steps]="steps"
         [status]="status()"
         [currentIndex]="currentStepIndex()"
+        [stepDates]="stepDates()"
         [parties]="parties()"
         [preselectedPartyId]="preselectedPartyId"
         (request)="onRequest($event)"
@@ -31,7 +32,24 @@
             </div>
             <div class="due__amount">R$ {{ fee.amount.toFixed(2) }}</div>
             <div class="due__date">{{ 'label.due-date' | translate: 'Due date' }} {{ fee.dueDate }}</div>
-            <ui-button [label]="'button.pay-contribution' | translate: 'Pay contribution'" icon="payments" variant="filled" [block]="true" (click)="onPay(fee.id)" />
+            <div class="due__actions">
+              <ui-button
+                [label]="'button.pay-with-pix' | translate: 'Pay with Pix'"
+                icon="qr_code_2"
+                variant="filled"
+                [block]="true"
+                [disabled]="checkoutProcessing()"
+                (click)="payFee(fee.id, 'pix')"
+              />
+              <ui-button
+                [label]="'button.pay-with-card' | translate: 'Pay with card'"
+                icon="credit_card"
+                variant="tonal"
+                [block]="true"
+                [disabled]="checkoutProcessing()"
+                (click)="payFee(fee.id, 'card')"
+              />
+            </div>
           </div>
         } @else {
           <div class="due due--clear">

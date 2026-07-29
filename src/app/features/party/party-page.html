@@ -38,7 +38,7 @@
     <div class="stats">
       <ui-stat icon="groups" [label]="'label.members' | translate: 'Members'" [value]="party().memberCount.toLocaleString('pt-BR')" [caption]="'label.nationwide' | translate: 'Nationwide'" />
       <ui-stat icon="location_city" [label]="'label.directories' | translate: 'Directories'" [value]="party().directories.length.toString()" [caption]="'label.active-levels' | translate: 'Active levels'" />
-      <ui-stat icon="event" [label]="'label.founded' | translate: 'Founded'" [value]="party().foundedYear.toString()" [caption]="'label.years-of-history' | translate: 'Years of history'" />
+      <ui-stat icon="event" [label]="'label.founded' | translate: 'Founded'" [value]="foundedYearDisplay()" [caption]="'label.years-of-history' | translate: 'Years of history'" />
       <ui-stat icon="how_to_vote" [label]="'label.representatives' | translate: 'Representatives'" [value]="party().representatives.length.toString()" [caption]="'label.in-office' | translate: 'In office'" />
     </div>
 
@@ -114,10 +114,15 @@
               <ul class="reps">
                 @for (rep of party().representatives; track rep.id) {
                   <li class="rep" [routerLink]="['/profile', rep.id]">
-                    <ui-avatar [src]="rep.avatarUrl" [alt]="rep.name" [size]="40" [ring]="true" />
-                    <div>
+                    <ui-avatar [src]="rep.avatarUrl" [alt]="rep.name" [size]="44" [ring]="true" />
+                    <div class="rep__body">
                       <div class="rep__name">{{ rep.name }}</div>
-                      <div class="rep__role">{{ rep.role }}</div>
+                      <div class="rep__role">
+                        {{ rep.role }}
+                        @if (rep.location) {
+                          <span class="rep__location">· {{ rep.location }}</span>
+                        }
+                      </div>
                     </div>
                     <ui-icon name="chevron_right" [size]="20" />
                   </li>

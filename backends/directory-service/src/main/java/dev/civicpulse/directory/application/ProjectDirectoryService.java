@@ -103,6 +103,19 @@ public class ProjectDirectoryService implements ProjectDirectoryUseCase {
     partyRepository.save(party);
   }
 
+  @Override
+  @Transactional
+  public void onPartyNumberCorrected(UUID partyId, int number) {
+    partyRepository
+        .findById(partyId)
+        .ifPresentOrElse(
+            party -> {
+              party.correctNumber(number, clock.instant());
+              partyRepository.save(party);
+            },
+            () -> log.warn("PartyNumberCorrected received for {} before its projection exists — skipping", partyId));
+  }
+
   /** Handles out-of-order delivery: if the projection doesn't exist yet (this event beat
    * {@code AccountRegistered} to the topic), enrich right away via the same lookup path.
    * Returns false if enrichment failed and the caller should skip its update. */

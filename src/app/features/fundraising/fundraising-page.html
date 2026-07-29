@@ -107,14 +107,13 @@
         </div>
 
         @if (isAuthenticated()) {
-          <div class="fund__contribute">
-            <span class="fund__contribute-label">{{ 'button.contribute' | translate: 'Contribute' }}</span>
-            @for (amount of presets; track amount) {
-              <button type="button" class="fund__amount-btn" (click)="contribute(f.id, amount)">
-                {{ money(amount) }}
-              </button>
-            }
-          </div>
+          <ui-button
+            [label]="'button.contribute' | translate: 'Contribute'"
+            icon="volunteer_activism"
+            variant="filled"
+            [block]="true"
+            (click)="openCheckout(f)"
+          />
         } @else {
           <p class="fund__signin-hint">{{ 'hint.sign-in-to-contribute' | translate: 'Sign in to contribute.' }}</p>
         }
@@ -122,3 +121,72 @@
     }
   </div>
 </div>
+
+<!-- Payment checkout: amount + method, always a real Asaas Pix/Card invoice — see confirmCheckout's javadoc -->
+<ui-dialog
+  [open]="!!checkoutFundraiser()"
+  [title]="('label.contribute-to' | translate: 'Contribute to') + ' ' + (checkoutFundraiser()?.title ?? '')"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  [maxWidth]="440"
+  (close)="closeCheckout()"
+>
+  @if (checkoutFundraiser(); as f) {
+    <div class="checkout">
+      <p class="checkout__organizer">{{ f.organizer }}</p>
+
+      <span class="checkout__section-label">{{ 'label.amount' | translate: 'Amount' }}</span>
+      <div class="checkout__presets">
+        @for (amount of presets; track amount) {
+          <button type="button" class="checkout__preset" [class.checkout__preset--active]="checkoutAmount() === amount" (click)="pickPreset(amount)">
+            {{ money(amount) }}
+          </button>
+        }
+      </div>
+      <p-inputnumber
+        [ngModel]="checkoutAmount()"
+        (ngModelChange)="checkoutAmount.set($event)"
+        mode="currency"
+        currency="BRL"
+        locale="pt-BR"
+        [min]="1"
+        [placeholder]="'label.or-enter-amount' | translate: 'Or enter an amount'"
+        styleClass="checkout__amount-input"
+      />
+
+      <span class="checkout__section-label">{{ 'label.payment-method' | translate: 'Payment method' }}</span>
+      <div class="checkout__methods">
+        <button
+          type="button"
+          class="checkout__method"
+          [class.checkout__method--active]="checkoutGateway() === 'pix'"
+          (click)="checkoutGateway.set('pix')"
+        >
+          <ui-icon name="qr_code_2" [size]="22" />
+          <span>Pix</span>
+        </button>
+        <button
+          type="button"
+          class="checkout__method"
+          [class.checkout__method--active]="checkoutGateway() === 'card'"
+          (click)="checkoutGateway.set('card')"
+        >
+          <ui-icon name="credit_card" [size]="22" />
+          <span>{{ 'label.card' | translate: 'Card' }}</span>
+        </button>
+      </div>
+
+      <ui-button
+        [label]="'button.continue-to-payment' | translate: 'Continue to payment'"
+        icon="arrow_forward"
+        variant="filled"
+        [block]="true"
+        [disabled]="!checkoutAmount() || checkoutProcessing()"
+        (click)="confirmCheckout()"
+      />
+      <p class="checkout__disclaimer">
+        <ui-icon name="lock" [size]="14" />
+        {{ 'hint.asaas-secure-checkout' | translate: "You'll complete payment on Asaas's secure page — CivicPulse never sees your card details." }}
+      </p>
+    </div>
+  }
+</ui-dialog>

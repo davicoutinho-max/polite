@@ -3,7 +3,6 @@ package dev.civicpulse.payments.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -11,10 +10,12 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import dev.civicpulse.payments.application.port.out.CheckoutGateway;
+import dev.civicpulse.payments.application.port.out.CheckoutGateway.CheckoutResult;
 import dev.civicpulse.payments.application.port.out.LedgerEntryRepository;
 import dev.civicpulse.payments.application.port.out.OutboxEventRepository;
-import dev.civicpulse.payments.application.port.out.PaymentGateway;
-import dev.civicpulse.payments.application.port.out.PaymentGateway.AuthorizationResult;
+import dev.civicpulse.payments.application.port.out.PayerLookupGateway;
+import dev.civicpulse.payments.application.port.out.PayerLookupGateway.PayerInfo;
 import dev.civicpulse.payments.application.port.out.PaymentIntentRepository;
 import dev.civicpulse.payments.domain.model.OutboxEvent;
 import dev.civicpulse.payments.domain.model.PaymentGatewayType;
@@ -40,7 +41,8 @@ class PaymentIntentServiceTest {
   @Mock private PaymentIntentRepository paymentIntentRepository;
   @Mock private LedgerEntryRepository ledgerEntryRepository;
   @Mock private OutboxEventRepository outboxEventRepository;
-  @Mock private PaymentGateway paymentGateway;
+  @Mock private PayerLookupGateway payerLookupGateway;
+  @Mock private CheckoutGateway checkoutGateway;
 
   private PaymentIntentService service;
 
@@ -49,11 +51,12 @@ class PaymentIntentServiceTest {
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     service =
         new PaymentIntentService(
-            paymentIntentRepository, ledgerEntryRepository, outboxEventRepository, paymentGateway, objectMapper, Clock.fixed(NOW, ZoneOffset.UTC));
+            paymentIntentRepository, ledgerEntryRepository, outboxEventRepository, payerLookupGateway, checkoutGateway, objectMapper,
+            Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
-  void createAndAuthorizeIsIdempotentForSameKey() {
+  void createPendingPaymentIsIdempotentForSameKey() {
     String idempotencyKey = "key-1";
     PaymentIntent existing =
         PaymentIntent.create(
@@ -62,43 +65,82 @@ class PaymentIntentServiceTest {
     when(paymentIntentRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(existing));
 
     PaymentIntent result =
-        service.createAndAuthorize(
+        service.createPendingPayment(
             PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5000, PaymentGatewayType.PIX, idempotencyKey);
 
     assertThat(result).isEqualTo(existing);
-    verify(paymentGateway, never()).authorize(any(), anyLong(), anyString());
+    verify(paymentIntentRepository, never()).save(any());
   }
 
   @Test
-  void createAndAuthorizeWritesOutboxEventOnApproval() {
+  void createPendingPaymentCreatesIntentWithoutCallingTheGatewayYet() {
     when(paymentIntentRepository.findByIdempotencyKey(anyString())).thenReturn(Optional.empty());
     when(paymentIntentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    when(paymentGateway.authorize(any(), anyLong(), anyString())).thenReturn(new AuthorizationResult(true, "gw-ref-1"));
 
     PaymentIntent result =
-        service.createAndAuthorize(
-            PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5000, PaymentGatewayType.PIX, "key-2");
+        service.createPendingPayment(
+            PaymentPurpose.FUNDRAISING_CONTRIBUTION, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 12345, PaymentGatewayType.PIX,
+            "key-2");
 
-    assertThat(result.status().code()).isEqualTo("authorized");
-    ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
-    verify(outboxEventRepository).save(captor.capture());
-    assertThat(captor.getValue().eventType()).isEqualTo("PaymentAuthorized");
+    assertThat(result.status().code()).isEqualTo("created");
+    assertThat(result.gateway().code()).isEqualTo("pix");
+    verify(checkoutGateway, never()).createPayment(any(), any());
   }
 
   @Test
-  void createAndAuthorizeWritesFailedOutboxEventOnDecline() {
-    when(paymentIntentRepository.findByIdempotencyKey(anyString())).thenReturn(Optional.empty());
+  void createCheckoutUrlResolvesPayerThenAsksTheGatewayForAnInvoice() {
+    UUID intentId = UUID.randomUUID();
+    UUID payerAccountId = UUID.randomUUID();
+    PaymentIntent intent =
+        PaymentIntent.create(
+            intentId, PaymentPurpose.FUNDRAISING_CONTRIBUTION, UUID.randomUUID(), payerAccountId, UUID.randomUUID(), 5000, "BRL",
+            PaymentGatewayType.CARD, "key-3", NOW);
+    PayerInfo payer = new PayerInfo("Jane Doe", "52998224725");
+    when(paymentIntentRepository.findById(intentId)).thenReturn(Optional.of(intent));
+    when(payerLookupGateway.getPaymentProfile(payerAccountId)).thenReturn(payer);
+    when(checkoutGateway.createPayment(intent, payer)).thenReturn(new CheckoutResult("https://asaas.example/i/abc", "pay_abc"));
+
+    String url = service.createCheckoutUrl(intentId);
+
+    assertThat(url).isEqualTo("https://asaas.example/i/abc");
+  }
+
+  @Test
+  void confirmPaymentIsIdempotentWhenAlreadyCaptured() {
+    UUID intentId = UUID.randomUUID();
+    PaymentIntent intent =
+        PaymentIntent.create(
+            intentId, PaymentPurpose.FUNDRAISING_CONTRIBUTION, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5000, "BRL",
+            PaymentGatewayType.CARD, "key-4", NOW);
+    intent.authorize("pay_abc", NOW);
+    intent.capture(NOW);
+    when(paymentIntentRepository.findById(intentId)).thenReturn(Optional.of(intent));
+
+    PaymentIntent result = service.confirmPayment(intentId, "pay_abc");
+
+    assertThat(result.status().code()).isEqualTo("captured");
+    verify(paymentIntentRepository, never()).save(any());
+    verify(ledgerEntryRepository, never()).save(any());
+  }
+
+  @Test
+  void confirmPaymentAuthorizesThenCapturesAndWritesBothOutboxEvents() {
+    UUID intentId = UUID.randomUUID();
+    UUID payer = UUID.randomUUID();
+    UUID payee = UUID.randomUUID();
+    PaymentIntent intent =
+        PaymentIntent.create(intentId, PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), payer, payee, 5000, "BRL", PaymentGatewayType.PIX, "key-5", NOW);
+    when(paymentIntentRepository.findById(intentId)).thenReturn(Optional.of(intent));
     when(paymentIntentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    when(paymentGateway.authorize(any(), anyLong(), anyString())).thenReturn(new AuthorizationResult(false, null));
+    when(ledgerEntryRepository.currentBalance(payer)).thenReturn(0L);
+    when(ledgerEntryRepository.currentBalance(payee)).thenReturn(0L);
 
-    PaymentIntent result =
-        service.createAndAuthorize(
-            PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 5000, PaymentGatewayType.PIX, "key-3");
+    PaymentIntent result = service.confirmPayment(intentId, "pay_xyz");
 
-    assertThat(result.status().code()).isEqualTo("failed");
+    assertThat(result.status().code()).isEqualTo("captured");
     ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
-    verify(outboxEventRepository).save(captor.capture());
-    assertThat(captor.getValue().eventType()).isEqualTo("PaymentFailed");
+    verify(outboxEventRepository, times(2)).save(captor.capture());
+    assertThat(captor.getAllValues()).extracting(OutboxEvent::eventType).containsExactly("PaymentAuthorized", "PaymentCaptured");
   }
 
   @Test
@@ -107,7 +149,7 @@ class PaymentIntentServiceTest {
     UUID payer = UUID.randomUUID();
     UUID payee = UUID.randomUUID();
     PaymentIntent intent =
-        PaymentIntent.create(intentId, PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), payer, payee, 5000, "BRL", PaymentGatewayType.PIX, "key-4", NOW);
+        PaymentIntent.create(intentId, PaymentPurpose.MEMBERSHIP_FEE, UUID.randomUUID(), payer, payee, 5000, "BRL", PaymentGatewayType.PIX, "key-6", NOW);
     intent.authorize("gw-ref-1", NOW);
     when(paymentIntentRepository.findById(intentId)).thenReturn(Optional.of(intent));
     when(paymentIntentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));

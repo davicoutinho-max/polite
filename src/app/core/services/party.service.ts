@@ -87,7 +87,7 @@ const EMPTY_PARTY: Party = {
   logoUrl: FALLBACK_AVATAR,
   coverUrl: FALLBACK_AVATAR,
   ideology: '',
-  foundedYear: new Date().getFullYear(),
+  foundedYear: null,
   president: '',
   memberCount: 0,
   history: '',
@@ -153,7 +153,7 @@ export class PartyService {
           logoUrl: summary?.logoUrl || FALLBACK_AVATAR,
           coverUrl: profile.coverUrl || summary?.logoUrl || FALLBACK_AVATAR,
           ideology: summary?.ideology ?? '',
-          foundedYear: summary?.founded ?? new Date().getFullYear(),
+          foundedYear: summary?.founded ?? null,
           president: summary?.president ?? '',
           memberCount: summary?.members ?? 0,
           history: profile.history ?? '',
@@ -269,7 +269,13 @@ export class PartyService {
       })
       .subscribe({
         next: () => {
-          const rep: PartyRepresentative = { id: candidate.id, name: candidate.name, role: candidate.office, avatarUrl: candidate.avatarUrl ?? '' };
+          const rep: PartyRepresentative = {
+            id: candidate.id,
+            name: candidate.name,
+            role: candidate.office,
+            avatarUrl: candidate.avatarUrl ?? '',
+            location: candidate.state ?? '',
+          };
           this._party.update((party) =>
             party.representatives.some((r) => r.id === candidate.id) ? party : { ...party, representatives: [...party.representatives, rep] },
           );
@@ -322,7 +328,13 @@ export class PartyService {
       })
       .pipe(
         tap((response) => {
-          const rep: PartyRepresentative = { id: response.politicianAccountId, name: input.name, role: input.roleTitle, avatarUrl: '' };
+          const rep: PartyRepresentative = {
+            id: response.politicianAccountId,
+            name: input.name,
+            role: input.roleTitle,
+            avatarUrl: '',
+            location: input.state,
+          };
           this._party.update((party) => ({ ...party, representatives: [...party.representatives, rep] }));
         }),
       );
@@ -335,7 +347,13 @@ export class PartyService {
   private resolveRepresentative(r: RepresentativeResponseDto): Observable<PartyRepresentative> {
     const cached = this.directory.politicians().find((p) => p.id === r.politicianAccountId);
     if (cached) {
-      return of({ id: r.politicianAccountId, name: cached.name, role: r.roleTitle ?? cached.office ?? '', avatarUrl: cached.avatarUrl || FALLBACK_AVATAR });
+      return of({
+        id: r.politicianAccountId,
+        name: cached.name,
+        role: r.roleTitle ?? cached.office ?? '',
+        avatarUrl: cached.avatarUrl || FALLBACK_AVATAR,
+        location: cached.state ?? '',
+      });
     }
     return this.directory.getPolitician(r.politicianAccountId).pipe(
       map(
@@ -344,9 +362,10 @@ export class PartyService {
           name: p.name,
           role: r.roleTitle ?? p.office ?? '',
           avatarUrl: p.avatarUrl || FALLBACK_AVATAR,
+          location: p.state ?? '',
         }),
       ),
-      catchError(() => of({ id: r.politicianAccountId, name: 'Unknown', role: r.roleTitle ?? '', avatarUrl: FALLBACK_AVATAR })),
+      catchError(() => of({ id: r.politicianAccountId, name: 'Unknown', role: r.roleTitle ?? '', avatarUrl: FALLBACK_AVATAR, location: '' })),
     );
   }
 

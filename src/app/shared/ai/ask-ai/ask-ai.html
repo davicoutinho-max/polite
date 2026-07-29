@@ -1,0 +1,76 @@
+<ui-button [label]="'button.ask-ai' | translate: 'Ask AI'" icon="auto_awesome" variant="text" (click)="open()" />
+
+<ui-dialog
+  [open]="show()"
+  [title]="'label.ask-ai' | translate: 'Ask AI'"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  [maxWidth]="560"
+  (close)="show.set(false)"
+>
+  <div class="ask-ai">
+    <p class="ask-ai__topic">{{ topicLabel() }}</p>
+
+    <div class="ask-ai__disclaimer">
+      <ui-icon name="info" [size]="16" />
+      <p>
+        {{
+          'hint.ask-ai-disclaimer-live'
+            | translate
+              : 'Answered by an AI model scoped to this topic only. It can be incomplete and is not official advice — always check the official source.'
+        }}
+      </p>
+    </div>
+
+    <div class="ask-ai__thread">
+      @for (message of messages(); track message.id) {
+        <article class="ask-ai__msg ask-ai__msg--{{ message.role }}">
+          @if (message.role === 'assistant') {
+            <span class="ask-ai__ai-icon"><ui-icon name="auto_awesome" [size]="16" [fill]="true" /></span>
+          }
+          <div class="ask-ai__bubble">
+            <p>{{ message.text }}</p>
+          </div>
+        </article>
+      } @empty {
+        <p class="ask-ai__placeholder">
+          {{ 'hint.ask-ai-placeholder' | translate: 'Pick a quick question below, or type your own.' }}
+        </p>
+      }
+      @if (thinking()) {
+        <article class="ask-ai__msg ask-ai__msg--assistant">
+          <span class="ask-ai__ai-icon"><ui-icon name="auto_awesome" [size]="16" [fill]="true" /></span>
+          <div class="ask-ai__bubble ask-ai__bubble--typing"><span></span><span></span><span></span></div>
+        </article>
+      }
+    </div>
+
+    @if (prompts().length) {
+      <div class="ask-ai__prompts">
+        @for (prompt of prompts(); track prompt.question) {
+          <button type="button" class="ask-ai__prompt" [disabled]="thinking()" (click)="askPrompt(prompt)">
+            <ui-icon [name]="prompt.icon" [size]="16" />
+            <span>{{ prompt.label }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    <form class="ask-ai__composer" (submit)="askFreeText(); $event.preventDefault()">
+      <input
+        pInputText
+        type="text"
+        [ngModel]="question()"
+        (ngModelChange)="question.set($event)"
+        name="askAiQuestion"
+        [placeholder]="'label.ask-ai-placeholder-input' | translate: 'Ask something about this…'"
+      />
+      <ui-button [label]="'button.send' | translate: 'Send'" icon="send" variant="filled" type="submit" [disabled]="thinking()" />
+    </form>
+
+    @if (messages().length > 0) {
+      <button type="button" class="ask-ai__clear" (click)="clear()">
+        <ui-icon name="delete_sweep" [size]="16" /><span>{{ 'button.clear-conversation' | translate: 'Clear conversation' }}</span>
+      </button>
+    }
+  </div>
+</ui-dialog>

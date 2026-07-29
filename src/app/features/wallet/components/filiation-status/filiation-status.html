@@ -52,6 +52,9 @@
             }
           </div>
           <div class="step__desc">{{ ('step.' + step.status + '.desc') | translate: step.description }}</div>
+          @if (stepDate(step.status); as date) {
+            <div class="step__date">{{ date }}</div>
+          }
         </div>
       </li>
     }

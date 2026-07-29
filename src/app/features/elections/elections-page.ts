@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { ElectionService } from '../../core/services/election.service';
 import { Election, ElectionScope, TagSeverity } from '../../core/models';
@@ -32,7 +33,7 @@ const CANDIDATE_PREVIEW_LIMIT = 6;
 @Component({
   selector: 'app-elections-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, Select, PageHeader, UiStat, UiCard, UiTag, UiAvatar, UiEmpty, TranslatePipe],
+  imports: [RouterLink, FormsModule, InputText, Select, PageHeader, UiStat, UiCard, UiTag, UiAvatar, UiEmpty, TranslatePipe],
   templateUrl: './elections-page.html',
   styleUrl: './elections-page.scss',
 })
@@ -46,16 +47,24 @@ export class ElectionsPage {
 
   protected readonly scopeOptions: ScopeOption[] = [
     { value: 'all', label: this.translate.t('label.all-scopes', 'All scopes') },
-    { value: 'Nacional', label: 'Nacional' },
-    { value: 'Estadual', label: 'Estadual' },
-    { value: 'Municipal', label: 'Municipal' },
+    { value: 'Nacional', label: this.translate.t('label.scope-federal', 'Federal') },
+    { value: 'Estadual', label: this.translate.t('label.scope-state', 'Estadual') },
+    { value: 'Municipal', label: this.translate.t('label.scope-municipal', 'Municipal') },
   ];
   protected readonly scope = signal<ElectionScope | 'all'>('all');
+  protected readonly search = signal('');
 
   protected readonly elections = computed<Election[]>(() => {
     const scope = this.scope();
+    const term = this.search().trim().toLowerCase();
     const all = this.electionService.elections();
-    return scope === 'all' ? all : all.filter((e) => e.scope === scope);
+    let result = scope === 'all' ? all : all.filter((e) => e.scope === scope);
+    if (term) {
+      result = result.filter(
+        (e) => e.title.toLowerCase().includes(term) || this.candidatesOf(e.id).some((c) => c.name.toLowerCase().includes(term)),
+      );
+    }
+    return result;
   });
 
   /** Most recent year first, per election — a citizen thinks in terms of "the 2024 elections",

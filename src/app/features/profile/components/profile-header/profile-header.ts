@@ -19,6 +19,9 @@ export class ProfileHeader {
   readonly following = input(false);
   readonly canFollow = input(true);
   readonly canContact = input(true);
+  /** Only true for citizens viewing a politician that has a party — politicians/parties/admin
+   * accounts don't hold the 'request-affiliation' permission themselves (see permission.model.ts). */
+  readonly canAffiliate = input(false);
 
   readonly toggleFollow = output<void>();
   readonly contact = output<void>();

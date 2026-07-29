@@ -144,6 +144,12 @@ public class AffiliationService implements ManageAffiliationUseCase {
     return membershipCardRepository.findByAffiliationId(affiliationId);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public List<AffiliationStatusHistoryEntry> listStatusHistory(UUID affiliationId) {
+    return historyRepository.findByAffiliationId(affiliationId);
+  }
+
   private void recordHistory(UUID affiliationId, AffiliationStatus from, AffiliationStatus to, ChangedBy changedBy, Instant now) {
     historyRepository.save(AffiliationStatusHistoryEntry.record(UUID.randomUUID(), affiliationId, from, to, changedBy, now));
   }

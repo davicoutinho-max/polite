@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
+import { InputNumber } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
-import { FundraisingService } from '../../core/services/fundraising.service';
+import { ContributionGateway, FundraisingService } from '../../core/services/fundraising.service';
 import { SessionService } from '../../core/services/session.service';
 import { TranslateService } from '../../core/services/translate.service';
+import { AlertsService } from '../../core/services/alerts.service';
 import { Fundraiser, FundraiserCategory } from '../../core/models';
 import { CanDirective } from '../../core/directives/can.directive';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
+import { UiDialog } from '../../shared/ui/ui-dialog/ui-dialog';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiProgress } from '../../shared/ui/ui-progress/ui-progress';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
@@ -24,6 +27,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
   imports: [
     CanDirective,
     PageHeader,
+    UiDialog,
     UiIcon,
     UiProgress,
     UiTag,
@@ -31,6 +35,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
     UiStat,
     FormsModule,
     InputText,
+    InputNumber,
     TextareaModule,
     Select,
     DatePicker,
@@ -43,6 +48,7 @@ export class FundraisingPage {
   private readonly fundraising = inject(FundraisingService);
   private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
+  private readonly alerts = inject(AlertsService);
 
   protected readonly fundraisers = this.fundraising.fundraisers;
   protected readonly categories = this.fundraising.categories;
@@ -55,6 +61,26 @@ export class FundraisingPage {
   protected readonly isAuthenticated = this.session.isAuthenticated;
 
   protected readonly presets = [25, 50, 100];
+
+  // ---- Checkout dialog: a real payment-checkout screen (amount + method), not inline buttons ----
+  protected readonly checkoutFundraiser = signal<Fundraiser | null>(null);
+  protected readonly checkoutAmount = signal<number | null>(null);
+  protected readonly checkoutGateway = signal<ContributionGateway>('pix');
+  protected readonly checkoutProcessing = signal(false);
+
+  protected openCheckout(fundraiser: Fundraiser): void {
+    this.checkoutFundraiser.set(fundraiser);
+    this.checkoutAmount.set(null);
+    this.checkoutGateway.set('pix');
+  }
+
+  protected closeCheckout(): void {
+    this.checkoutFundraiser.set(null);
+  }
+
+  protected pickPreset(amount: number): void {
+    this.checkoutAmount.set(amount);
+  }
 
   // ---- Create form state ----
   protected readonly showForm = signal(false);
@@ -103,8 +129,54 @@ export class FundraisingPage {
     this.resetForm();
   }
 
-  protected contribute(id: string, amount: number): void {
-    this.fundraising.contribute(id, amount);
+  /** Real Asaas Checkout — opens Asaas's own hosted invoice page in a new tab (Pix QR/copy-paste
+   * or a card form depending on the chosen gateway), so this component never sees a card number
+   * and the citizen keeps this page open. The final confirmation happens asynchronously via
+   * payments-service's webhook once Asaas reports the payment settled (see
+   * FundraisingService.startContribution) — there's no redirect-back to auto-detect success, so
+   * the total updates once the citizen (or the next natural page reload) refreshes. */
+  protected confirmCheckout(): void {
+    const fundraiser = this.checkoutFundraiser();
+    const amount = this.checkoutAmount();
+    if (!fundraiser || !amount || amount <= 0) {
+      return;
+    }
+    const gateway = this.checkoutGateway();
+    this.checkoutProcessing.set(true);
+    this.fundraising.startContribution(fundraiser.id, amount, gateway).subscribe({
+      next: (checkoutUrl) => {
+        this.checkoutProcessing.set(false);
+        this.closeCheckout();
+        if (checkoutUrl) {
+          window.open(checkoutUrl, '_blank', 'noopener');
+          this.alerts.push({
+            category: 'campaign',
+            icon: 'volunteer_activism',
+            title: this.translate.t('title.checkout-opened', 'Complete your payment'),
+            message: this.translate.t(
+              'hint.checkout-opened',
+              'We opened the secure payment page in a new tab. Once you complete it, refresh this page to see it reflected.',
+            ),
+            timeLabel: this.translate.t('label.just-now', 'Just now'),
+            link: '/fundraising',
+          });
+        }
+      },
+      error: () => {
+        this.checkoutProcessing.set(false);
+        this.alerts.push({
+          category: 'campaign',
+          icon: 'error',
+          title: this.translate.t('title.contribution-failed', 'Could not start payment'),
+          message: this.translate.t(
+            'hint.asaas-unavailable',
+            'The payment gateway is temporarily unavailable — please try again shortly.',
+          ),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
+          link: '/fundraising',
+        });
+      },
+    });
   }
 
   private resetForm(): void {

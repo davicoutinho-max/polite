@@ -85,7 +85,7 @@ function toPartySummary(response: PartyResponse): PartySummary {
     spectrum: (response.spectrum?.replace(/_/g, '-') as PartySpectrum) ?? 'center',
     ideology: response.ideology ?? '',
     members: response.memberCount,
-    founded: response.foundedYear ?? new Date().getFullYear(),
+    founded: response.foundedYear ?? null,
     president: response.president ?? '',
   };
 }

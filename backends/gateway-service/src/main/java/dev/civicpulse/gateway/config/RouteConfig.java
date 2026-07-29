@@ -47,6 +47,22 @@ public class RouteConfig {
                                   return exchange.getResponse().setComplete();
                                 }))
                     .uri(uris.identityUri()))
+        // /accounts/{id}/payment-profile decrypts the account's real CPF/CNPJ — payments-service's
+        // own need (see AccountController.getPaymentProfile's javadoc), never a citizen-facing
+        // read. Blocked explicitly even though the general route below doesn't list this path
+        // either, matching the same belt-and-suspenders precedent as provision/provision-synced.
+        .route(
+            "identity-accounts-payment-profile-blocked",
+            r ->
+                r.path("/api/identity/accounts/*/payment-profile")
+                    .filters(
+                        f ->
+                            f.filter(
+                                (exchange, chain) -> {
+                                  exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
+                                  return exchange.getResponse().setComplete();
+                                }))
+                    .uri(uris.identityUri()))
         .route(
             "identity-accounts",
             r ->

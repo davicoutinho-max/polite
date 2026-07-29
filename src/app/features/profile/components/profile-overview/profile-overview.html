@@ -29,7 +29,7 @@
       <ul class="links">
         @for (link of politician().socialLinks; track link.label) {
           <li>
-            <a class="link" [href]="link.url">
+            <a class="link" [href]="link.url" target="_blank" rel="noopener">
               <ui-icon [name]="link.icon" [size]="20" />
               <div>
                 <div class="link__label">{{ link.label }}</div>

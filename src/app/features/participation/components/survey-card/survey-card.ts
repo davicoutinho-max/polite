@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { Observable } from 'rxjs';
 import { Survey } from '../../../../core/models';
+import { AiAssistantService } from '../../../../core/services/ai-assistant.service';
+import { TranslateService } from '../../../../core/services/translate.service';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
+import { AskAi, AskAiPromptOption } from '../../../../shared/ai/ask-ai/ask-ai';
 import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
@@ -14,7 +18,7 @@ interface VoteEvent {
 @Component({
   selector: 'app-survey-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiIcon, CompactNumberPipe, TranslatePipe],
+  imports: [UiCard, UiIcon, AskAi, CompactNumberPipe, TranslatePipe],
   template: `
     <ui-card padding="lg">
       <div class="context">{{ survey().context }}</div>
@@ -46,8 +50,11 @@ interface VoteEvent {
       </ul>
 
       <div class="foot">
-        <ui-icon name="how_to_vote" [size]="16" />
-        {{ total() | compactNumber }} {{ 'label.votes' | translate: 'votes' }}{{ voted() ? ' · ' + ('hint.thanks-for-voting' | translate: 'thanks for voting') : '' }}
+        <span class="foot__votes">
+          <ui-icon name="how_to_vote" [size]="16" />
+          {{ total() | compactNumber }} {{ 'label.votes' | translate: 'votes' }}{{ voted() ? ' · ' + ('hint.thanks-for-voting' | translate: 'thanks for voting') : '' }}
+        </span>
+        <app-ask-ai [topicLabel]="survey().question" [askFn]="askAiFn()" [prompts]="askAiPrompts" />
       </div>
     </ui-card>
   `,
@@ -78,17 +85,33 @@ interface VoteEvent {
     .result__pct { font-weight: 700; color: var(--cp-on-surface); }
 
     .foot {
-      display: inline-flex; align-items: center; gap: var(--cp-space-xs);
-      margin-top: var(--cp-space-md); font-size: 13px; color: var(--cp-on-surface-variant);
+      display: flex; align-items: center; justify-content: space-between; gap: var(--cp-space-sm);
+      margin-top: var(--cp-space-md); flex-wrap: wrap;
     }
+    .foot__votes { display: inline-flex; align-items: center; gap: var(--cp-space-xs); font-size: 13px; color: var(--cp-on-surface-variant); }
   `,
 })
 export class SurveyCard {
+  private readonly aiAssistant = inject(AiAssistantService);
+  private readonly translate = inject(TranslateService);
+
   readonly survey = input.required<Survey>();
   readonly vote = output<VoteEvent>();
 
   protected readonly voted = computed(() => this.survey().votedOptionId !== null);
   protected readonly total = computed(() => this.survey().options.reduce((sum, o) => sum + o.votes, 0));
+
+  protected readonly askAiFn = computed(
+    () => (question: string): Observable<string> =>
+      this.aiAssistant.askAboutParticipationItem('survey', this.survey().question, this.survey().context, question),
+  );
+  protected readonly askAiPrompts: AskAiPromptOption[] = [
+    {
+      question: 'Why might this survey matter to citizens?',
+      label: this.translate.t('button.ask-ai-why-matters', 'Why does this matter?'),
+      icon: 'lightbulb',
+    },
+  ];
 
   protected percent(votes: number): number {
     const total = this.total();

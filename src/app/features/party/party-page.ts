@@ -133,13 +133,18 @@ export class PartyPage {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   });
 
+  protected readonly foundedYearDisplay = computed(() => {
+    const year = this.party().foundedYear;
+    return year !== null ? String(year) : '—';
+  });
+
   protected readonly overview = computed<DataListItem[]>(() => {
     const p = this.party();
     const t = (key: string, fallback: string) => this.translate.t(key, fallback);
     return [
       { icon: 'tag', label: t('label.number', 'Number'), value: String(p.number) },
       { icon: 'psychology', label: t('label.ideology', 'Ideology'), value: p.ideology },
-      { icon: 'event', label: t('label.founded', 'Founded'), value: String(p.foundedYear) },
+      { icon: 'event', label: t('label.founded', 'Founded'), value: p.foundedYear !== null ? String(p.foundedYear) : '' },
       { icon: 'person', label: t('label.president', 'President'), value: p.president },
     ];
   });

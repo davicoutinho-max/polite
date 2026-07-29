@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { WalletService } from '../../core/services/wallet.service';
+import { FeePaymentGateway, WalletService } from '../../core/services/wallet.service';
 import { DirectoryService } from '../../core/services/directory.service';
+import { AlertsService } from '../../core/services/alerts.service';
 import { TagSeverity } from '../../core/models';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
@@ -31,7 +32,10 @@ export class WalletPage {
   private readonly wallet = inject(WalletService);
   private readonly directory = inject(DirectoryService);
   private readonly translate = inject(TranslateService);
+  private readonly alerts = inject(AlertsService);
   private readonly route = inject(ActivatedRoute);
+
+  protected readonly checkoutProcessing = signal(false);
 
   /** Set when arriving from a party's "Join party" button (?partyId=…) so the affiliation
    * form starts with that party already selected instead of defaulting to the first one. */
@@ -41,6 +45,7 @@ export class WalletPage {
   protected readonly steps = this.wallet.steps;
   protected readonly status = this.wallet.status;
   protected readonly currentStepIndex = this.wallet.currentStepIndex;
+  protected readonly stepDates = this.wallet.stepDates;
   protected readonly isAffiliated = this.wallet.isAffiliated;
   protected readonly fees = this.wallet.fees;
   protected readonly pendingFee = this.wallet.pendingFee;
@@ -67,7 +72,44 @@ export class WalletPage {
     this.wallet.reset();
   }
 
-  protected onPay(id: string): void {
-    this.wallet.payFee(id);
+  /** Real Asaas Checkout — opens Asaas's own hosted invoice page in a new tab (Pix QR/copy-paste
+   * or a card form depending on `gateway`), so this component never sees a card number. The fee
+   * only shows as paid once Asaas's webhook confirms the payment settled — there's no
+   * redirect-back to auto-detect success, so refresh this page afterwards to see it reflected. */
+  protected payFee(id: string, gateway: FeePaymentGateway): void {
+    this.checkoutProcessing.set(true);
+    this.wallet.startFeeCheckout(id, gateway).subscribe({
+      next: (checkoutUrl) => {
+        this.checkoutProcessing.set(false);
+        if (checkoutUrl) {
+          window.open(checkoutUrl, '_blank', 'noopener');
+          this.alerts.push({
+            category: 'party',
+            icon: 'payments',
+            title: this.translate.t('title.checkout-opened', 'Complete your payment'),
+            message: this.translate.t(
+              'hint.checkout-opened',
+              'We opened the secure payment page in a new tab. Once you complete it, refresh this page to see it reflected.',
+            ),
+            timeLabel: this.translate.t('label.just-now', 'Just now'),
+            link: '/wallet',
+          });
+        }
+      },
+      error: () => {
+        this.checkoutProcessing.set(false);
+        this.alerts.push({
+          category: 'party',
+          icon: 'error',
+          title: this.translate.t('title.payment-failed', 'Could not start payment'),
+          message: this.translate.t(
+            'hint.asaas-unavailable',
+            'The payment gateway is temporarily unavailable — please try again shortly.',
+          ),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
+          link: '/wallet',
+        });
+      },
+    });
   }
 }

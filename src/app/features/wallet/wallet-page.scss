@@ -14,6 +14,7 @@
 .due__label { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cp-on-surface-variant); }
 .due__amount { font-size: 32px; font-weight: 700; color: var(--cp-on-surface); }
 .due__date { font-size: 14px; color: var(--cp-on-surface-variant); margin-bottom: var(--cp-space-sm); }
+.due__actions { display: flex; flex-direction: column; gap: var(--cp-space-xs); }
 .due--clear {
   flex-direction: row; align-items: center; gap: var(--cp-space-md);
   color: var(--cp-on-success-container); font-weight: 600;

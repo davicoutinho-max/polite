@@ -32,7 +32,9 @@ export interface StartPetitionSignatureCommand {
   readonly birthDate: string | null;
   readonly city: string | null;
   readonly state: string | null;
-  readonly verificationMethod: 'sms' | 'email';
+  /** Always 'email' — the only real (non-mocked) verification channel this platform sends
+   * through (see participation-service's PetitionService/ResendEmailClient). */
+  readonly verificationMethod: 'email';
   readonly contact: string | null;
   readonly electoralData: string | null;
   readonly eSignatureConsent: boolean;
@@ -41,7 +43,6 @@ export interface StartPetitionSignatureCommand {
 
 export interface PetitionSignatureVerificationStarted {
   readonly verificationId: string;
-  readonly demoCode: string;
   readonly contact: string | null;
   readonly method: string;
 }

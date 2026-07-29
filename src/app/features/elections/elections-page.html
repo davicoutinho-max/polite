@@ -12,6 +12,14 @@
   </div>
 
   <div class="elections__filter">
+    <input
+      pInputText
+      type="text"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+      [placeholder]="'label.search-elections-placeholder' | translate: 'Search by election or candidate name…'"
+      class="elections__search"
+    />
     <p-select
       [options]="scopeOptions"
       optionLabel="label"

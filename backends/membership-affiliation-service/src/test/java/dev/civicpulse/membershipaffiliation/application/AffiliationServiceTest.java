@@ -98,4 +98,20 @@ class AffiliationServiceTest {
 
     assertThat(service.getCard(affiliationId)).contains(card);
   }
+
+  @Test
+  void listStatusHistoryDelegatesToRepository() {
+    UUID affiliationId = UUID.randomUUID();
+    var entry =
+        dev.civicpulse.membershipaffiliation.domain.model.AffiliationStatusHistoryEntry.record(
+            UUID.randomUUID(),
+            affiliationId,
+            null,
+            AffiliationStatus.REQUESTED,
+            dev.civicpulse.membershipaffiliation.domain.model.ChangedBy.CITIZEN,
+            NOW);
+    when(historyRepository.findByAffiliationId(affiliationId)).thenReturn(List.of(entry));
+
+    assertThat(service.listStatusHistory(affiliationId)).containsExactly(entry);
+  }
 }

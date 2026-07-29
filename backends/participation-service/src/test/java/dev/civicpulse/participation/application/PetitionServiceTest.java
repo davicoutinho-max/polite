@@ -3,11 +3,14 @@ package dev.civicpulse.participation.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.civicpulse.participation.application.port.in.StartSignatureCommand;
+import dev.civicpulse.participation.application.port.out.EmailGateway;
 import dev.civicpulse.participation.application.port.out.EventPublisher;
 import dev.civicpulse.participation.application.port.out.PetitionRepository;
 import dev.civicpulse.participation.application.port.out.PetitionSignatureRepository;
@@ -41,6 +44,7 @@ class PetitionServiceTest {
   @Mock private PetitionSignatureRepository petitionSignatureRepository;
   @Mock private PetitionSignatureVerificationRepository verificationRepository;
   @Mock private EventPublisher eventPublisher;
+  @Mock private EmailGateway emailGateway;
 
   private PetitionService service;
 
@@ -48,7 +52,8 @@ class PetitionServiceTest {
   void setUp() {
     service =
         new PetitionService(
-            petitionRepository, petitionSignatureRepository, verificationRepository, eventPublisher, Clock.fixed(NOW, ZoneOffset.UTC));
+            petitionRepository, petitionSignatureRepository, verificationRepository, eventPublisher, emailGateway,
+            Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
@@ -90,13 +95,13 @@ class PetitionServiceTest {
         .thenReturn(Optional.of(Petition.create(petitionId, "title", null, null, 100, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT)));
 
     var invalidCommand =
-        new StartSignatureCommand("Jane Doe", "111.111.111-11", null, "City", "ST", "sms", "+5511999990000", null, true, "Jane Doe");
+        new StartSignatureCommand("Jane Doe", "111.111.111-11", null, "City", "ST", "email", "jane@example.com", null, true, "Jane Doe");
 
     assertThatThrownBy(() -> service.startSignature(petitionId, citizenId, invalidCommand)).isInstanceOf(InvalidCpfException.class);
   }
 
   @Test
-  void startSignaturePersistsPendingVerification() {
+  void startSignaturePersistsPendingVerificationAndSendsRealEmail() {
     UUID petitionId = UUID.randomUUID();
     UUID citizenId = UUID.randomUUID();
     when(petitionSignatureRepository.exists(petitionId, citizenId)).thenReturn(false);
@@ -106,9 +111,23 @@ class PetitionServiceTest {
 
     var started = service.startSignature(petitionId, citizenId, command());
 
-    assertThat(started.demoCode()).hasSize(6);
-    assertThat(started.contact()).isEqualTo("+5511999990000");
+    assertThat(started.contact()).isEqualTo("jane@example.com");
     verify(verificationRepository).save(any(PendingSignatureVerification.class));
+    verify(emailGateway).sendVerificationCode(eq("jane@example.com"), anyString());
+  }
+
+  @Test
+  void startSignatureRejectsNonEmailVerificationMethod() {
+    UUID petitionId = UUID.randomUUID();
+    UUID citizenId = UUID.randomUUID();
+    when(petitionSignatureRepository.exists(petitionId, citizenId)).thenReturn(false);
+    when(petitionRepository.findById(petitionId))
+        .thenReturn(Optional.of(Petition.create(petitionId, "title", null, null, 100, null, null, null, null, null, PetitionType.VERIFIED_SUPPORT)));
+
+    var smsCommand = new StartSignatureCommand("Jane Doe", VALID_CPF, null, "City", "ST", "sms", "+5511999990000", null, true, "Jane Doe");
+
+    assertThatThrownBy(() -> service.startSignature(petitionId, citizenId, smsCommand)).isInstanceOf(IllegalArgumentException.class);
+    verify(emailGateway, never()).sendVerificationCode(any(), any());
   }
 
   @Test
@@ -143,12 +162,12 @@ class PetitionServiceTest {
   }
 
   private static StartSignatureCommand command() {
-    return new StartSignatureCommand("Jane Doe", VALID_CPF, null, "City", "ST", "sms", "+5511999990000", null, true, "Jane Doe");
+    return new StartSignatureCommand("Jane Doe", VALID_CPF, null, "City", "ST", "email", "jane@example.com", null, true, "Jane Doe");
   }
 
   private static PendingSignatureVerification pendingVerification(UUID id, UUID petitionId, UUID citizenId, String code) {
     return PendingSignatureVerification.create(
-        id, petitionId, citizenId, code, "+5511999990000", "sms", "Jane Doe", VALID_CPF, null, "City", "ST", null, true, "Jane Doe",
+        id, petitionId, citizenId, code, "jane@example.com", "email", "Jane Doe", VALID_CPF, null, "City", "ST", null, true, "Jane Doe",
         NOW.plusSeconds(600));
   }
 }

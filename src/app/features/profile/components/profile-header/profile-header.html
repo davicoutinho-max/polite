@@ -32,6 +32,15 @@
           <ui-button [label]="'button.follow' | translate: 'Follow'" icon="person_add" variant="outlined" (click)="toggleFollow.emit()" />
         }
       }
+      @if (canAffiliate()) {
+        <ui-button
+          [label]="'button.affiliate-to-party' | translate: 'Affiliate to party'"
+          icon="how_to_reg"
+          variant="outlined"
+          routerLink="/wallet"
+          [queryParams]="{ partyId: politician().partyId }"
+        />
+      }
     </div>
   </div>
 </header>

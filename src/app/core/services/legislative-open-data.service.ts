@@ -9,6 +9,7 @@ import {
   LegislativeTimelineEntry,
   LegislativeVotingRecord,
 } from '../models';
+import { DirectoryService } from './directory.service';
 
 const CAMARA_BASE = 'https://dadosabertos.camara.leg.br/api/v2';
 const SENADO_BASE = 'https://legis.senado.leg.br/dadosabertos';
@@ -153,11 +154,13 @@ function asArray<T>(value: T[] | T | undefined): T[] {
 
 /** Real bills (Projetos de Lei) pulled live from Câmara dos Deputados and Senado Federal's own
  * open-data APIs — not internal CivicPulse data, and not LLM-generated. Both APIs expose open CORS
- * (`Access-Control-Allow-Origin: *`) and a JSON representation, so this calls them directly from
- * the browser with no backend proxy. */
+ * (`Access-Control-Allow-Origin: *`) and a JSON representation for the endpoints used here, so
+ * this calls them directly from the browser with no backend proxy — except author party, see
+ * resolveAuthorParty's javadoc for the one confirmed exception. */
 @Injectable({ providedIn: 'root' })
 export class LegislativeOpenDataService {
   private readonly http = inject(HttpClient);
+  private readonly directory = inject(DirectoryService);
 
   /** How many merged/sorted results a single "page" holds — `page` is 1-based and cumulative
    * (page 2 returns the first two pages' worth, not just the second slice), since Câmara's own
@@ -267,6 +270,42 @@ export class LegislativeOpenDataService {
     return source === 'camara' ? this.getCamaraVotingRecords(id) : of([]);
   }
 
+  /** Same author lookup as getCamaraDetail (name + party), exposed standalone so the Bills list
+   * page can enrich already-loaded cards without re-fetching the whole bill detail. Senado bills
+   * resolve to nulls immediately — no per-bill call — since that API's list endpoint doesn't carry
+   * an author field at all (only its separate per-bill detail endpoint does, see getSenadoDetail),
+   * and its party has no separately-resolvable source either way (see
+   * LegislativeBillDetail.authorParty's javadoc). */
+  resolveAuthorInfo(source: LegislativeSource, id: string): Observable<{ readonly name: string | null; readonly party: string | null }> {
+    if (source !== 'camara') {
+      return of({ name: null, party: null });
+    }
+    return this.http.get<CamaraAutoresResponse>(`${CAMARA_BASE}/proposicoes/${id}/autores`, { headers: JSON_HEADERS }).pipe(
+      map((res) => res.dados ?? []),
+      catchError(() => of([])),
+      map((autores) => ({ name: autores[0]?.nome ?? null, party: this.matchAuthorParty(autores[0]?.nome) })),
+    );
+  }
+
+  /** Câmara's per-deputy detail endpoint (`/deputados/{id}`) — the only place with a deputy's
+   * current party — confirmed to have NO CORS headers at all (unlike every `/proposicoes/**`
+   * endpoint used elsewhere in this service), so it cannot be called from the browser. Matching
+   * the author's name against DirectoryService's already-loaded, already-synced politicians
+   * (same underlying Câmara "nome" field, populated by the exact same government sync) avoids the
+   * problem entirely — zero extra network calls, and no CORS issue since nothing external is hit.
+   * Only misses for authors who aren't currently-serving synced deputies (rare: departed members,
+   * or an author record not yet in the directory), in which case this stays `null`. */
+  private matchAuthorParty(authorName: string | undefined): string | null {
+    if (!authorName) {
+      return null;
+    }
+    const politician = this.directory.politicians().find((p) => p.name === authorName);
+    if (!politician?.partyAcronym) {
+      return null;
+    }
+    return politician.state ? `${politician.partyAcronym}-${politician.state}` : politician.partyAcronym;
+  }
+
   private getCamaraDetail(id: string): Observable<LegislativeBillDetail | null> {
     return forkJoin([
       this.http.get<CamaraProposicaoDetailResponse>(`${CAMARA_BASE}/proposicoes/${id}`, { headers: JSON_HEADERS }).pipe(catchError(() => of(null))),
@@ -279,6 +318,7 @@ export class LegislativeOpenDataService {
         if (!detailRes?.dados) {
           return null;
         }
+        const authorParty = this.matchAuthorParty(autores[0]?.nome);
         const p = detailRes.dados;
         return {
           source: 'camara' as LegislativeSource,
@@ -290,6 +330,7 @@ export class LegislativeOpenDataService {
           officialUrl: `https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${p.id}`,
           fullSummary: p.ementaDetalhada || p.ementa || null,
           author: autores.map((a) => a.nome).join(', ') || null,
+          authorParty,
           currentStatusDescription: p.statusProposicao?.despacho || p.statusProposicao?.descricaoTramitacao || null,
           currentStatusDate: p.statusProposicao?.dataHora ? p.statusProposicao.dataHora.slice(0, 10) : null,
           currentStatusLocation: p.statusProposicao?.siglaOrgao ?? null,
@@ -320,6 +361,7 @@ export class LegislativeOpenDataService {
           officialUrl: `https://www25.senado.leg.br/web/atividade/materias/-/materia/${codigoMateria}`,
           fullSummary: dados?.EmentaMateria ?? null,
           author: dados?.Autor ?? null,
+          authorParty: null,
           currentStatusDescription: latest?.description ?? null,
           currentStatusDate: latest?.date ?? null,
           currentStatusLocation: latest?.location ?? null,

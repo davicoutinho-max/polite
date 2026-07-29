@@ -1,5 +1,6 @@
 package dev.civicpulse.identity.adapter.in.web;
 
+import dev.civicpulse.identity.adapter.in.web.dto.AccountPaymentProfileResponse;
 import dev.civicpulse.identity.adapter.in.web.dto.AccountResponse;
 import dev.civicpulse.identity.adapter.in.web.dto.ProvisionAccountRequest;
 import dev.civicpulse.identity.adapter.in.web.dto.ProvisionSyncedAccountRequest;
@@ -98,6 +99,15 @@ public class AccountController {
   @GetMapping("/{id}/permissions")
   public Set<String> getPermissions(@PathVariable UUID id) {
     return getAccountUseCase.getPermissions(AccountId.of(id));
+  }
+
+  /** Internal-only: not routed to the public internet by the Gateway (see RouteConfig's
+   * "identity-accounts-payment-profile-blocked"). Called by payments-service to get the real,
+   * decrypted CPF/CNPJ it must supply when creating a customer record with the real payment
+   * gateway (Asaas) — see GetAccountUseCase.getPaymentProfile's javadoc. */
+  @GetMapping("/{id}/payment-profile")
+  public AccountPaymentProfileResponse getPaymentProfile(@PathVariable UUID id) {
+    return AccountPaymentProfileResponse.from(getAccountUseCase.getPaymentProfile(AccountId.of(id)));
   }
 
   @PostMapping("/{id}/verify-document")

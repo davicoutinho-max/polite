@@ -1,5 +1,6 @@
 package dev.civicpulse.assistant.adapter.in.web;
 
+import dev.civicpulse.assistant.domain.exception.AiUnavailableException;
 import dev.civicpulse.assistant.domain.exception.AssistantTopicNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AssistantTopicNotFoundException.class)
   public ProblemDetail handleTopicNotFound(AssistantTopicNotFoundException ex) {
     return problem(HttpStatus.NOT_FOUND, "Assistant topic not found", ex.getMessage());
+  }
+
+  @ExceptionHandler(AiUnavailableException.class)
+  public ProblemDetail handleAiUnavailable(AiUnavailableException ex) {
+    return problem(HttpStatus.SERVICE_UNAVAILABLE, "AI assistant unavailable", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

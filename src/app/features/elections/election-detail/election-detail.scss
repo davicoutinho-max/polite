@@ -64,6 +64,33 @@
   &:hover { opacity: 0.9; }
 }
 
+.nominate { margin-bottom: var(--cp-space-xl); }
+.nominate__title {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  margin: 0 0 var(--cp-space-xs);
+  font-size: 15px;
+  color: var(--cp-on-surface);
+}
+.nominate__hint {
+  margin: 0 0 var(--cp-space-md);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+}
+.nominate__form {
+  display: flex;
+  gap: var(--cp-space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.nominate__input { flex: 1; min-width: 220px; }
+.nominate__error {
+  margin: var(--cp-space-sm) 0 0;
+  font-size: 13px;
+  color: var(--cp-error);
+}
+
 .election-detail__section-title {
   margin: 0 0 var(--cp-space-md);
   font-size: 18px;

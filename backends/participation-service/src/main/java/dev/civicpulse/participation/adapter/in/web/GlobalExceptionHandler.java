@@ -3,6 +3,7 @@ package dev.civicpulse.participation.adapter.in.web;
 import dev.civicpulse.participation.domain.exception.AlreadySignedException;
 import dev.civicpulse.participation.domain.exception.AlreadyVotedException;
 import dev.civicpulse.participation.domain.exception.ConsultationNotFoundException;
+import dev.civicpulse.participation.domain.exception.EmailDeliveryException;
 import dev.civicpulse.participation.domain.exception.InvalidCpfException;
 import dev.civicpulse.participation.domain.exception.PetitionNotFoundException;
 import dev.civicpulse.participation.domain.exception.SurveyNotFoundException;
@@ -56,6 +57,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(VerificationFailedException.class)
   public ProblemDetail handleVerificationFailed(VerificationFailedException ex) {
     return problem(HttpStatus.BAD_REQUEST, "Verification failed", ex.getMessage());
+  }
+
+  @ExceptionHandler(EmailDeliveryException.class)
+  public ProblemDetail handleEmailDeliveryFailed(EmailDeliveryException ex) {
+    return problem(HttpStatus.SERVICE_UNAVAILABLE, "Email delivery unavailable", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

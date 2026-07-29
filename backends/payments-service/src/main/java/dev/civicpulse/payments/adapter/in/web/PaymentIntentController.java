@@ -1,5 +1,6 @@
 package dev.civicpulse.payments.adapter.in.web;
 
+import dev.civicpulse.payments.adapter.in.web.dto.CheckoutUrlResponse;
 import dev.civicpulse.payments.adapter.in.web.dto.CreatePaymentIntentRequest;
 import dev.civicpulse.payments.adapter.in.web.dto.PaymentIntentResponse;
 import dev.civicpulse.payments.application.port.in.ManagePaymentIntentUseCase;
@@ -27,22 +28,25 @@ public class PaymentIntentController {
     this.managePaymentIntentUseCase = managePaymentIntentUseCase;
   }
 
-  /** {@code X-Account-Id} is the payer's own id, forwarded by the Gateway after JWT
-   * validation — see docs/architecture/system-architecture.html. */
+  /** {@code X-Account-Id} is the payer's own id, forwarded by the Gateway after JWT validation —
+   * see docs/architecture/system-architecture.html. Every gateway (Pix, Card, Boleto) only ever
+   * creates a pending intent here now — real money only moves once the citizen completes payment
+   * on Asaas's own hosted invoice page; the frontend must then call {@code
+   * POST /payment-intents/{id}/checkout-url} to get that page's URL. */
   @PostMapping
   public ResponseEntity<PaymentIntentResponse> create(
       @RequestHeader("X-Account-Id") UUID payerAccountId, @Valid @RequestBody CreatePaymentIntentRequest request) {
     var intent =
-        managePaymentIntentUseCase.createAndAuthorize(
-            PaymentPurpose.fromCode(request.purpose()),
-            request.referenceId(),
-            payerAccountId,
-            request.payeeId(),
-            request.amountCents(),
-            PaymentGatewayType.fromCode(request.gateway()),
-            request.idempotencyKey());
+        managePaymentIntentUseCase.createPendingPayment(
+            PaymentPurpose.fromCode(request.purpose()), request.referenceId(), payerAccountId, request.payeeId(), request.amountCents(),
+            PaymentGatewayType.fromCode(request.gateway()), request.idempotencyKey());
     PaymentIntentResponse body = PaymentIntentResponse.from(intent);
     return ResponseEntity.created(URI.create("/payment-intents/" + body.id())).body(body);
+  }
+
+  @PostMapping("/{id}/checkout-url")
+  public CheckoutUrlResponse createCheckoutUrl(@PathVariable UUID id) {
+    return new CheckoutUrlResponse(managePaymentIntentUseCase.createCheckoutUrl(id));
   }
 
   @GetMapping("/{id}")

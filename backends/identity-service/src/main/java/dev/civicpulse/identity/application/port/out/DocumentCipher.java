@@ -9,4 +9,10 @@ public interface DocumentCipher {
   String hash(String rawDocumentNumber);
 
   byte[] encrypt(String rawDocumentNumber);
+
+  /** Recovers the raw CPF/CNPJ from {@code encrypt}'s output — needed only where a real external
+   * party legally requires the document number itself (e.g. a payment gateway's KYC/tax
+   * requirements when creating a customer record), never for display or logging. Callers must
+   * treat the result with the same care as the original raw input. */
+  String decrypt(byte[] encryptedDocumentNumber);
 }

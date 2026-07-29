@@ -55,6 +55,11 @@ interface AffiliationResponseDto {
   readonly status: string;
 }
 
+interface AffiliationStatusHistoryResponseDto {
+  readonly toStatus: string;
+  readonly changedAt: string;
+}
+
 interface MembershipFeeResponseDto {
   readonly id: string;
   readonly referencePeriod: string;
@@ -75,10 +80,16 @@ interface PaymentIntentResponseDto {
   readonly status: string;
 }
 
+interface CheckoutUrlResponseDto {
+  readonly checkoutUrl: string;
+}
+
+export type FeePaymentGateway = 'pix' | 'card';
+
 /**
  * Digital wallet: the citizen's affiliation lifecycle (membership-affiliation-service) and
- * monthly fee payments (membership-affiliation-service + payments-service's two-step
- * authorize-then-capture flow). "Simulate next step"/"Reset demo" map to the real
+ * monthly fee payments (membership-affiliation-service + payments-service's real Asaas checkout
+ * flow — see startFeeCheckout). "Simulate next step"/"Reset demo" map to the real
  * citizen-triggerable transitions where one exists (there is none between under-review and
  * party-approved — that step is the party admin's call, made elsewhere).
  */
@@ -108,6 +119,12 @@ export class WalletService {
   readonly fees = this._fees.asReadonly();
   readonly pendingFee = computed(() => this._fees().find((f) => f.status !== 'paid'));
 
+  /** When each stage was actually reached, from the real audit trail (membership-affiliation-
+   * service's AffiliationStatusHistoryEntry) — lets the status timeline show real dates per step
+   * instead of just done/active/pending state. */
+  private readonly _stepDates = signal<ReadonlyMap<FiliationStatus, string>>(new Map());
+  readonly stepDates = this._stepDates.asReadonly();
+
   constructor() {
     // Gated on session.ready() rather than fired immediately — see DirectoryService's
     // reloadFollowing for the full explanation of why an unconditional constructor-time call
@@ -133,6 +150,7 @@ export class WalletService {
           this._status.set('not-started');
           this._card.set(null);
           this._fees.set([]);
+          this._stepDates.set(new Map());
           return of(undefined);
         }
         this._affiliationId.set(affiliation.id);
@@ -142,8 +160,19 @@ export class WalletService {
             .get<MembershipCardResponseDto>(`${this.membershipApiBase}/affiliations/${affiliation.id}/card`)
             .pipe(catchError(() => of(null))),
           fees: this.http.get<MembershipFeeResponseDto[]>(`${this.membershipApiBase}/affiliations/${affiliation.id}/fees`),
+          history: this.http
+            .get<AffiliationStatusHistoryResponseDto[]>(`${this.membershipApiBase}/affiliations/${affiliation.id}/history`)
+            .pipe(catchError(() => of([]))),
         }).pipe(
-          map(({ card, fees }) => {
+          map(({ card, fees, history }) => {
+            const dates = new Map<FiliationStatus, string>();
+            for (const entry of history) {
+              const mapped = STATUS_MAP[entry.toStatus];
+              if (mapped) {
+                dates.set(mapped, entry.changedAt.slice(0, 10));
+              }
+            }
+            this._stepDates.set(dates);
             const party = this.directory.parties().find((p) => p.id === affiliation.partyId);
             this._card.set(
               card
@@ -221,29 +250,28 @@ export class WalletService {
     this._fees.set([]);
   }
 
-  payFee(id: string): void {
+  /** Real Asaas Checkout for the membership fee — see FundraisingService.startContribution's
+   * javadoc for why this only ever returns a hosted invoice URL, never touching card data itself.
+   * The fee only shows as paid once Asaas's webhook confirms the payment settled. */
+  startFeeCheckout(id: string, gateway: FeePaymentGateway): Observable<string> {
     const affiliationId = this._affiliationId();
     const fee = this._fees().find((f) => f.id === id);
     if (!affiliationId || !fee) {
-      return;
+      return of('');
     }
-    const affiliation$ = this.http.get<AffiliationResponseDto>(`${this.membershipApiBase}/affiliations/${affiliationId}`);
-    affiliation$
-      .pipe(
-        switchMap((affiliation) =>
-          this.http.post<PaymentIntentResponseDto>(`${this.paymentsApiBase}/payment-intents`, {
-            purpose: 'membership_fee',
-            referenceId: id,
-            payeeId: affiliation.partyId,
-            amountCents: Math.round(fee.amount * 100),
-            gateway: 'pix',
-            idempotencyKey: `fee-${id}`,
-          }),
-        ),
-        switchMap((intent) => this.http.post<PaymentIntentResponseDto>(`${this.paymentsApiBase}/payment-intents/${intent.id}/capture`, {})),
-      )
-      .subscribe({
-        next: () => this.reload().subscribe(),
-      });
+    return this.http.get<AffiliationResponseDto>(`${this.membershipApiBase}/affiliations/${affiliationId}`).pipe(
+      switchMap((affiliation) =>
+        this.http.post<PaymentIntentResponseDto>(`${this.paymentsApiBase}/payment-intents`, {
+          purpose: 'membership_fee',
+          referenceId: id,
+          payeeId: affiliation.partyId,
+          amountCents: Math.round(fee.amount * 100),
+          gateway,
+          idempotencyKey: `fee-${gateway}-${id}-${Date.now()}`,
+        }),
+      ),
+      switchMap((intent) => this.http.post<CheckoutUrlResponseDto>(`${this.paymentsApiBase}/payment-intents/${intent.id}/checkout-url`, {})),
+      map((session) => session.checkoutUrl),
+    );
   }
 }

@@ -96,7 +96,7 @@
   align-items: center;
   text-decoration: none;
 }
-.pcard__id { display: flex; flex-direction: column; min-width: 0; }
+.pcard__id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .pcard__name {
   display: inline-flex;
   align-items: center;
@@ -106,10 +106,15 @@
   color: var(--cp-on-surface);
 }
 .pcard__verified { color: var(--cp-secondary); }
-.pcard__handle { font-size: 12px; color: var(--cp-on-surface-variant); }
 .pcard__office { font-size: 13px; color: var(--cp-on-surface-variant); margin-top: 2px; }
 
-.pcard__tags { display: flex; flex-wrap: wrap; gap: var(--cp-space-xs); }
+.pcard__tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--cp-on-surface-variant);
+}
 
 .pcard__follow {
   display: inline-flex;

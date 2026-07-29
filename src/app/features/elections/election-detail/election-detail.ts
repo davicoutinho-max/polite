@@ -1,9 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ElectionService } from '../../../core/services/election.service';
-import { ElectionResult, TagSeverity } from '../../../core/models';
+import { DirectoryService } from '../../../core/services/directory.service';
+import { SessionService } from '../../../core/services/session.service';
+import { ElectionResult, PoliticianSummary, TagSeverity } from '../../../core/models';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
+import { UiButton } from '../../../shared/ui/ui-button/ui-button';
 import { UiCard } from '../../../shared/ui/ui-card/ui-card';
 import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
 import { UiAvatar } from '../../../shared/ui/ui-avatar/ui-avatar';
@@ -27,12 +32,14 @@ const RESULTS_PREVIEW_LIMIT = 10;
 @Component({
   selector: 'app-election-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, PageHeader, UiCard, UiTag, UiAvatar, UiIcon, UiEmpty, TranslatePipe],
+  imports: [RouterLink, DecimalPipe, FormsModule, AutoComplete, PageHeader, UiButton, UiCard, UiTag, UiAvatar, UiIcon, UiEmpty, TranslatePipe],
   templateUrl: './election-detail.html',
   styleUrl: './election-detail.scss',
 })
 export class ElectionDetailPage {
   private readonly electionService = inject(ElectionService);
+  private readonly directory = inject(DirectoryService);
+  private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
 
   readonly id = input.required<string>();
@@ -100,5 +107,40 @@ export class ElectionDetailPage {
 
   protected scopeSeverity(scope: string): TagSeverity {
     return SCOPE_SEVERITY[scope] ?? 'neutral';
+  }
+
+  // ---- Pre-candidate nomination (party accounts only, upcoming elections only) ----
+  protected readonly canNominate = computed(() => this.session.can('party-admin') && this.isUpcoming());
+  protected readonly nominationSuggestions = signal<PoliticianSummary[]>([]);
+  protected readonly nominationSelection = signal<PoliticianSummary | null>(null);
+  protected readonly nominating = signal(false);
+  protected readonly nominationError = signal('');
+
+  protected searchPoliticians(event: AutoCompleteCompleteEvent): void {
+    const query = event.query.trim().toLowerCase();
+    const alreadyIn = new Set(this.candidates().map((c) => c.id));
+    const pool = this.directory.politicians().filter((p) => !alreadyIn.has(p.id));
+    const matches = query ? pool.filter((p) => p.name.toLowerCase().includes(query)) : pool.slice(0, 15);
+    this.nominationSuggestions.set(matches.slice(0, 15));
+  }
+
+  protected nominate(): void {
+    const politician = this.nominationSelection();
+    const electionId = this.id();
+    if (!politician) {
+      return;
+    }
+    this.nominating.set(true);
+    this.nominationError.set('');
+    this.electionService.nominateCandidate(electionId, politician.id).subscribe({
+      next: () => {
+        this.nominating.set(false);
+        this.nominationSelection.set(null);
+      },
+      error: () => {
+        this.nominating.set(false);
+        this.nominationError.set(this.translate.t('error.nominate-candidate-failed', 'Could not add this pre-candidate — please try again.'));
+      },
+    });
   }
 }

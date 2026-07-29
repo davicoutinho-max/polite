@@ -15,7 +15,16 @@
   margin-bottom: var(--cp-space-lg);
 }
 
-.elections__filter { margin-bottom: var(--cp-space-lg); }
+.elections__filter {
+  display: flex;
+  gap: var(--cp-space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--cp-space-lg);
+}
+.elections__search {
+  flex: 1;
+  min-width: 220px;
+}
 
 .elections__year-section { margin-bottom: var(--cp-space-xl); }
 .elections__year-title {

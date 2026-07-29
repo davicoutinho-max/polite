@@ -89,6 +89,13 @@ public final class Party {
     this.updatedAt = now;
   }
 
+  /** See platform-configuration-service's {@code PartyNumberCorrected} event javadoc — corrects
+   * a synthetic placeholder number once the real TSE one is known. */
+  public void correctNumber(int number, Instant now) {
+    this.number = number;
+    this.updatedAt = now;
+  }
+
   private static String requireNonBlank(String value, String field) {
     if (value == null || value.isBlank()) {
       throw new IllegalArgumentException(field + " must not be blank");

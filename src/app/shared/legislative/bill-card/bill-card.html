@@ -5,6 +5,15 @@
       severity="neutral"
     />
     <span class="bill__identification">{{ bill().identification }}</span>
+    @if (bill().authorName; as author) {
+      <span class="bill__author">
+        <ui-icon name="person" [size]="14" />
+        <span>{{ author }}</span>
+      </span>
+    }
+    @if (bill().authorParty; as party) {
+      <ui-tag [label]="party" severity="primary" />
+    }
     @if (bill().presentedDate) {
       <span class="bill__date">{{ bill().presentedDate }}</span>
     }
@@ -16,7 +25,7 @@
       <span>{{ 'button.view-details' | translate: 'View details' }}</span>
     </a>
     <ui-button [label]="'button.view-history' | translate: 'View history'" icon="history" variant="text" (click)="openHistory()" />
-    <ui-button [label]="'button.ask-ai' | translate: 'Ask AI'" icon="auto_awesome" variant="text" (click)="openAskAi()" />
+    <app-ask-ai [topicLabel]="askAiTopicLabel()" [askFn]="askAiFn()" [prompts]="askAiPrompts" />
     <a class="bill__official-link" [href]="bill().officialUrl" target="_blank" rel="noopener">
       <ui-icon name="open_in_new" [size]="16" />
       <span>{{ 'button.view-official-page' | translate: 'View official page' }}</span>
@@ -61,74 +70,4 @@
       }
     </div>
   }
-</ui-dialog>
-
-<!-- Ask AI: templated Q&A grounded in this bill's own official data (not a real model) -->
-<ui-dialog
-  [open]="showAskAi()"
-  [title]="'label.ask-ai' | translate: 'Ask AI'"
-  [closeLabel]="'button.close' | translate: 'Close'"
-  [maxWidth]="560"
-  (close)="showAskAi.set(false)"
->
-  <div class="ask-ai">
-    <p class="ask-ai__bill">{{ bill().identification }} — {{ bill().summary }}</p>
-
-    <div class="ask-ai__disclaimer">
-      <ui-icon name="info" [size]="16" />
-      <p>
-        {{ 'hint.ask-ai-disclaimer' | translate: 'Automatic explanations grounded in this bill\'s own official text. They can be incomplete and are not legal advice — always check the official page.' }}
-      </p>
-    </div>
-
-    <div class="ask-ai__prompts">
-      @for (prompt of askAiPrompts; track prompt.kind) {
-        <button type="button" class="ask-ai__prompt" [disabled]="askAiThinking()" (click)="askPrompt(prompt.kind, prompt.label)">
-          <ui-icon [name]="prompt.icon" [size]="16" />
-          <span>{{ prompt.label }}</span>
-        </button>
-      }
-    </div>
-
-    <div class="ask-ai__thread">
-      @for (message of askAiMessages(); track message.id) {
-        <article class="ask-ai__msg ask-ai__msg--{{ message.role }}">
-          @if (message.role === 'assistant') {
-            <span class="ask-ai__ai-icon"><ui-icon name="auto_awesome" [size]="16" [fill]="true" /></span>
-          }
-          <div class="ask-ai__bubble">
-            <p>{{ message.text }}</p>
-          </div>
-        </article>
-      } @empty {
-        <p class="ask-ai__placeholder">
-          {{ 'hint.ask-ai-placeholder' | translate: 'Pick a quick question above, or type your own about this bill.' }}
-        </p>
-      }
-      @if (askAiThinking()) {
-        <article class="ask-ai__msg ask-ai__msg--assistant">
-          <span class="ask-ai__ai-icon"><ui-icon name="auto_awesome" [size]="16" [fill]="true" /></span>
-          <div class="ask-ai__bubble ask-ai__bubble--typing"><span></span><span></span><span></span></div>
-        </article>
-      }
-    </div>
-
-    <form class="ask-ai__composer" (submit)="askFreeText(); $event.preventDefault()">
-      <input
-        pInputText
-        type="text"
-        [ngModel]="askAiQuestion()"
-        (ngModelChange)="askAiQuestion.set($event)"
-        name="askAiQuestion"
-        [placeholder]="'label.ask-ai-placeholder-input' | translate: 'Ask something about this bill…'"
-      />
-      <ui-button [label]="'button.send' | translate: 'Send'" icon="send" variant="filled" type="submit" [disabled]="askAiThinking()" />
-    </form>
-
-    @if (askAiMessages().length > 0) {
-      <button type="button" class="ask-ai__clear" (click)="clearAskAi()">
-        <ui-icon name="delete_sweep" [size]="16" /><span>{{ 'button.clear-conversation' | translate: 'Clear conversation' }}</span>
-      </button>
-    }
-  </div>
 </ui-dialog>

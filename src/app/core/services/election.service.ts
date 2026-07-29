@@ -219,6 +219,16 @@ export class ElectionService {
       );
   }
 
+  /** Lets a party nominate one of its politicians as a pre-candidate for an upcoming election —
+   * backed by the same `POST /elections/{id}/candidacies` endpoint used by the government-sync
+   * pipeline (see ElectionController's javadoc: writes here are trusted to whatever gateway-level
+   * policy fronts this service, same as every other admin-style endpoint in this system). */
+  nominateCandidate(electionId: string, politicianAccountId: string): Observable<void> {
+    return this.http
+      .post<void>(`${this.apiBase}/elections/${electionId}/candidacies`, { politicianAccountId })
+      .pipe(switchMap(() => this.loadCandidates(electionId).pipe(map(() => undefined))));
+  }
+
   byId(electionId: string): Election | undefined {
     return this._elections().find((e) => e.id === electionId);
   }

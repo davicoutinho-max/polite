@@ -4,6 +4,7 @@ import dev.civicpulse.participation.application.port.in.GetPetitionUseCase;
 import dev.civicpulse.participation.application.port.in.ManagePetitionUseCase;
 import dev.civicpulse.participation.application.port.in.SignatureVerificationStarted;
 import dev.civicpulse.participation.application.port.in.StartSignatureCommand;
+import dev.civicpulse.participation.application.port.out.EmailGateway;
 import dev.civicpulse.participation.application.port.out.EventPublisher;
 import dev.civicpulse.participation.application.port.out.PetitionRepository;
 import dev.civicpulse.participation.application.port.out.PetitionSignatureRepository;
@@ -33,10 +34,13 @@ public class PetitionService implements ManagePetitionUseCase, GetPetitionUseCas
 
   private static final int CODE_VALIDITY_MINUTES = 10;
 
+  private static final String SUPPORTED_VERIFICATION_METHOD = "email";
+
   private final PetitionRepository petitionRepository;
   private final PetitionSignatureRepository petitionSignatureRepository;
   private final PetitionSignatureVerificationRepository verificationRepository;
   private final EventPublisher eventPublisher;
+  private final EmailGateway emailGateway;
   private final Clock clock;
   private final SecureRandom random = new SecureRandom();
 
@@ -45,11 +49,13 @@ public class PetitionService implements ManagePetitionUseCase, GetPetitionUseCas
       PetitionSignatureRepository petitionSignatureRepository,
       PetitionSignatureVerificationRepository verificationRepository,
       EventPublisher eventPublisher,
+      EmailGateway emailGateway,
       Clock clock) {
     this.petitionRepository = petitionRepository;
     this.petitionSignatureRepository = petitionSignatureRepository;
     this.verificationRepository = verificationRepository;
     this.eventPublisher = eventPublisher;
+    this.emailGateway = emailGateway;
     this.clock = clock;
   }
 
@@ -83,6 +89,9 @@ public class PetitionService implements ManagePetitionUseCase, GetPetitionUseCas
     if (command.typedSignature() == null || command.typedSignature().isBlank()) {
       throw new IllegalArgumentException("A typed signature is required");
     }
+    if (!SUPPORTED_VERIFICATION_METHOD.equals(command.verificationMethod())) {
+      throw new IllegalArgumentException("Only email verification is supported");
+    }
 
     Instant now = clock.instant();
     String code = generateCode();
@@ -105,7 +114,12 @@ public class PetitionService implements ManagePetitionUseCase, GetPetitionUseCas
             now.plus(CODE_VALIDITY_MINUTES, ChronoUnit.MINUTES));
     verificationRepository.save(pending);
 
-    return new SignatureVerificationStarted(pending.id(), code, command.contact(), command.verificationMethod());
+    // The code must actually reach the citizen for this flow to be real rather than simulated —
+    // if the send fails, the whole attempt fails too (no pending verification the citizen could
+    // never complete). See EmailGateway/EmailDeliveryException's javadoc.
+    emailGateway.sendVerificationCode(command.contact(), code);
+
+    return new SignatureVerificationStarted(pending.id(), command.contact(), command.verificationMethod());
   }
 
   @Override

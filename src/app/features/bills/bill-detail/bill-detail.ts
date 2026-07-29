@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { LegislativeBillDetail, LegislativeSource, LegislativeTimelineEntry, LegislativeVotingRecord } from '../../../core/models';
+import { AiAssistantService } from '../../../core/services/ai-assistant.service';
 import { LegislativeOpenDataService } from '../../../core/services/legislative-open-data.service';
 import { TranslateService } from '../../../core/services/translate.service';
+import { AskAi, AskAiPromptOption } from '../../../shared/ai/ask-ai/ask-ai';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { UiCard } from '../../../shared/ui/ui-card/ui-card';
@@ -18,12 +21,13 @@ import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
 @Component({
   selector: 'app-bill-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PageHeader, UiCard, UiTag, UiIcon, UiEmpty, TranslatePipe],
+  imports: [RouterLink, PageHeader, UiCard, UiTag, UiIcon, UiEmpty, AskAi, TranslatePipe],
   templateUrl: './bill-detail.html',
   styleUrl: './bill-detail.scss',
 })
 export class BillDetailPage implements OnInit {
   private readonly legislativeOpenData = inject(LegislativeOpenDataService);
+  private readonly aiAssistant = inject(AiAssistantService);
   protected readonly translate = inject(TranslateService);
 
   readonly source = input.required<LegislativeSource>();
@@ -32,6 +36,28 @@ export class BillDetailPage implements OnInit {
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
   protected readonly bill = signal<LegislativeBillDetail | null>(null);
+
+  protected readonly askAiTopicLabel = computed(() => {
+    const b = this.bill();
+    return b ? `${b.identification} — ${b.fullSummary || b.summary}` : '';
+  });
+  protected readonly askAiFn = computed(() => (question: string): Observable<string> => {
+    const b = this.bill()!;
+    return this.aiAssistant.askAboutBill(b.identification, b.fullSummary || b.summary, question);
+  });
+  protected readonly askAiPrompts: AskAiPromptOption[] = [
+    { question: 'Summarize this bill in one or two sentences.', label: this.translate.t('button.ask-ai-summarize', 'Summarize'), icon: 'summarize' },
+    {
+      question: 'Explain this bill in simple, plain terms a non-lawyer would understand.',
+      label: this.translate.t('button.ask-ai-explain-simply', 'Explain simply'),
+      icon: 'lightbulb',
+    },
+    {
+      question: 'What would change in practice if this bill is approved?',
+      label: this.translate.t('button.ask-ai-impact', 'What changes if approved?'),
+      icon: 'trending_up',
+    },
+  ];
 
   protected readonly votingLoading = signal(true);
   protected readonly votingRecords = signal<LegislativeVotingRecord[]>([]);

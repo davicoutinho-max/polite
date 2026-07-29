@@ -29,6 +29,9 @@ export class FiliationStatusComponent {
   readonly status = input.required<FiliationStatus>();
   /** Index of the current (last completed) step; -1 when not started. */
   readonly currentIndex = input.required<number>();
+  /** Real per-stage timestamps from the audit trail (membership-affiliation-service's
+   * AffiliationStatusHistoryEntry) — shown next to done/active steps when available. */
+  readonly stepDates = input<ReadonlyMap<FiliationStatus, string>>(new Map());
   readonly parties = input<readonly PartySummary[]>([]);
   /** Arriving from a party's own "Join party" button pre-selects it here instead of the form
    * defaulting to the first party in the list. */
@@ -58,6 +61,10 @@ export class FiliationStatusComponent {
       return 'active';
     }
     return 'pending';
+  }
+
+  protected stepDate(status: FiliationStatus): string | null {
+    return this.stepDates().get(status) ?? null;
   }
 
   protected onRequest(): void {

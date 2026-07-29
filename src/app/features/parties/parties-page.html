@@ -54,16 +54,22 @@
       @for (p of visible(); track p.id) {
         <article class="qcard">
           <a class="qcard__head" [routerLink]="['/party', p.id]">
-            <span class="qcard__badge">{{ p.number }}</span>
+            <ui-avatar [src]="p.logoUrl" [alt]="p.name" [size]="44" [ring]="true" />
             <div class="qcard__id">
               <span class="qcard__name">{{ p.name }}</span>
-              <span class="qcard__acronym">{{ p.acronym }} · {{ 'label.founded-lower' | translate: 'founded' }} {{ p.founded }}</span>
+              <span class="qcard__acronym">
+                {{ p.acronym }}
+                @if (p.founded !== null) {
+                  · {{ 'label.founded-lower' | translate: 'founded' }} {{ p.founded }}
+                }
+              </span>
             </div>
           </a>
 
           <p class="qcard__ideology">{{ p.ideology }}</p>
 
           <div class="qcard__tags">
+            <ui-tag [label]="'Nº ' + p.number" severity="primary" />
             <ui-tag [label]="spectrumLabel(p.spectrum)" severity="secondary" />
             <ui-tag [label]="(p.members | compactNumber) + ' ' + ('label.members-lower' | translate: 'members')" severity="neutral" />
           </div>

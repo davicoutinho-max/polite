@@ -1,5 +1,6 @@
 package dev.civicpulse.participation.adapter.in.web.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ public record StartSignatureRequest(
     String city,
     String state,
     @NotBlank String verificationMethod,
-    String contact,
+    @NotBlank @Email String contact,
     String electoralData,
     boolean eSignatureConsent,
     @NotBlank String typedSignature) {}

@@ -54,7 +54,8 @@
 
 .prose { margin: 0; font-size: 16px; line-height: 24px; color: var(--cp-on-surface-variant); }
 
-.directories, .events, .reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--cp-space-md); }
+.directories, .events { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--cp-space-md); }
+.reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .directory { display: flex; align-items: center; gap: var(--cp-space-md); flex-wrap: wrap; }
 .directory__body { flex: 1; min-width: 0; }
 .directory__location { font-weight: 600; color: var(--cp-on-surface); }
@@ -75,11 +76,14 @@
 
 .rep {
   display: flex; align-items: center; gap: var(--cp-space-md);
-  padding: var(--cp-space-sm); margin: calc(var(--cp-space-sm) * -1);
-  border-radius: var(--cp-radius); cursor: pointer; color: var(--cp-on-surface-variant);
+  padding: var(--cp-space-sm) 0;
+  cursor: pointer; color: var(--cp-on-surface-variant);
+  border-bottom: 1px solid var(--cp-outline-variant);
   transition: background 0.15s ease;
+  &:last-child { border-bottom: none; }
 }
 .rep:hover { background: var(--cp-surface-container-low); }
-.rep > div { flex: 1; }
-.rep__name { font-weight: 600; color: var(--cp-on-surface); }
-.rep__role { font-size: 14px; color: var(--cp-on-surface-variant); }
+.rep__body { flex: 1; min-width: 0; }
+.rep__name { font-weight: 600; color: var(--cp-on-surface); font-size: 14px; }
+.rep__role { font-size: 13px; color: var(--cp-on-surface-variant); }
+.rep__location { color: var(--cp-on-surface-variant); opacity: 0.75; }

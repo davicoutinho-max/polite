@@ -10,6 +10,7 @@ import dev.civicpulse.identity.domain.exception.InvalidDocumentNumberException;
 import dev.civicpulse.identity.domain.model.Account;
 import dev.civicpulse.identity.domain.model.AccountId;
 import dev.civicpulse.identity.domain.model.AccountType;
+import dev.civicpulse.identity.domain.model.DocumentNumberValidator;
 import dev.civicpulse.identity.domain.model.DocumentType;
 import java.time.Clock;
 import java.time.Instant;
@@ -63,7 +64,7 @@ public class ProvisionSyncedAccountService implements ProvisionSyncedAccountUseC
 
     DocumentType documentType = command.documentType();
     String digitsOnly = command.rawDocumentNumber() == null ? "" : command.rawDocumentNumber().replaceAll("\\D", "");
-    if (documentType == null || digitsOnly.length() != documentType.digitCount()) {
+    if (documentType == null || !DocumentNumberValidator.isValid(documentType, digitsOnly)) {
       throw new InvalidDocumentNumberException(documentType == null ? DocumentType.CPF : documentType);
     }
     String documentNumberHash = documentCipher.hash(digitsOnly);

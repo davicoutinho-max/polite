@@ -1,6 +1,7 @@
 package dev.civicpulse.directory.adapter.in.messaging;
 
 import dev.civicpulse.directory.adapter.in.messaging.dto.AccountRegisteredMessage;
+import dev.civicpulse.directory.adapter.in.messaging.dto.PartyNumberCorrectedMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PartyRegisteredMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PoliticianReassignedMessage;
 import dev.civicpulse.directory.adapter.in.messaging.dto.PoliticianRegisteredMessage;
@@ -46,5 +47,10 @@ class DirectoryProjectionListener {
   void onPartyRegistered(PartyRegisteredMessage message) {
     projectDirectoryUseCase.onPartyRegistered(
         message.partyId(), message.name(), message.acronym(), message.number(), message.president(), message.ideology(), message.occurredAt());
+  }
+
+  @KafkaListener(topics = "party-number-corrected", groupId = "directory-service")
+  void onPartyNumberCorrected(PartyNumberCorrectedMessage message) {
+    projectDirectoryUseCase.onPartyNumberCorrected(message.partyId(), message.number());
   }
 }

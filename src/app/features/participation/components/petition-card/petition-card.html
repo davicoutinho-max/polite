@@ -58,6 +58,13 @@
       </a>
     }
 
+    <div class="details__progress">
+      <div class="progress__row">
+        <span class="progress__count">{{ percent() }}% {{ 'label.of-goal' | translate: 'of goal' }}</span>
+      </div>
+      <ui-progress [value]="percent()" [color]="percent() >= 100 ? 'tertiary' : 'secondary'" />
+    </div>
+
     <div class="details__stats">
       <div>
         <span class="details__stat-value">{{ petition().signatures | compactNumber }}</span>
@@ -71,6 +78,10 @@
         <span class="details__stat-value">{{ petition().deadline }}</span>
         <span class="details__stat-label">{{ 'label.deadline' | translate: 'Deadline' }}</span>
       </div>
+    </div>
+
+    <div class="details__ask-ai">
+      <app-ask-ai [topicLabel]="petition().title" [askFn]="askAiFn()" [prompts]="askAiPrompts" />
     </div>
   </div>
 </ui-dialog>
@@ -118,6 +129,23 @@
   [closeLabel]="'button.close' | translate: 'Close'"
   (close)="closeSignWizard()"
 >
+  @if (signStep() !== 'closed') {
+    <ol class="sign-timeline">
+      @for (item of signWizardSteps; track item.step) {
+        <li class="sign-timeline__step" [attr.data-state]="signWizardStepState(item.step)">
+          <div class="sign-timeline__marker">
+            @if (signWizardStepState(item.step) === 'done') {
+              <ui-icon name="check" [size]="16" />
+            } @else {
+              <ui-icon [name]="item.icon" [size]="16" [fill]="signWizardStepState(item.step) === 'active'" />
+            }
+          </div>
+          <span class="sign-timeline__label">{{ item.labelKey | translate: item.labelDefault }}</span>
+        </li>
+      }
+    </ol>
+  }
+
   @switch (signStep()) {
     @case ('confirm') {
       <div class="sign-step">
@@ -166,16 +194,10 @@
           </label>
         }
 
-        <div class="sign-form__row">
-          <label class="sign-form__field">
-            <span>{{ 'label.verification-method' | translate: 'Verify by' }}</span>
-            <p-select [options]="verificationMethodOptions" optionLabel="label" optionValue="value" [ngModel]="verificationMethod()" (ngModelChange)="verificationMethod.set($event)" name="verificationMethod" appendTo="body" />
-          </label>
-          <label class="sign-form__field sign-form__field--grow">
-            <span>{{ verificationMethod() === 'sms' ? ('label.phone' | translate: 'Phone number') : ('label.email' | translate: 'E-mail') }}</span>
-            <input pInputText type="text" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" />
-          </label>
-        </div>
+        <label class="sign-form__field">
+          <span>{{ 'label.email-for-code' | translate: 'Email (your verification code is sent here)' }}</span>
+          <input pInputText type="email" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" placeholder="you@example.com" />
+        </label>
 
         <label class="sign-form__field">
           <span>{{ 'label.typed-signature' | translate: 'Type your full legal name as your electronic signature' }}</span>
@@ -196,7 +218,7 @@
           <ui-button
             [label]="'button.send-code' | translate: 'Send verification code'"
             variant="filled"
-            icon="sms"
+            icon="mail"
             type="submit"
             [disabled]="signSubmitting()"
           />
@@ -206,8 +228,7 @@
     @case ('code') {
       <form class="sign-form" (submit)="submitCode(); $event.preventDefault()">
         <p class="sign-form__demo-hint">
-          {{ 'hint.demo-code' | translate: 'Demo mode — this platform has no real SMS/e-mail gateway, so here is the code that would have been sent:' }}
-          <strong>{{ demoCode() }}</strong>
+          {{ 'hint.real-code-sent' | translate: 'We sent a 6-digit verification code to your email. It expires in 10 minutes.' }}
         </p>
         <label class="sign-form__field">
           <span>{{ 'label.verification-code' | translate: 'Verification code' }}</span>
@@ -227,6 +248,15 @@
           />
         </div>
       </form>
+    }
+    @case ('done') {
+      <div class="sign-step sign-step--done">
+        <ui-icon name="task_alt" [size]="40" [fill]="true" />
+        <p>{{ 'hint.petition-signed' | translate: 'Your signature was recorded. Thank you for taking part.' }}</p>
+        <div class="sign-step__actions">
+          <ui-button [label]="'button.close' | translate: 'Close'" variant="filled" (click)="closeSignWizard()" />
+        </div>
+      </div>
     }
   }
 </ui-dialog>

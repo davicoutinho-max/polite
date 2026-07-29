@@ -2,6 +2,13 @@ spring:
   application:
     name: participation-service
 
+  # Loads participation-service/.env (KEY=VALUE, gitignored — see .env.example) as extra
+  # properties, so the Resend key below can be edited in a local file instead of exported as a
+  # shell env var every time this service is launched with `java -jar`. Safe if the file doesn't
+  # exist.
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/participation_service
     username: ${DB_USERNAME:participation_service_app}
@@ -30,6 +37,12 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+
+participation:
+  email:
+    # Real key lives in participation-service/.env (gitignored), never here — see EmailProperties.
+    api-key: ${RESEND_API_KEY:}
+    from-address: ${RESEND_FROM_ADDRESS:CivicPulse <onboarding@resend.dev>}
 
 server:
   port: ${SERVER_PORT:8092}

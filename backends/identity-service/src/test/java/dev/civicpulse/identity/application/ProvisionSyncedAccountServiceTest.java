@@ -108,14 +108,14 @@ class ProvisionSyncedAccountServiceTest {
   void createsBrandNewSyncedAccountWhenNothingMatches() {
     ProvisionSyncedAccountCommand command =
         new ProvisionSyncedAccountCommand(
-            "New Deputy", "new-deputy-dep-1", "dep1@camara.leg.br", "http://photo", DocumentType.CPF, "12345678901", "CAMARA_DEPUTADO", "1");
+            "New Deputy", "new-deputy-dep-1", "dep1@camara.leg.br", "http://photo", DocumentType.CPF, "52998224725", "CAMARA_DEPUTADO", "1");
     when(accountRepository.findByExternalSourceAndExternalId("CAMARA_DEPUTADO", "1")).thenReturn(Optional.empty());
     when(accountRepository.findByEmail("dep1@camara.leg.br")).thenReturn(Optional.empty());
     when(accountRepository.existsByEmail("dep1@camara.leg.br")).thenReturn(false);
     when(accountRepository.existsByHandle("new-deputy-dep-1")).thenReturn(false);
-    when(documentCipher.hash("12345678901")).thenReturn("cpf-hash");
+    when(documentCipher.hash("52998224725")).thenReturn("cpf-hash");
     when(accountRepository.existsByDocumentNumberHash("cpf-hash")).thenReturn(false);
-    when(documentCipher.encrypt("12345678901")).thenReturn(new byte[] {9});
+    when(documentCipher.encrypt("52998224725")).thenReturn(new byte[] {9});
     when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     Account result = service.provisionOrUpdate(AccountType.POLITICIAN, command);

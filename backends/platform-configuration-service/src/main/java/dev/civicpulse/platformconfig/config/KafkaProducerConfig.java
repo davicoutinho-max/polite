@@ -5,6 +5,7 @@ import dev.civicpulse.platformconfig.domain.event.CountryRemoved;
 import dev.civicpulse.platformconfig.domain.event.DefaultLanguageChanged;
 import dev.civicpulse.platformconfig.domain.event.LanguageAdded;
 import dev.civicpulse.platformconfig.domain.event.LanguageRemoved;
+import dev.civicpulse.platformconfig.domain.event.PartyNumberCorrected;
 import dev.civicpulse.platformconfig.domain.event.PartyRegistered;
 import dev.civicpulse.platformconfig.domain.event.PoliticianReassigned;
 import dev.civicpulse.platformconfig.domain.event.TranslationValueUpdated;
@@ -27,6 +28,7 @@ public class KafkaProducerConfig {
    * published" list. */
   private static final String TYPE_MAPPINGS =
       "PartyRegistered:" + PartyRegistered.class.getName() + "," //
+          + "PartyNumberCorrected:" + PartyNumberCorrected.class.getName() + "," //
           + "PoliticianReassigned:" + PoliticianReassigned.class.getName() + "," //
           + "LanguageAdded:" + LanguageAdded.class.getName() + "," //
           + "LanguageRemoved:" + LanguageRemoved.class.getName() + "," //

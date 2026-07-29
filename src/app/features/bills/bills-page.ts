@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { from, map, mergeMap } from 'rxjs';
 import { LEGISLATIVE_BILL_TYPES, LegislativeBillSummary } from '../../core/models';
 import { FilterOption } from '../../core/services/directory.service';
 import { LegislativeOpenDataService } from '../../core/services/legislative-open-data.service';
@@ -11,6 +12,13 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+
+type SortKey = 'recent' | 'party';
+
+/** Caps how many "resolve this bill's author party" calls run at once — enrichment happens for
+ * every bill already on screen, and firing 20-40 of these at once against Câmara's API in one
+ * burst is the kind of thing that gets a client rate-limited for no good reason. */
+const PARTY_ENRICHMENT_CONCURRENCY = 3;
 
 /** Matches LegislativeOpenDataService's own page size — used here only to guess whether a
  * "load more" click is likely to reveal anything (see `PAGE_SIZE` there for the real source of
@@ -46,9 +54,76 @@ export class BillsPage {
 
   protected readonly visibleTypes = computed(() => (this.selectedType() === 'all' ? this.billTypes : this.billTypes.filter((t) => t.code === this.selectedType())));
 
+  // ---- Author name/party filter/sort — resolved lazily per bill after each load, see enrichParties() ----
+  protected readonly resolvedAuthors = signal<ReadonlyMap<string, { readonly name: string | null; readonly party: string | null }>>(new Map());
+  private readonly resolvedParties = computed(() => new Map([...this.resolvedAuthors()].map(([key, v]) => [key, v.party])));
+  protected readonly partyFilter = signal('all');
+  protected readonly sortKey = signal<SortKey>('recent');
+
+  protected readonly partyFilterOptions = computed<FilterOption[]>(() => {
+    const parties = [...new Set([...this.resolvedParties().values()].filter((p): p is string => p !== null))].sort();
+    return [{ value: 'all', label: this.translate.t('label.all-parties', 'All parties') }, ...parties.map((p) => ({ value: p, label: p }))];
+  });
+
+  protected readonly sortOptions: FilterOption[] = [
+    { value: 'recent', label: this.translate.t('label.most-recent', 'Most recent') },
+    { value: 'party', label: this.translate.t('label.party-az', 'Party (A–Z)') },
+  ];
+
+  private partyKeyOf(bill: LegislativeBillSummary): string {
+    return `${bill.source}:${bill.id}`;
+  }
+
+  private applyPartyFilterAndSort(bills: LegislativeBillSummary[]): LegislativeBillSummary[] {
+    const resolved = this.resolvedAuthors();
+    // Merge in whatever name/party each bill has resolved to so far — lets bill-card show them
+    // directly without every caller needing its own lookup against resolvedAuthors().
+    let result = bills.map((b): LegislativeBillSummary => {
+      const info = resolved.get(this.partyKeyOf(b));
+      return { ...b, authorName: info?.name, authorParty: info?.party };
+    });
+
+    const filter = this.partyFilter();
+    if (filter !== 'all') {
+      result = result.filter((b) => b.authorParty === filter);
+    }
+    if (this.sortKey() === 'party') {
+      result = [...result].sort((a, b) => {
+        if (!a.authorParty && !b.authorParty) return 0;
+        if (!a.authorParty) return 1;
+        if (!b.authorParty) return -1;
+        return a.authorParty.localeCompare(b.authorParty);
+      });
+    }
+    return result;
+  }
+
+  /** Fires one author lookup (name + party) per bill not already resolved, capped at
+   * PARTY_ENRICHMENT_CONCURRENCY in flight at once, and merges each result into
+   * `resolvedAuthors` as it arrives — the list renders immediately and author names/party
+   * tags/filter options fill in progressively rather than blocking on the whole batch. */
+  private enrichParties(bills: LegislativeBillSummary[]): void {
+    const resolved = this.resolvedAuthors();
+    const unresolved = bills.filter((b) => !resolved.has(this.partyKeyOf(b)));
+    if (unresolved.length === 0) {
+      return;
+    }
+    from(unresolved)
+      .pipe(
+        mergeMap(
+          (bill) => this.legislativeOpenData.resolveAuthorInfo(bill.source, bill.id).pipe(map((info) => ({ bill, info }))),
+          PARTY_ENRICHMENT_CONCURRENCY,
+        ),
+      )
+      .subscribe(({ bill, info }) => {
+        this.resolvedAuthors.update((map) => new Map(map).set(this.partyKeyOf(bill), info));
+      });
+  }
+
   protected readonly visibleSearchResults = computed(() => {
     const results = this.searchResults() ?? [];
-    return this.selectedType() === 'all' ? results : results.filter((b) => b.typeLabel === this.selectedType());
+    const byType = this.selectedType() === 'all' ? results : results.filter((b) => b.typeLabel === this.selectedType());
+    return this.applyPartyFilterAndSort(byType);
   });
 
   protected readonly keyword = signal('');
@@ -88,6 +163,7 @@ export class BillsPage {
           }
         }
         this.exhaustedTypes.set(exhausted);
+        this.enrichParties(Object.values(grouped).flat());
       },
       error: () => {
         this.loading.set(false);
@@ -108,6 +184,7 @@ export class BillsPage {
         if (bills.length <= previousCount) {
           this.exhaustedTypes.update((s) => new Set(s).add(typeCode));
         }
+        this.enrichParties(bills);
       },
       error: () => {
         this.loadingMoreType.set(null);
@@ -133,6 +210,7 @@ export class BillsPage {
         if (bills.length === 0) {
           this.error.set(this.translate.t('error.bills-none-found', 'No related bills were found on Câmara/Senado for this topic.'));
         }
+        this.enrichParties(bills);
       },
       error: () => {
         this.loading.set(false);
@@ -158,6 +236,7 @@ export class BillsPage {
         if (bills.length <= previousCount) {
           this.searchExhausted.set(true);
         }
+        this.enrichParties(bills);
       },
       error: () => {
         this.loadingMoreSearch.set(false);
@@ -173,7 +252,7 @@ export class BillsPage {
   }
 
   protected billsForType(typeCode: string): LegislativeBillSummary[] {
-    return this.groupedBills()[typeCode] ?? [];
+    return this.applyPartyFilterAndSort(this.groupedBills()[typeCode] ?? []);
   }
 
   protected isExhausted(typeCode: string): boolean {

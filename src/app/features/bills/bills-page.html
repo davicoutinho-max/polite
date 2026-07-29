@@ -37,6 +37,25 @@
     }
   </form>
 
+  <div class="bills-page__filters">
+    <p-select
+      [options]="partyFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="partyFilter()"
+      (ngModelChange)="partyFilter.set($event)"
+      appendTo="body"
+    />
+    <p-select
+      [options]="sortOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="sortKey()"
+      (ngModelChange)="sortKey.set($event)"
+      appendTo="body"
+    />
+  </div>
+
   @if (loading()) {
     <p class="bills-page__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
   } @else if (error() && (isSearching() ? (searchResults() ?? []).length === 0 : true)) {

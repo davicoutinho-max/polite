@@ -101,9 +101,25 @@
 .details__file:hover {
   text-decoration: underline;
 }
+.details__progress {
+  margin-bottom: var(--cp-space-md);
+}
+.details__progress .progress__row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+}
 .details__stats {
   display: flex;
   gap: var(--cp-space-lg);
+  padding-top: var(--cp-space-md);
+  border-top: 1px solid var(--cp-outline-variant);
+}
+.details__ask-ai {
+  margin-top: var(--cp-space-md);
   padding-top: var(--cp-space-md);
   border-top: 1px solid var(--cp-outline-variant);
 }
@@ -143,6 +159,87 @@
 }
 
 // ---- Sign wizard ----
+.sign-timeline {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0 0 var(--cp-space-lg);
+  padding: 0;
+}
+.sign-timeline__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  text-align: center;
+  position: relative;
+}
+.sign-timeline__step::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--cp-outline-variant);
+  z-index: 0;
+}
+.sign-timeline__step:first-child::before {
+  display: none;
+}
+.sign-timeline__step[data-state='done']::before {
+  background: var(--cp-success, #2e7d32);
+}
+.sign-timeline__marker {
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cp-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cp-surface-container-high);
+  color: var(--cp-on-surface-variant);
+  border: 2px solid transparent;
+}
+.sign-timeline__step[data-state='done'] .sign-timeline__marker {
+  background: var(--cp-success, #2e7d32);
+  color: #fff;
+}
+.sign-timeline__step[data-state='active'] .sign-timeline__marker {
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+  border-color: var(--cp-secondary);
+}
+.sign-timeline__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+}
+.sign-timeline__step[data-state='active'] .sign-timeline__label,
+.sign-timeline__step[data-state='done'] .sign-timeline__label {
+  color: var(--cp-on-surface);
+}
+
+.sign-step--done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--cp-space-md);
+  padding: var(--cp-space-lg) 0;
+  color: var(--cp-success, #2e7d32);
+}
+.sign-step--done p {
+  color: var(--cp-on-surface);
+}
+.sign-step--done .sign-step__actions {
+  justify-content: center;
+  width: 100%;
+}
+
 .sign-step p {
   color: var(--cp-on-surface-variant);
   line-height: 22px;

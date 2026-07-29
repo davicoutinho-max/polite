@@ -27,6 +27,15 @@
 
 .bills-page__type-filter { min-width: 160px; }
 
+.bills-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-sm);
+  margin-bottom: var(--cp-space-lg);
+
+  p-select { min-width: 160px; }
+}
+
 .bills-page__status {
   margin: 0 0 var(--cp-space-lg);
   color: var(--cp-on-surface-variant);
