@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FeedService } from '../../../../core/services/feed.service';
 import { UiYoutube } from '../../../../shared/ui/ui-youtube/ui-youtube';
+import { UiEmpty } from '../../../../shared/ui/ui-empty/ui-empty';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
@@ -8,7 +9,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 @Component({
   selector: 'app-live-now',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiYoutube, UiIcon, TranslatePipe],
+  imports: [UiYoutube, UiEmpty, UiIcon, TranslatePipe],
   template: `
     @if (liveNow(); as live) {
       <div class="live">
@@ -19,11 +20,20 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
             {{ live.watching }} {{ 'label.watching' | translate: 'watching' }}
           </span>
         </header>
+        <!-- No [live] here — the header badge above already covers it; ui-youtube's own badge
+             is only needed where it's used standalone, without a wrapping header (see post-card). -->
         <ui-youtube
-          [live]="true"
           [videoId]="live.videoId ?? undefined"
           [channelId]="live.channelId ?? undefined"
           [title]="'label.plenary-live' | translate: 'Plenary session — live now'"
+        />
+      </div>
+    } @else {
+      <div class="live live--empty">
+        <ui-empty
+          icon="sensors_off"
+          [title]="'label.no-live-stream.title' | translate: 'Nothing live right now'"
+          [description]="'label.no-live-stream.desc' | translate: 'No live stream is currently being broadcast.'"
         />
       </div>
     }
@@ -37,6 +47,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
       box-shadow: var(--cp-shadow-card);
       padding: var(--cp-space-md);
     }
+    .live--empty { padding: 0; }
     .live__head {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: var(--cp-space-sm);

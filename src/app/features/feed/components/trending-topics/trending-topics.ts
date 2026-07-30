@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TrendingTopic } from '../../../../core/models';
 import { UiSection } from '../../../../shared/ui/ui-section/ui-section';
+import { UiEmpty } from '../../../../shared/ui/ui-empty/ui-empty';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
@@ -9,7 +10,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 @Component({
   selector: 'app-trending-topics',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiSection, UiIcon, RouterLink, TranslatePipe],
+  imports: [UiSection, UiEmpty, UiIcon, RouterLink, TranslatePipe],
   template: `
     <ui-section [title]="'section.trending-topics' | translate: 'Trending Topics'" icon="trending_up">
       <ul class="topics">
@@ -26,6 +27,12 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
             </span>
             <ui-icon class="topic__chevron" name="chevron_right" [size]="20" />
           </li>
+        } @empty {
+          <ui-empty
+            icon="trending_up"
+            [title]="'label.no-trending-topics.title' | translate: 'Nothing trending yet'"
+            [description]="'label.no-trending-topics.desc' | translate: 'Hashtags in recent posts will show up here once they pick up activity.'"
+          />
         }
       </ul>
     </ui-section>

@@ -36,7 +36,7 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
         }
       </ul>
       <div class="widget__footer">
-        <ui-button [label]="'button.view-all-active-bills' | translate: 'View All Active Bills'" variant="text" routerLink="/politicians" />
+        <ui-button [label]="'button.view-all-active-bills' | translate: 'View All Active Bills'" variant="text" routerLink="/bills" />
       </div>
     </ui-section>
   `,
