@@ -3,7 +3,7 @@
   <aside class="list">
     <header class="list__head">
       <h1 class="list__title">{{ 'page.messages.title' | translate: 'Messages' }}</h1>
-      <ui-icon-button *appCan="'message'" icon="edit_square" ariaLabel="New message" [iconSize]="20" (click)="openPicker()" />
+      <ui-icon-button *appCan="'message'" icon="edit_square" [ariaLabel]="'aria.new-message' | translate: 'New message'" [iconSize]="20" (click)="openPicker()" />
     </header>
     <ul class="conversations">
       @for (conversation of conversations(); track conversation.id) {
@@ -60,8 +60,8 @@
               (ngModelChange)="groupNameDraft.set($event)"
               autocomplete="off"
             />
-            <ui-icon-button icon="check" ariaLabel="Save group name" [iconSize]="18" (click)="saveRenameGroup(conversation.id)" />
-            <ui-icon-button icon="close" ariaLabel="Cancel" [iconSize]="18" (click)="cancelRenameGroup()" />
+            <ui-icon-button icon="check" [ariaLabel]="'aria.save-group-name' | translate: 'Save group name'" [iconSize]="18" (click)="saveRenameGroup(conversation.id)" />
+            <ui-icon-button icon="close" [ariaLabel]="'aria.cancel' | translate: 'Cancel'" [iconSize]="18" (click)="cancelRenameGroup()" />
           </form>
         } @else {
           <div class="thread__peer">
@@ -82,7 +82,7 @@
 
         @if (conversation.isGroup && !renamingGroup()) {
           <div class="thread__menu">
-            <ui-icon-button icon="more_vert" ariaLabel="Group options" [iconSize]="20" (click)="toggleGroupMenu()" />
+            <ui-icon-button icon="more_vert" [ariaLabel]="'aria.group-options' | translate: 'Group options'" [iconSize]="20" (click)="toggleGroupMenu()" />
             @if (showGroupMenu()) {
               <div class="thread__menu-backdrop" (click)="closeGroupMenu()"></div>
               <div class="thread__menu-panel" role="menu">
@@ -122,8 +122,8 @@
                   (ngModelChange)="editDraft.set($event)"
                   autocomplete="off"
                 />
-                <ui-icon-button icon="check" ariaLabel="Save edit" [iconSize]="16" (click)="saveEditMessage(conversation.id)" />
-                <ui-icon-button icon="close" ariaLabel="Cancel edit" [iconSize]="16" (click)="cancelEditMessage()" />
+                <ui-icon-button icon="check" [ariaLabel]="'aria.save-edit' | translate: 'Save edit'" [iconSize]="16" (click)="saveEditMessage(conversation.id)" />
+                <ui-icon-button icon="close" [ariaLabel]="'aria.cancel-edit' | translate: 'Cancel edit'" [iconSize]="16" (click)="cancelEditMessage()" />
               </form>
             } @else if (message.deleted) {
               <div class="bubble__text bubble__text--deleted">
@@ -186,7 +186,7 @@
         <div class="composer__reply">
           <ui-icon name="reply" [size]="16" />
           <span class="composer__reply-text">{{ replyPreviewLabel(reply) }}</span>
-          <ui-icon-button icon="close" ariaLabel="Cancel reply" [iconSize]="16" (click)="cancelReply()" />
+          <ui-icon-button icon="close" [ariaLabel]="'aria.cancel-reply' | translate: 'Cancel reply'" [iconSize]="16" (click)="cancelReply()" />
         </div>
       }
 
@@ -255,7 +255,7 @@
             [iconSize]="20"
             (click)="startRecording(conversation.id)"
           />
-          <button type="submit" class="composer__send" [disabled]="!draft().trim()" aria-label="Send">
+          <button type="submit" class="composer__send" [disabled]="!draft().trim()" [attr.aria-label]="'aria.send' | translate: 'Send'">
             <ui-icon name="send" [size]="20" [fill]="true" />
           </button>
         </form>

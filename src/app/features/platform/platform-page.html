@@ -36,7 +36,7 @@
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'label.president' | translate: 'President' }}</span>
-              <input pInputText type="text" [value]="president()" (input)="president.set($any($event.target).value)" placeholder="Full name" />
+              <input pInputText type="text" [value]="president()" (input)="president.set($any($event.target).value)" [placeholder]="'label.full-name' | translate: 'Full name'" />
             </label>
             <label class="platform__field platform__field--grow">
               <span>{{ 'label.ideology' | translate: 'Ideology' }}</span>
@@ -56,7 +56,7 @@
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.password' | translate: 'Password' }}</span>
-              <input pInputText type="password" required [value]="password()" (input)="password.set($any($event.target).value)" placeholder="Min. 8 characters" />
+              <input pInputText type="password" required [value]="password()" (input)="password.set($any($event.target).value)" [placeholder]="'label.min-8-characters' | translate: 'Min. 8 characters'" />
             </label>
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>

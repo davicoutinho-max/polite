@@ -3,7 +3,7 @@
     type="button"
     class="notif__trigger"
     [class.notif__trigger--active]="open()"
-    aria-label="Notifications"
+    [attr.aria-label]="'aria.notifications' | translate: 'Notifications'"
     [attr.aria-expanded]="open()"
     (click)="toggle()"
   >
@@ -18,12 +18,12 @@
     <div class="notif__panel" role="menu">
       <header class="notif__head">
         <div class="notif__head-title">
-          <h3>Notifications</h3>
+          <h3>{{ 'section.notifications' | translate: 'Notifications' }}</h3>
           @if (unread() > 0) {
-            <span class="notif__count">{{ unread() }} new</span>
+            <span class="notif__count">{{ unread() }} {{ 'label.new' | translate: 'new' }}</span>
           }
         </div>
-        <button type="button" class="notif__link-btn" (click)="markAllRead()">Mark all read</button>
+        <button type="button" class="notif__link-btn" (click)="markAllRead()">{{ 'button.mark-all-read' | translate: 'Mark all read' }}</button>
       </header>
 
       <div class="notif__list">
@@ -47,12 +47,12 @@
             }
           </a>
         } @empty {
-          <p class="notif__empty">You're all caught up.</p>
+          <p class="notif__empty">{{ 'hint.all-caught-up' | translate: "You're all caught up." }}</p>
         }
       </div>
 
       <footer class="notif__foot">
-        <a routerLink="/alerts" class="notif__link-btn" (click)="close()">See all notifications</a>
+        <a routerLink="/alerts" class="notif__link-btn" (click)="close()">{{ 'button.see-all-notifications' | translate: 'See all notifications' }}</a>
       </footer>
     </div>
   }

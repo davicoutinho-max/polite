@@ -5,7 +5,7 @@
 
   <div class="top-bar__actions">
     @if (canMessage()) {
-      <a routerLink="/messages" class="top-bar__link" aria-label="Messages">
+      <a routerLink="/messages" class="top-bar__link" [attr.aria-label]="'aria.messages' | translate: 'Messages'">
         <ui-icon name="chat" [size]="22" />
         @if (unreadMessages() > 0) {
           <span class="top-bar__badge">{{ unreadMessages() > 9 ? '9+' : unreadMessages() }}</span>

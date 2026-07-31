@@ -5,12 +5,13 @@ import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-button';
 import { UiProgress } from '../../../../shared/ui/ui-progress/ui-progress';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
 /** Rich legislation card used on the politician profile. */
 @Component({
   selector: 'app-bill-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiTag, UiIcon, UiIconButton, UiProgress],
+  imports: [UiCard, UiTag, UiIcon, UiIconButton, UiProgress, TranslatePipe],
   templateUrl: './bill-card.html',
   styleUrl: './bill-card.scss',
 })

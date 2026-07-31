@@ -6,6 +6,7 @@ import { DigitalCard, FiliationStatus, FiliationStep, MembershipFee, PaymentStat
 import { AlertsService } from './alerts.service';
 import { DirectoryService } from './directory.service';
 import { SessionService } from './session.service';
+import { TranslateService } from './translate.service';
 
 /** Ordered stages of the official affiliation flow. */
 const FILIATION_STEPS: FiliationStep[] = [
@@ -99,6 +100,7 @@ export class WalletService {
   private readonly session = inject(SessionService);
   private readonly directory = inject(DirectoryService);
   private readonly alerts = inject(AlertsService);
+  private readonly translate = inject(TranslateService);
   private readonly membershipApiBase = `${environment.apiBaseUrl}/api/membership`;
   private readonly paymentsApiBase = `${environment.apiBaseUrl}/api/payments`;
 
@@ -215,9 +217,12 @@ export class WalletService {
         this.alerts.push({
           category: 'party',
           icon: 'how_to_reg',
-          title: 'Affiliation request sent',
-          message: 'Your request was submitted to the party. Official confirmation depends on the party and the Electoral Justice.',
-          timeLabel: 'Just now',
+          title: this.translate.t('title.affiliation-request-sent', 'Affiliation request sent'),
+          message: this.translate.t(
+            'hint.affiliation-request-sent',
+            'Your request was submitted to the party. Official confirmation depends on the party and the Electoral Justice.',
+          ),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
           link: '/wallet',
         });
       },

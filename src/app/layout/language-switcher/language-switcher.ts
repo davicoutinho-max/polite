@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { LocaleService } from '../../core/services/locale.service';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 /** Top-bar control to switch the platform's display language. */
 @Component({
   selector: 'app-language-switcher',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiIcon],
+  imports: [UiIcon, TranslatePipe],
   templateUrl: './language-switcher.html',
   styleUrl: './language-switcher.scss',
 })

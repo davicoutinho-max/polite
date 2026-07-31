@@ -48,7 +48,7 @@ export class ElectionsPage {
   protected readonly scopeOptions: ScopeOption[] = [
     { value: 'all', label: this.translate.t('label.all-scopes', 'All scopes') },
     { value: 'Nacional', label: this.translate.t('label.scope-federal', 'Federal') },
-    { value: 'Estadual', label: this.translate.t('label.scope-state', 'Estadual') },
+    { value: 'Estadual', label: this.translate.t('label.scope-state', 'State') },
     { value: 'Municipal', label: this.translate.t('label.scope-municipal', 'Municipal') },
   ];
   protected readonly scope = signal<ElectionScope | 'all'>('all');

@@ -317,7 +317,7 @@
             <div class="quick-form__row">
               <label class="quick-form__field quick-form__field--grow">
                 <span>{{ 'label.tag' | translate: 'Tag label' }}</span>
-                <input pInputText type="text" [value]="eventTagLabel()" (input)="eventTagLabel.set($any($event.target).value)" placeholder="Upcoming" />
+                <input pInputText type="text" [value]="eventTagLabel()" (input)="eventTagLabel.set($any($event.target).value)" [placeholder]="'label.upcoming' | translate: 'Upcoming'" />
               </label>
               <label class="quick-form__field">
                 <span>{{ 'label.severity' | translate: 'Severity' }}</span>
@@ -377,7 +377,7 @@
             </label>
             <label class="quick-form__field">
               <span>{{ 'field.description' | translate: 'Description' }}</span>
-              <input pInputText type="text" [value]="broadcastMessage()" (input)="broadcastMessage.set($any($event.target).value)" placeholder="Message shown to every member" />
+              <input pInputText type="text" [value]="broadcastMessage()" (input)="broadcastMessage.set($any($event.target).value)" [placeholder]="'label.broadcast-message-placeholder' | translate: 'Message shown to every member'" />
             </label>
             <label class="quick-form__field">
               <span>{{ 'field.category' | translate: 'Category' }}</span>

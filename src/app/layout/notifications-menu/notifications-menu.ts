@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AlertsService } from '../../core/services/alerts.service';
 import { AlertCategory, TagSeverity } from '../../core/models';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 const CATEGORY_TONE: Record<AlertCategory, TagSeverity> = {
   project: 'info',
@@ -17,7 +18,7 @@ const CATEGORY_TONE: Record<AlertCategory, TagSeverity> = {
 @Component({
   selector: 'app-notifications-menu',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiIcon],
+  imports: [RouterLink, UiIcon, TranslatePipe],
   templateUrl: './notifications-menu.html',
   styleUrl: './notifications-menu.scss',
 })

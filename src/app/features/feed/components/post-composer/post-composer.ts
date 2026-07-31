@@ -12,14 +12,16 @@ import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-butto
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiTabs, UiTab } from '../../../../shared/ui/ui-tabs/ui-tabs';
 import { PlatformService } from '../../../../core/services/platform.service';
+import { TranslateService } from '../../../../core/services/translate.service';
+import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { PostDraft, PostKind, PostVisibility, UserSummary } from '../../../../core/models';
 
 export type PostComposerMode = PostKind;
 
 const MODES: UiTab[] = [
-  { id: 'text', label: 'Text', icon: 'edit' },
-  { id: 'agenda', label: 'Agenda', icon: 'event' },
-  { id: 'live', label: 'Live', icon: 'sensors' },
+  { id: 'text', label: 'Text', key: 'tab.post-text', icon: 'edit' },
+  { id: 'agenda', label: 'Agenda', key: 'tab.post-agenda', icon: 'event' },
+  { id: 'live', label: 'Live', key: 'tab.post-live', icon: 'sensors' },
 ];
 
 /** Post composer. Presentational — emits `publish` with the drafted post. */
@@ -39,12 +41,14 @@ const MODES: UiTab[] = [
     UiIconButton,
     UiIcon,
     UiTabs,
+    TranslatePipe,
   ],
   templateUrl: './post-composer.html',
   styleUrl: './post-composer.scss',
 })
 export class PostComposer {
   private readonly platform = inject(PlatformService);
+  protected readonly translate = inject(TranslateService);
 
   readonly author = input.required<UserSummary>();
   readonly publish = output<PostDraft>();
@@ -83,10 +87,10 @@ export class PostComposer {
   /** 'none' = the poll never locks on its own — voting/unvoting/switching stays open forever. */
   protected readonly pollDuration = signal<'none' | '1d' | '3d' | '1w'>('1d');
   protected readonly pollDurationOptions: { value: 'none' | '1d' | '3d' | '1w'; label: string }[] = [
-    { value: 'none', label: 'No time limit' },
-    { value: '1d', label: '1 day' },
-    { value: '3d', label: '3 days' },
-    { value: '1w', label: '1 week' },
+    { value: 'none', label: this.translate.t('label.poll-no-time-limit', 'No time limit') },
+    { value: '1d', label: this.translate.t('label.poll-1-day', '1 day') },
+    { value: '3d', label: this.translate.t('label.poll-3-days', '3 days') },
+    { value: '1w', label: this.translate.t('label.poll-1-week', '1 week') },
   ];
 
   private readonly pollOptionsValid = computed(
@@ -116,6 +120,23 @@ export class PostComposer {
 
   protected setMode(id: string): void {
     this.mode.set(id as PostComposerMode);
+  }
+
+  /** The draft textarea's placeholder depends on both poll mode and post kind — kept here rather
+   * than inline in the template so it can call TranslateService without an awkward nested-ternary
+   * translate-pipe chain. */
+  protected draftPlaceholder(): string {
+    if (this.pollMode()) {
+      return this.translate.t('label.poll-title-placeholder', 'Poll title — ask your question…');
+    }
+    if (this.mode() === 'text') {
+      return this.translate.t('label.policy-discussion-placeholder', 'Start a policy discussion...');
+    }
+    return this.translate.t('label.optional-note-placeholder', 'Add a note (optional)...');
+  }
+
+  protected optionPlaceholder(index: number): string {
+    return this.translate.t('label.option-n', 'Option {n}').replace('{n}', String(index + 1));
   }
 
   protected onImageSelected(event: FileSelectEvent): void {

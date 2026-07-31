@@ -6,7 +6,7 @@
       }
       <ui-tag [label]="bill().status.label" [severity]="bill().status.severity" />
     </div>
-    <ui-icon-button icon="more_vert" ariaLabel="Bill options" [iconSize]="20" />
+    <ui-icon-button icon="more_vert" [ariaLabel]="'aria.bill-options' | translate: 'Bill options'" [iconSize]="20" />
   </header>
 
   <h4 class="bill__title">{{ bill().title }}</h4>

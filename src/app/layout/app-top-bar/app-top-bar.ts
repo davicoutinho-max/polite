@@ -7,6 +7,7 @@ import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import { NotificationsMenu } from '../notifications-menu/notifications-menu';
 import { AccountMenu } from '../account-menu/account-menu';
 import { LanguageSwitcher } from '../language-switcher/language-switcher';
+import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 /**
  * Responsive top app bar. On mobile it also carries the brand; on desktop the
@@ -16,7 +17,7 @@ import { LanguageSwitcher } from '../language-switcher/language-switcher';
 @Component({
   selector: 'app-top-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiIcon, ThemeToggle, NotificationsMenu, AccountMenu, LanguageSwitcher],
+  imports: [RouterLink, UiIcon, ThemeToggle, NotificationsMenu, AccountMenu, LanguageSwitcher, TranslatePipe],
   templateUrl: './app-top-bar.html',
   styleUrl: './app-top-bar.scss',
 })

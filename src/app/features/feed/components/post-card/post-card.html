@@ -10,17 +10,17 @@
       </div>
     </a>
     <div class="post__menu">
-      <ui-icon-button icon="more_horiz" ariaLabel="Post options" [iconSize]="22" (click)="toggleMenu()" />
+      <ui-icon-button icon="more_horiz" [ariaLabel]="'aria.post-options' | translate: 'Post options'" [iconSize]="22" (click)="toggleMenu()" />
       @if (showMenu()) {
         <div class="post__menu-backdrop" (click)="toggleMenu()"></div>
         <div class="post__menu-panel" role="menu">
           @if (canDelete()) {
             <button type="button" class="post__menu-item post__menu-item--danger" (click)="onDelete()">
-              <ui-icon name="delete" [size]="18" /><span>Delete post</span>
+              <ui-icon name="delete" [size]="18" /><span>{{ 'button.delete-post' | translate: 'Delete post' }}</span>
             </button>
           } @else {
             <button type="button" class="post__menu-item" disabled>
-              <ui-icon name="flag" [size]="18" /><span>Report (coming soon)</span>
+              <ui-icon name="flag" [size]="18" /><span>{{ 'button.report-coming-soon' | translate: 'Report (coming soon)' }}</span>
             </button>
           }
         </div>
@@ -78,7 +78,7 @@
   @if (post().fileUrl; as fileUrl) {
     <a class="post__file" [href]="fileUrl" target="_blank" rel="noopener noreferrer" download>
       <ui-icon name="description" [size]="20" />
-      <span class="post__file-name">{{ post().fileName || 'Download attachment' }}</span>
+      <span class="post__file-name">{{ post().fileName || ('label.download-attachment' | translate: 'Download attachment') }}</span>
       <ui-icon name="download" [size]="18" />
     </a>
   }
@@ -103,7 +103,7 @@
         </button>
       }
       <div class="post__poll-footer">
-        <p class="post__poll-total">{{ pollTotalVotes(poll) | compactNumber }} votes</p>
+        <p class="post__poll-total">{{ pollTotalVotes(poll) | compactNumber }} {{ 'label.votes' | translate: 'votes' }}</p>
         @if (isPollClosed(poll)) {
           <p class="post__poll-status">{{ 'label.poll-closed' | translate: 'Poll closed' }}</p>
         } @else if (poll.myVoteOptionId) {
@@ -137,7 +137,7 @@
 
     <button type="button" class="post__action" (click)="share()">
       <ui-icon name="share" [size]="20" />
-      <span>Share</span>
+      <span>{{ 'button.share' | translate: 'Share' }}</span>
     </button>
   </footer>
 
@@ -146,25 +146,25 @@
       @if (canReact()) {
         <form class="comments__composer" (submit)="$event.preventDefault(); submitComment()">
           @if (currentUserAvatar()) {
-            <ui-avatar [src]="currentUserAvatar()" alt="You" [size]="32" />
+            <ui-avatar [src]="currentUserAvatar()" [alt]="'label.you' | translate: 'You'" [size]="32" />
           }
           <input
             pInputText
             class="comments__input"
             type="text"
-            placeholder="Add a comment…"
+            [placeholder]="'label.add-a-comment' | translate: 'Add a comment…'"
             name="comment"
-            aria-label="Add a comment"
+            [attr.aria-label]="'aria.add-a-comment' | translate: 'Add a comment'"
             autocomplete="off"
             [ngModel]="draft()"
             (ngModelChange)="draft.set($event)"
           />
-          <button type="submit" class="comments__send" [disabled]="!draft().trim()" aria-label="Send comment">
+          <button type="submit" class="comments__send" [disabled]="!draft().trim()" [attr.aria-label]="'aria.send-comment' | translate: 'Send comment'">
             <ui-icon name="send" [size]="18" [fill]="true" />
           </button>
         </form>
       } @else {
-        <p class="comments__signin">Sign in as a citizen to comment.</p>
+        <p class="comments__signin">{{ 'hint.sign-in-to-comment' | translate: 'Sign in as a citizen to comment.' }}</p>
       }
 
       @for (comment of post().comments; track comment.id) {
@@ -181,7 +181,7 @@
           </div>
         </div>
       } @empty {
-        <p class="comments__empty">Be the first to comment.</p>
+        <p class="comments__empty">{{ 'hint.be-the-first-to-comment' | translate: 'Be the first to comment.' }}</p>
       }
     </section>
   }

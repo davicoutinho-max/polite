@@ -14,6 +14,7 @@ import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-butto
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 import { UiYoutube } from '../../../../shared/ui/ui-youtube/ui-youtube';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
+import { TranslateService } from '../../../../core/services/translate.service';
 
 export interface CommentEvent {
   readonly postId: string;
@@ -37,6 +38,7 @@ export class PostCard {
   private readonly session = inject(SessionService);
   private readonly alerts = inject(AlertsService);
   private readonly directory = inject(DirectoryService);
+  private readonly translate = inject(TranslateService);
 
   readonly post = input.required<Post>();
   readonly currentUserAvatar = input('');
@@ -86,9 +88,9 @@ export class PostCard {
         this.alerts.push({
           category: 'project',
           icon: 'link',
-          title: 'Link copied',
-          message: 'A link to this post was copied to your clipboard.',
-          timeLabel: 'Just now',
+          title: this.translate.t('title.link-copied', 'Link copied'),
+          message: this.translate.t('hint.link-copied', 'A link to this post was copied to your clipboard.'),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
         }),
       )
       .catch(() => undefined);

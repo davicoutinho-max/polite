@@ -37,7 +37,7 @@
       </label>
       <label class="fund__field">
         <span>{{ 'field.description' | translate: 'Description' }}</span>
-        <textarea pTextarea rows="3" [value]="description()" (input)="description.set($any($event.target).value)" placeholder="What is this for?"></textarea>
+        <textarea pTextarea rows="3" [value]="description()" (input)="description.set($any($event.target).value)" [placeholder]="'label.what-is-this-for' | translate: 'What is this for?'"></textarea>
       </label>
       <div class="fund__row">
         <label class="fund__field">

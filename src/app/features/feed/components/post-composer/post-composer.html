@@ -9,7 +9,7 @@
         pTextarea
         class="composer__input"
         rows="2"
-        [placeholder]="pollMode() ? 'Poll title — ask your question…' : mode() === 'text' ? 'Start a policy discussion...' : 'Add a note (optional)...'"
+        [placeholder]="draftPlaceholder()"
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
       ></textarea>
@@ -18,19 +18,19 @@
     @if (mode() === 'agenda') {
       <div class="composer__fields composer__fields--agenda">
         <label class="composer__field composer__field--title">
-          <span>Title</span>
-          <input pInputText type="text" [ngModel]="agendaTitle()" (ngModelChange)="agendaTitle.set($event)" placeholder="e.g. Town hall meeting" />
+          <span>{{ 'label.title' | translate: 'Title' }}</span>
+          <input pInputText type="text" [ngModel]="agendaTitle()" (ngModelChange)="agendaTitle.set($event)" [placeholder]="'label.agenda-title-placeholder' | translate: 'e.g. Town hall meeting'" />
         </label>
         <label class="composer__field composer__field--date">
-          <span>Date</span>
+          <span>{{ 'label.date' | translate: 'Date' }}</span>
           <p-datepicker required dateFormat="dd/mm/yy" [ngModel]="agendaDate()" (ngModelChange)="agendaDate.set($event)" appendTo="body" />
         </label>
         <label class="composer__field composer__field--time">
-          <span>Time</span>
+          <span>{{ 'label.time' | translate: 'Time' }}</span>
           <p-datepicker [timeOnly]="true" hourFormat="24" [ngModel]="agendaTime()" (ngModelChange)="agendaTime.set($event)" appendTo="body" />
         </label>
         <label class="composer__field composer__field--location">
-          <span>Location</span>
+          <span>{{ 'label.location' | translate: 'Location' }}</span>
           <p-select
             required
             [options]="states()"
@@ -38,7 +38,7 @@
             optionValue="name"
             [filter]="true"
             filterBy="name"
-            placeholder="Select a state"
+            [placeholder]="'label.select-a-state' | translate: 'Select a state'"
             [ngModel]="agendaLocation()"
             (ngModelChange)="agendaLocation.set($event)"
             appendTo="body"
@@ -49,7 +49,7 @@
         pTextarea
         class="composer__input"
         rows="2"
-        [placeholder]="pollMode() ? 'Poll title — ask your question…' : 'Add a note (optional)...'"
+        [placeholder]="draftPlaceholder()"
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
       ></textarea>
@@ -58,7 +58,7 @@
     @if (imagePreviewUrl()) {
       <div class="composer__attachment-preview">
         <img [src]="imagePreviewUrl()" alt="" class="composer__image-preview" />
-        <ui-icon-button icon="close" ariaLabel="Remove image" [iconSize]="16" (click)="removeImage()" />
+        <ui-icon-button icon="close" [ariaLabel]="'aria.remove-image' | translate: 'Remove image'" [iconSize]="16" (click)="removeImage()" />
       </div>
     }
 
@@ -66,13 +66,13 @@
       <div class="composer__attachment-chip">
         <ui-icon name="description" [size]="18" />
         <span class="composer__attachment-name">{{ file.name }}</span>
-        <ui-icon-button icon="close" ariaLabel="Remove file" [iconSize]="16" (click)="removeAttachedFile()" />
+        <ui-icon-button icon="close" [ariaLabel]="'aria.remove-file' | translate: 'Remove file'" [iconSize]="16" (click)="removeAttachedFile()" />
       </div>
     }
 
     @if (pollMode()) {
       <div class="composer__poll">
-        <p class="composer__poll-hint">The title above is shown as your poll's question.</p>
+        <p class="composer__poll-hint">{{ 'hint.poll-title-is-question' | translate: "The title above is shown as your poll's question." }}</p>
         @for (option of pollOptionInputs(); track $index) {
           <label class="composer__field composer__field--grow composer__poll-option">
             <input
@@ -80,18 +80,18 @@
               type="text"
               [ngModel]="option"
               (ngModelChange)="updatePollOption($index, $event)"
-              [placeholder]="'Option ' + ($index + 1)"
+              [placeholder]="optionPlaceholder($index)"
             />
             @if (pollOptionInputs().length > 2) {
-              <ui-icon-button icon="close" ariaLabel="Remove option" [iconSize]="16" (click)="removePollOption($index)" />
+              <ui-icon-button icon="close" [ariaLabel]="'aria.remove-option' | translate: 'Remove option'" [iconSize]="16" (click)="removePollOption($index)" />
             }
           </label>
         }
         @if (pollOptionInputs().length < 6) {
-          <ui-button label="Add option" icon="add" variant="text" (click)="addPollOption()" />
+          <ui-button [label]="'button.add-option' | translate: 'Add option'" icon="add" variant="text" (click)="addPollOption()" />
         }
         <label class="composer__field composer__field--grow">
-          <span>Voting closes</span>
+          <span>{{ 'label.voting-closes' | translate: 'Voting closes' }}</span>
           <p-select
             [options]="pollDurationOptions"
             optionLabel="label"
@@ -107,12 +107,12 @@
     @if (mode() === 'live') {
       <div class="composer__fields">
         <label class="composer__field composer__field--grow">
-          <span>Video ID</span>
-          <input pInputText type="text" [ngModel]="liveVideoId()" (ngModelChange)="liveVideoId.set($event)" placeholder="YouTube video id" />
+          <span>{{ 'label.video-id' | translate: 'Video ID' }}</span>
+          <input pInputText type="text" [ngModel]="liveVideoId()" (ngModelChange)="liveVideoId.set($event)" [placeholder]="'label.youtube-video-id-placeholder' | translate: 'YouTube video id'" />
         </label>
         <label class="composer__field composer__field--grow">
-          <span>Channel ID</span>
-          <input pInputText type="text" [ngModel]="liveChannelId()" (ngModelChange)="liveChannelId.set($event)" placeholder="YouTube channel id (optional)" />
+          <span>{{ 'label.channel-id' | translate: 'Channel ID' }}</span>
+          <input pInputText type="text" [ngModel]="liveChannelId()" (ngModelChange)="liveChannelId.set($event)" [placeholder]="'label.youtube-channel-id-placeholder' | translate: 'YouTube channel id (optional)'" />
         </label>
       </div>
       <label class="visibility">
@@ -120,21 +120,21 @@
           <ui-icon name="sensors" [size]="20" [fill]="liveIsNow()" />
         </span>
         <span class="visibility__text">
-          <span class="visibility__title">{{ liveIsNow() ? 'Live now' : 'Scheduled' }}</span>
+          <span class="visibility__title">{{ liveIsNow() ? ('label.live-now' | translate: 'Live now') : ('label.scheduled' | translate: 'Scheduled') }}</span>
           <span class="visibility__hint">
-            {{ liveIsNow() ? 'Broadcasts immediately when published' : 'Set a date/time below' }}
+            {{ liveIsNow() ? ('hint.broadcasts-immediately' | translate: 'Broadcasts immediately when published') : ('hint.set-date-time-below' | translate: 'Set a date/time below') }}
           </span>
         </span>
         <p-toggleswitch
           class="visibility__switch"
           [ngModel]="liveIsNow()"
           (ngModelChange)="liveIsNow.set($event)"
-          ariaLabel="Toggle live now"
+          [ariaLabel]="'aria.toggle-live-now' | translate: 'Toggle live now'"
         />
       </label>
       @if (!liveIsNow()) {
         <label class="composer__field composer__field--grow">
-          <span>Scheduled for</span>
+          <span>{{ 'label.scheduled-for' | translate: 'Scheduled for' }}</span>
           <input pInputText type="text" [ngModel]="liveScheduledFor()" (ngModelChange)="liveScheduledFor.set($event)" placeholder="Aug 12, 2026 · 20:00" />
         </label>
       }
@@ -145,12 +145,12 @@
         <ui-icon [name]="isPublic() ? 'public' : 'lock'" [size]="20" [fill]="!isPublic()" />
       </span>
       <span class="visibility__text">
-        <span class="visibility__title">{{ isPublic() ? 'Public' : 'Supporters only' }}</span>
+        <span class="visibility__title">{{ isPublic() ? ('label.public' | translate: 'Public') : ('label.supporters-only' | translate: 'Supporters only') }}</span>
         <span class="visibility__hint">
           {{
             isPublic()
-              ? 'Anyone can see this discussion'
-              : 'Only your party supporters can see this discussion'
+              ? ('hint.anyone-can-see-discussion' | translate: 'Anyone can see this discussion')
+              : ('hint.only-supporters-can-see-discussion' | translate: 'Only your party supporters can see this discussion')
           }}
         </span>
       </span>
@@ -158,17 +158,17 @@
         class="visibility__switch"
         [ngModel]="isPublic()"
         (ngModelChange)="isPublic.set($event)"
-        ariaLabel="Toggle post visibility"
+        [ariaLabel]="'aria.toggle-post-visibility' | translate: 'Toggle post visibility'"
       />
     </label>
 
     <div class="composer__actions">
       <div class="composer__tools">
         <p-fileupload mode="basic" accept="image/*" [auto]="true" chooseIcon="pi pi-image" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onImageSelected($event)" />
-        <ui-icon-button icon="poll" ariaLabel="Add poll" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
+        <ui-icon-button icon="poll" [ariaLabel]="'aria.add-poll' | translate: 'Add poll'" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
         <p-fileupload mode="basic" [auto]="true" chooseIcon="pi pi-paperclip" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onFileSelected($event)" />
       </div>
-      <ui-button label="Post" variant="filled" [disabled]="!canPublish() || submitting()" (click)="onPublish()" />
+      <ui-button [label]="'button.post' | translate: 'Post'" variant="filled" [disabled]="!canPublish() || submitting()" (click)="onPublish()" />
     </div>
 
     @if (error()) {
