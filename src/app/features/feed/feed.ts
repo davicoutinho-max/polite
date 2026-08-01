@@ -3,6 +3,9 @@ import { FeedService } from '../../core/services/feed.service';
 import { TrendingService } from '../../core/services/trending.service';
 import { BillsService } from '../../core/services/bills.service';
 import { SessionService } from '../../core/services/session.service';
+import { AlertsService } from '../../core/services/alerts.service';
+import { TranslateService } from '../../core/services/translate.service';
+import { SocialConnectionService, SocialPlatform } from '../../core/services/social-connection.service';
 import { FeedSort as FeedSortValue, PostDraft } from '../../core/models';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
 import { PostComposer } from './components/post-composer/post-composer';
@@ -27,6 +30,9 @@ export class Feed {
   private readonly trendingService = inject(TrendingService);
   private readonly billsService = inject(BillsService);
   private readonly session = inject(SessionService);
+  private readonly alerts = inject(AlertsService);
+  private readonly translate = inject(TranslateService);
+  private readonly socialConnections = inject(SocialConnectionService);
   private readonly composer = viewChild(PostComposer);
 
   protected readonly currentUser = this.session.currentUser;
@@ -48,8 +54,48 @@ export class Feed {
     const composer = this.composer();
     composer?.markSubmitting();
     this.feedService.publish(draft).subscribe({
-      next: () => composer?.onPublishSucceeded(),
+      next: (post) => {
+        composer?.onPublishSucceeded();
+        if (post && draft.socialPlatforms && draft.socialPlatforms.length > 0) {
+          this.publishToSocialNetworks(post.id, draft.socialPlatforms as SocialPlatform[]);
+        }
+      },
       error: () => composer?.onPublishFailed('Could not publish your post. Please try again.'),
+    });
+  }
+
+  /** Best-effort — the in-app post already succeeded by the time this runs, so a cross-posting
+   * failure here is surfaced as a toast, never rolled back or blocked on. */
+  private publishToSocialNetworks(postId: string, platforms: SocialPlatform[]): void {
+    this.socialConnections.publish(postId, platforms).subscribe({
+      next: (shares) => {
+        const failed = shares.filter((s) => s.status === 'failed');
+        if (failed.length === 0) {
+          this.alerts.push({
+            category: 'project',
+            icon: 'check_circle',
+            title: this.translate.t('title.social-share-success', 'Shared!'),
+            message: shares.map((s) => s.platform).join(', '),
+            timeLabel: this.translate.t('label.just-now', 'Just now'),
+          });
+        } else {
+          this.alerts.push({
+            category: 'project',
+            icon: 'error',
+            title: this.translate.t('title.social-share-partial', 'Some networks failed'),
+            message: failed.map((s) => `${s.platform}: ${s.errorMessage}`).join(' · '),
+            timeLabel: this.translate.t('label.just-now', 'Just now'),
+          });
+        }
+      },
+      error: () =>
+        this.alerts.push({
+          category: 'project',
+          icon: 'error',
+          title: this.translate.t('title.social-share-failed', 'Sharing failed'),
+          message: this.translate.t('hint.social-share-failed', 'Could not share this post to the selected networks.'),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
+        }),
     });
   }
 

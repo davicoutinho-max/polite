@@ -8,5 +8,12 @@ import java.util.UUID;
 public interface ManageFundraiserUseCase {
 
   Fundraiser create(
-      UUID organizerAccountId, String title, String description, FundraiserCategory category, long goalCents, LocalDate deadline, boolean ledgerPublic);
+      UUID organizerAccountId,
+      String title,
+      String description,
+      FundraiserCategory category,
+      long goalCents,
+      LocalDate deadline,
+      boolean ledgerPublic,
+      String imageUrl);
 }

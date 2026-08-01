@@ -295,6 +295,21 @@
   color: var(--cp-error);
   font-size: 13px;
 }
+.sign-form__lock-icon {
+  color: var(--cp-on-surface-variant);
+  vertical-align: -2px;
+}
+.sign-form__input--locked {
+  background: var(--cp-surface-container-low) !important;
+  color: var(--cp-on-surface-variant);
+  cursor: default;
+}
+.sign-form__locked-hint {
+  margin: calc(var(--cp-space-sm) * -1) 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--cp-on-surface-variant);
+}
 .sign-form__demo-hint {
   margin: 0 0 var(--cp-space-md);
   padding: var(--cp-space-md);

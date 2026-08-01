@@ -27,6 +27,9 @@ public class PoliticianJpaEntity {
   @Column(name = "avatar_url")
   private String avatarUrl;
 
+  @Column(name = "cover_image_url")
+  private String coverImageUrl;
+
   @Column(nullable = false)
   private boolean verified;
 
@@ -58,6 +61,7 @@ public class PoliticianJpaEntity {
       String name,
       String handle,
       String avatarUrl,
+      String coverImageUrl,
       boolean verified,
       String office,
       GovLevel level,
@@ -71,6 +75,7 @@ public class PoliticianJpaEntity {
     this.name = name;
     this.handle = handle;
     this.avatarUrl = avatarUrl;
+    this.coverImageUrl = coverImageUrl;
     this.verified = verified;
     this.office = office;
     this.level = level;
@@ -96,6 +101,10 @@ public class PoliticianJpaEntity {
 
   public String getAvatarUrl() {
     return avatarUrl;
+  }
+
+  public String getCoverImageUrl() {
+    return coverImageUrl;
   }
 
   public boolean isVerified() {

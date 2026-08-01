@@ -28,6 +28,7 @@ export interface ElectionCandidateSummary {
   readonly name: string;
   readonly avatarUrl: string;
   readonly office: string;
+  readonly partyId: string;
   readonly partyAcronym: string;
 }
 

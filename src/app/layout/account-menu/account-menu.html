@@ -27,6 +27,11 @@
               <ui-icon name="person" [size]="18" /><span>{{ 'account.my-profile' | translate: 'My profile' }}</span>
             </a>
           }
+          @if (canPublish()) {
+            <a class="acct__link" routerLink="/settings/social-connections" (click)="close()">
+              <ui-icon name="share" [size]="18" /><span>{{ 'account.social-networks' | translate: 'Social networks' }}</span>
+            </a>
+          }
           <a class="acct__link" routerLink="/privacy" (click)="close()">
             <ui-icon name="shield" [size]="18" /><span>{{ 'account.privacy' | translate: 'Privacy & data' }}</span>
           </a>

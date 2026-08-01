@@ -1,5 +1,6 @@
 package dev.civicpulse.legislative.adapter.in.web;
 
+import dev.civicpulse.legislative.domain.exception.DocumentVerificationException;
 import dev.civicpulse.legislative.domain.exception.DossierNotFoundException;
 import dev.civicpulse.legislative.domain.exception.InvalidStatusTransitionException;
 import dev.civicpulse.legislative.domain.exception.LegislativeItemNotFoundException;
@@ -26,6 +27,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidStatusTransitionException.class)
   public ProblemDetail handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
     return problem(HttpStatus.CONFLICT, "Invalid status transition", ex.getMessage());
+  }
+
+  @ExceptionHandler(DocumentVerificationException.class)
+  public ProblemDetail handleDocumentVerificationFailure(DocumentVerificationException ex) {
+    return problem(HttpStatus.SERVICE_UNAVAILABLE, "Document verification unavailable", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

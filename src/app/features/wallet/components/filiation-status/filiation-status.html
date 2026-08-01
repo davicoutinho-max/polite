@@ -1,36 +1,154 @@
 <ui-section [title]="'section.affiliation-status' | translate: 'Affiliation status'" icon="how_to_reg">
-  <div slot="action" class="filiation__actions">
-    @if (status() === 'not-started') {
-      <ui-button [label]="'button.request-affiliation' | translate: 'Request affiliation'" icon="send" variant="filled" (click)="onRequest()" />
-    } @else if (status() !== 'affiliated') {
+  @if (status() !== 'not-started' && status() !== 'affiliated') {
+    <div slot="action" class="filiation__actions">
       <ui-button [label]="'button.simulate-next-step' | translate: 'Simulate next step'" icon="fast_forward" variant="tonal" (click)="advance.emit()" />
-    } @else {
+    </div>
+  } @else if (status() === 'affiliated') {
+    <div slot="action" class="filiation__actions">
       <ui-button [label]="'button.reset-demo' | translate: 'Reset demo'" icon="restart_alt" variant="text" (click)="reset.emit()" />
-    }
-  </div>
+    </div>
+  }
 
   @if (status() === 'not-started') {
-    <p class="filiation__intro">
-      {{ 'hint.affiliation-intro' | translate: "Start your affiliation request below. You'll pre-register, upload documents and pay the contribution — but the official confirmation depends on the party and the Electoral Justice." }}
-    </p>
-    <div class="filiation__form">
-      <label class="filiation__field">
-        <span>{{ 'label.party' | translate: 'Party' }}</span>
-        <p-select
-          [options]="$any(parties())"
-          optionLabel="name"
-          optionValue="id"
-          [filter]="true"
-          filterBy="name"
-          [ngModel]="selectedPartyId()"
-          (ngModelChange)="selectedPartyId.set($event)"
-          appendTo="body"
+    <div class="wizard">
+      <div class="wizard__progress">
+        <div class="wizard__progress-step" [class.wizard__progress-step--done]="wizardStep() === 'identity'" [class.wizard__progress-step--active]="wizardStep() === 'data'">
+          <span class="wizard__progress-dot"></span>
+          <span>{{ 'label.wizard-start' | translate: 'Start' }}</span>
+        </div>
+        <div class="wizard__progress-bar" [class.wizard__progress-bar--filled]="wizardStep() === 'identity'"></div>
+        <div class="wizard__progress-step" [class.wizard__progress-step--active]="wizardStep() === 'identity'">
+          <span class="wizard__progress-dot"></span>
+          <span>{{ 'label.wizard-identity' | translate: 'Identity' }}</span>
+        </div>
+        <div class="wizard__progress-bar"></div>
+        <div class="wizard__progress-step">
+          <span class="wizard__progress-dot"></span>
+          <span>{{ 'label.wizard-done' | translate: 'Done' }}</span>
+        </div>
+      </div>
+
+      @if (wizardStep() === 'data') {
+        <p class="filiation__intro">
+          {{ 'hint.affiliation-tse-intro' | translate: 'Read carefully — this is the information that will be sent to the Electoral Justice for your affiliation.' }}
+        </p>
+        <div class="filiation__form">
+          <label class="filiation__field">
+            <span>{{ 'label.party' | translate: 'Party' }}</span>
+            <p-select
+              [options]="$any(parties())"
+              optionLabel="name"
+              optionValue="id"
+              [filter]="true"
+              filterBy="name"
+              [ngModel]="selectedPartyId()"
+              (ngModelChange)="selectedPartyId.set($event)"
+              appendTo="body"
+            />
+          </label>
+          <label class="filiation__field">
+            <span>{{ 'label.full-legal-name' | translate: 'Full name (as on your ID)' }} <ui-icon name="lock" [size]="13" class="filiation__lock-icon" /></span>
+            <input pInputText type="text" [value]="accountName()" readonly class="filiation__input--locked" />
+          </label>
+          <label class="filiation__field">
+            <span>{{ 'label.voter-registration-number' | translate: 'Registration number (título de eleitor)' }}</span>
+            <input pInputText type="text" inputmode="numeric" [ngModel]="voterRegistrationNumber()" (ngModelChange)="voterRegistrationNumber.set($event)" name="voterRegistrationNumber" />
+          </label>
+          <div class="filiation__row">
+            <label class="filiation__field">
+              <span>{{ 'label.electoral-zone' | translate: 'Electoral zone' }}</span>
+              <input pInputText type="text" inputmode="numeric" [ngModel]="electoralZone()" (ngModelChange)="electoralZone.set($event)" name="electoralZone" />
+            </label>
+            <label class="filiation__field">
+              <span>{{ 'label.electoral-section' | translate: 'Electoral section' }}</span>
+              <input pInputText type="text" inputmode="numeric" [ngModel]="electoralSection()" (ngModelChange)="electoralSection.set($event)" name="electoralSection" />
+            </label>
+          </div>
+          <div class="filiation__row">
+            <label class="filiation__field">
+              <span>{{ 'label.electoral-state' | translate: 'Electoral state (UF)' }}</span>
+              <p-select
+                [options]="$any(states())"
+                optionLabel="name"
+                optionValue="code"
+                [filter]="true"
+                filterBy="name"
+                [ngModel]="electoralState()"
+                (ngModelChange)="electoralState.set($event)"
+                appendTo="body"
+              />
+            </label>
+            <label class="filiation__field">
+              <span>{{ 'label.electoral-municipality' | translate: 'Electoral municipality' }}</span>
+              <input pInputText type="text" [ngModel]="electoralMunicipality()" (ngModelChange)="electoralMunicipality.set($event)" name="electoralMunicipality" />
+            </label>
+          </div>
+          <label class="filiation__field">
+            <span>{{ 'label.city' | translate: 'Current city (optional)' }}</span>
+            <input pInputText type="text" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" placeholder="e.g. São Paulo — SP" />
+          </label>
+        </div>
+        <ui-button
+          [label]="'button.continue' | translate: 'Continue'"
+          icon="arrow_forward"
+          variant="filled"
+          [block]="true"
+          [disabled]="!dataStepValid()"
+          (click)="continueToIdentityStep()"
         />
-      </label>
-      <label class="filiation__field">
-        <span>{{ 'label.city' | translate: 'City' }}</span>
-        <input pInputText type="text" [value]="city()" (input)="city.set($any($event.target).value)" placeholder="e.g. São Paulo — SP" />
-      </label>
+      }
+
+      @if (wizardStep() === 'identity') {
+        <p class="filiation__intro">
+          {{ 'hint.affiliation-identity-intro' | translate: 'Confirm your identity' }}
+        </p>
+
+        @if (identityPhotoPreviewUrl(); as preview) {
+          <div class="wizard__photo-preview">
+            <img [src]="preview" alt="" />
+            <ui-button [label]="'button.choose-different-photo' | translate: 'Choose a different photo'" variant="text" icon="refresh" (click)="pickIdentityPhoto()" />
+          </div>
+        } @else {
+          <button type="button" class="wizard__photo-upload" [disabled]="uploadingIdentityPhoto()" (click)="pickIdentityPhoto()">
+            <ui-icon [name]="uploadingIdentityPhoto() ? 'progress_activity' : 'photo_camera'" [size]="28" />
+            <span>{{ 'button.send-photo' | translate: 'Send photo' }}</span>
+          </button>
+        }
+        <input #identityPhotoInput type="file" accept="image/*" capture="user" hidden (change)="onIdentityPhotoSelected($event)" />
+
+        <div class="wizard__instructions">
+          <span class="wizard__instructions-title">{{ 'label.photo-instructions' | translate: 'Instructions for the photo' }}</span>
+          <div class="wizard__instruction">
+            <span class="wizard__instruction-num">1</span>
+            <span>{{ 'hint.photo-instruction-hold-id' | translate: 'Hold your ID document (CPF or RG) next to your face.' }}</span>
+          </div>
+          <div class="wizard__instruction">
+            <span class="wizard__instruction-num">2</span>
+            <span>{{ 'hint.photo-instruction-legible' | translate: 'Make sure your face and the document details are sharp and legible.' }}</span>
+          </div>
+        </div>
+
+        @if (submitError()) {
+          <p class="filiation__error">
+            {{
+              submitError() === 'missing'
+                ? ('error.affiliation-photo-required' | translate: 'Add your identity photo to continue.')
+                : ('error.affiliation-upload-failed' | translate: 'Could not upload the photo — please try again.')
+            }}
+          </p>
+        }
+
+        <div class="wizard__actions">
+          <ui-button [label]="'button.back' | translate: 'Back'" variant="text" (click)="backToDataStep()" />
+          <ui-button
+            [label]="'button.continue' | translate: 'Continue'"
+            icon="arrow_forward"
+            variant="filled"
+            [disabled]="!identityPhotoFile() || uploadingIdentityPhoto()"
+            (click)="onSubmit()"
+          />
+        </div>
+      }
     </div>
   }
 

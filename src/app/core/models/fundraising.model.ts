@@ -23,6 +23,7 @@ export interface Fundraiser {
   readonly deadline: string;
   /** Whether an itemized ledger is publicly available (transparency). */
   readonly ledgerPublic: boolean;
+  readonly imageUrl: string | null;
 }
 
 export interface NewFundraiser {
@@ -32,4 +33,5 @@ export interface NewFundraiser {
   readonly goal: number;
   /** ISO date (yyyy-mm-dd), or empty for open-ended. */
   readonly deadline: string;
+  readonly imageUrl?: string | null;
 }

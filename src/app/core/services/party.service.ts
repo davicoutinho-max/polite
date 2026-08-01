@@ -180,6 +180,29 @@ export class PartyService {
     );
   }
 
+  /** Party logo (avatar-equivalent) — stored on directory-service's own Party row alongside
+   * name/acronym/number, unlike the cover photo below. */
+  updateLogo(logoUrl: string): Observable<void> {
+    return this.directory.updatePartyLogo(logoUrl).pipe(tap(() => this._party.update((p) => ({ ...p, logoUrl }))));
+  }
+
+  /** Cover photo — a full replace on party-management-service's own editable profile record, so
+   * every other field must be resent with its current value or it would be silently blanked. */
+  updateCoverPhoto(coverUrl: string): Observable<void> {
+    const party = this._party();
+    return this.http
+      .put<PartyProfileResponseDto>(`${this.apiBase}/parties/${party.id}/profile`, {
+        history: party.history || null,
+        program: party.program || null,
+        statuteUrl: party.statuteUrl === '#' ? null : party.statuteUrl,
+        coverUrl,
+      })
+      .pipe(
+        map(() => undefined),
+        tap(() => this._party.update((p) => ({ ...p, coverUrl }))),
+      );
+  }
+
   reloadRequests(partyId: string): Observable<FiliationRequestSummary[]> {
     return this.http.get<AffiliationRequestResponseDto[]>(`${this.apiBase}/parties/${partyId}/affiliation-requests`).pipe(
       switchMap((list) =>

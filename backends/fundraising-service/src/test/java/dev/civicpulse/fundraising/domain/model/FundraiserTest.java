@@ -14,7 +14,7 @@ class FundraiserTest {
   @Test
   void createStartsAtZeroRaisedAndZeroSupporters() {
     Fundraiser fundraiser =
-        Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "Help rebuild the school", "desc", FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+        Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "Help rebuild the school", "desc", FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
 
     assertThat(fundraiser.raisedCents()).isZero();
     assertThat(fundraiser.supportersCount()).isZero();
@@ -24,13 +24,13 @@ class FundraiserTest {
   @Test
   void createRejectsNonPositiveGoal() {
     assertThatThrownBy(
-            () -> Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 0, null, true, NOW))
+            () -> Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 0, null, true, null, NOW))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void recordContributionIncreasesRaisedAndSupporters() {
-    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
 
     fundraiser.recordContribution(30_000);
 
@@ -40,7 +40,7 @@ class FundraiserTest {
 
   @Test
   void recordContributionReturnsTrueOnlyWhenCrossingGoal() {
-    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
 
     assertThat(fundraiser.recordContribution(60_000)).isFalse();
     assertThat(fundraiser.recordContribution(30_000)).isFalse();
@@ -50,7 +50,7 @@ class FundraiserTest {
 
   @Test
   void recordContributionRejectsNonPositiveAmount() {
-    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(UUID.randomUUID(), UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
 
     assertThatThrownBy(() -> fundraiser.recordContribution(0)).isInstanceOf(IllegalArgumentException.class);
   }
@@ -58,8 +58,8 @@ class FundraiserTest {
   @Test
   void equalityIsBasedOnId() {
     UUID id = UUID.randomUUID();
-    Fundraiser a = Fundraiser.create(id, UUID.randomUUID(), "a", null, FundraiserCategory.SOCIAL, 1000, null, true, NOW);
-    Fundraiser b = Fundraiser.reconstitute(id, UUID.randomUUID(), "b", null, FundraiserCategory.PARTY, 2000, 500, 3, null, false, NOW);
+    Fundraiser a = Fundraiser.create(id, UUID.randomUUID(), "a", null, FundraiserCategory.SOCIAL, 1000, null, true, null, NOW);
+    Fundraiser b = Fundraiser.reconstitute(id, UUID.randomUUID(), "b", null, FundraiserCategory.PARTY, 2000, 500, 3, null, false, null, NOW);
 
     assertThat(a).isEqualTo(b);
     assertThat(a.hashCode()).isEqualTo(b.hashCode());

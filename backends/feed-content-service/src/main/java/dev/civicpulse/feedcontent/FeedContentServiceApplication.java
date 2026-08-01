@@ -1,7 +1,10 @@
 package dev.civicpulse.feedcontent;
 
+import dev.civicpulse.feedcontent.adapter.out.social.MetaProperties;
+import dev.civicpulse.feedcontent.adapter.out.social.XProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
  * Scope note for this pass: schema.sql documents Redis as the intended hot path for ranked
@@ -13,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * whenever a real caller needs them.
  */
 @SpringBootApplication
+@EnableConfigurationProperties({MetaProperties.class, XProperties.class})
 public class FeedContentServiceApplication {
 
   public static void main(String[] args) {

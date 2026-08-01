@@ -46,7 +46,7 @@ class FundraisingRepositoryIntegrationTest {
   @Test
   void savesAndRetrievesFundraiser() {
     UUID id = UUID.randomUUID();
-    Fundraiser fundraiser = Fundraiser.create(id, UUID.randomUUID(), "Help rebuild", "desc", FundraiserCategory.SOCIAL, 100_000, null, true, Instant.now());
+    Fundraiser fundraiser = Fundraiser.create(id, UUID.randomUUID(), "Help rebuild", "desc", FundraiserCategory.SOCIAL, 100_000, null, true, null, Instant.now());
 
     fundraiserRepository.save(fundraiser);
 
@@ -57,8 +57,8 @@ class FundraisingRepositoryIntegrationTest {
   void findByCategoryFiltersCorrectly() {
     UUID socialId = UUID.randomUUID();
     UUID partyId = UUID.randomUUID();
-    fundraiserRepository.save(Fundraiser.create(socialId, UUID.randomUUID(), "social one", null, FundraiserCategory.SOCIAL, 1000, null, true, Instant.now()));
-    fundraiserRepository.save(Fundraiser.create(partyId, UUID.randomUUID(), "party one", null, FundraiserCategory.PARTY, 1000, null, true, Instant.now()));
+    fundraiserRepository.save(Fundraiser.create(socialId, UUID.randomUUID(), "social one", null, FundraiserCategory.SOCIAL, 1000, null, true, null, Instant.now()));
+    fundraiserRepository.save(Fundraiser.create(partyId, UUID.randomUUID(), "party one", null, FundraiserCategory.PARTY, 1000, null, true, null, Instant.now()));
 
     assertThat(fundraiserRepository.findByCategory(FundraiserCategory.PARTY, 0, 50)).extracting(Fundraiser::id).contains(partyId).doesNotContain(socialId);
   }
@@ -66,7 +66,7 @@ class FundraisingRepositoryIntegrationTest {
   @Test
   void contributionRoundTripAndUniquePaymentIntentCheck() {
     UUID fundraiserId = UUID.randomUUID();
-    fundraiserRepository.save(Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, Instant.now()));
+    fundraiserRepository.save(Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, Instant.now()));
     UUID paymentIntentId = UUID.randomUUID();
 
     assertThat(contributionRepository.existsByPaymentIntentId(paymentIntentId)).isFalse();

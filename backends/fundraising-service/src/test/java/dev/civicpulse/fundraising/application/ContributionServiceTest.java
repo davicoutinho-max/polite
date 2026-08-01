@@ -73,7 +73,7 @@ class ContributionServiceTest {
     UUID fundraiserId = UUID.randomUUID();
     UUID paymentIntentId = UUID.randomUUID();
     UUID supporterId = UUID.randomUUID();
-    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
     when(contributionRepository.existsByPaymentIntentId(paymentIntentId)).thenReturn(false);
     when(fundraiserRepository.findById(fundraiserId)).thenReturn(Optional.of(fundraiser));
     when(paymentIntentLookupGateway.lookup(paymentIntentId)).thenReturn(new PaymentIntentSummary(supporterId, 30_000));
@@ -92,7 +92,7 @@ class ContributionServiceTest {
     UUID fundraiserId = UUID.randomUUID();
     UUID paymentIntentId = UUID.randomUUID();
     UUID supporterId = UUID.randomUUID();
-    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
     when(contributionRepository.existsByPaymentIntentId(paymentIntentId)).thenReturn(false);
     when(fundraiserRepository.findById(fundraiserId)).thenReturn(Optional.of(fundraiser));
     when(paymentIntentLookupGateway.lookup(paymentIntentId)).thenReturn(new PaymentIntentSummary(supporterId, 100_000));
@@ -106,7 +106,7 @@ class ContributionServiceTest {
   @Test
   void listByFundraiserThrowsWhenLedgerNotPublic() {
     UUID fundraiserId = UUID.randomUUID();
-    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, false, NOW);
+    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, false, null, NOW);
     when(fundraiserRepository.findById(fundraiserId)).thenReturn(Optional.of(fundraiser));
 
     assertThatThrownBy(() -> service.listByFundraiser(fundraiserId)).isInstanceOf(LedgerNotPublicException.class);
@@ -115,7 +115,7 @@ class ContributionServiceTest {
   @Test
   void listByFundraiserReturnsContributionsWhenLedgerPublic() {
     UUID fundraiserId = UUID.randomUUID();
-    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, NOW);
+    Fundraiser fundraiser = Fundraiser.create(fundraiserId, UUID.randomUUID(), "title", null, FundraiserCategory.SOCIAL, 100_000, null, true, null, NOW);
     when(fundraiserRepository.findById(fundraiserId)).thenReturn(Optional.of(fundraiser));
 
     service.listByFundraiser(fundraiserId);

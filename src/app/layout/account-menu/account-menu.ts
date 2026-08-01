@@ -19,6 +19,7 @@ export class AccountMenu {
   protected readonly account = this.session.account;
   protected readonly isAuthenticated = this.session.isAuthenticated;
   protected readonly canFollow = computed(() => this.session.can('follow'));
+  protected readonly canPublish = computed(() => this.session.can('publish-content'));
   protected readonly open = signal(false);
 
   protected toggle(): void {

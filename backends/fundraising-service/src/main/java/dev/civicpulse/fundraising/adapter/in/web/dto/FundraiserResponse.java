@@ -16,6 +16,7 @@ public record FundraiserResponse(
     int supportersCount,
     LocalDate deadline,
     boolean ledgerPublic,
+    String imageUrl,
     Instant createdAt) {
 
   public static FundraiserResponse from(Fundraiser fundraiser) {
@@ -30,6 +31,7 @@ public record FundraiserResponse(
         fundraiser.supportersCount(),
         fundraiser.deadline().orElse(null),
         fundraiser.ledgerPublic(),
+        fundraiser.imageUrl().orElse(null),
         fundraiser.createdAt());
   }
 }

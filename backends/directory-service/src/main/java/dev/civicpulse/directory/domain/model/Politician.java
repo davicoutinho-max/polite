@@ -22,6 +22,7 @@ public final class Politician {
   private String name;
   private String handle;
   private String avatarUrl;
+  private String coverImageUrl;
   private boolean verified;
   private String office;
   private GovLevel level;
@@ -37,6 +38,7 @@ public final class Politician {
       String name,
       String handle,
       String avatarUrl,
+      String coverImageUrl,
       boolean verified,
       String office,
       GovLevel level,
@@ -50,6 +52,7 @@ public final class Politician {
     this.name = requireNonBlank(name, "name");
     this.handle = requireNonBlank(handle, "handle");
     this.avatarUrl = avatarUrl;
+    this.coverImageUrl = coverImageUrl;
     this.verified = verified;
     this.office = office;
     this.level = level;
@@ -74,7 +77,7 @@ public final class Politician {
       String partyAcronym,
       String state,
       Instant now) {
-    return new Politician(accountId, name, handle, avatarUrl, false, office, level, partyId, partyAcronym, state, 0, 0, now);
+    return new Politician(accountId, name, handle, avatarUrl, null, false, office, level, partyId, partyAcronym, state, 0, 0, now);
   }
 
   public static Politician reconstitute(
@@ -82,6 +85,7 @@ public final class Politician {
       String name,
       String handle,
       String avatarUrl,
+      String coverImageUrl,
       boolean verified,
       String office,
       GovLevel level,
@@ -92,7 +96,21 @@ public final class Politician {
       int billsCount,
       Instant updatedAt) {
     return new Politician(
-        accountId, name, handle, avatarUrl, verified, office, level, partyId, partyAcronym, state, followersCount, billsCount, updatedAt);
+        accountId, name, handle, avatarUrl, coverImageUrl, verified, office, level, partyId, partyAcronym, state, followersCount,
+        billsCount, updatedAt);
+  }
+
+  /** Self-service update — a politician changing their own avatar/cover photo. Either argument
+   * left {@code null} leaves that field untouched (lets the frontend update just one of the two
+   * without having to resend the other). */
+  public void updateProfileImages(String avatarUrl, String coverImageUrl, Instant now) {
+    if (avatarUrl != null) {
+      this.avatarUrl = avatarUrl;
+    }
+    if (coverImageUrl != null) {
+      this.coverImageUrl = coverImageUrl;
+    }
+    this.updatedAt = now;
   }
 
   /** Applies a {@code PoliticianReassigned} event — the only path that changes party/office/
@@ -137,6 +155,10 @@ public final class Politician {
 
   public Optional<String> avatarUrl() {
     return Optional.ofNullable(avatarUrl);
+  }
+
+  public Optional<String> coverImageUrl() {
+    return Optional.ofNullable(coverImageUrl);
   }
 
   public boolean verified() {

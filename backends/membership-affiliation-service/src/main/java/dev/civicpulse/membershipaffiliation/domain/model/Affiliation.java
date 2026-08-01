@@ -19,23 +19,77 @@ public final class Affiliation {
   private AffiliationStatus status;
   private Instant requestedAt;
   private Instant updatedAt;
+  /** Título de eleitor — the citizen's voter-registration number. Required by TSE Resolução
+   * 23.571/2018 for a valid affiliation request; captured once at request time, never edited. */
+  private final String voterRegistrationNumber;
+  private final String electoralZone;
+  private final String electoralSection;
+  /** UF (state) of voter registration — not necessarily the citizen's current city/state. */
+  private final String electoralState;
+  private final String electoralMunicipality;
+  /** A selfie holding the citizen's ID document, per the same TSE resolution's identity-check
+   * requirement for the affiliation's electronic signature to be valid. */
+  private final String identityPhotoUrl;
 
-  private Affiliation(UUID id, UUID citizenAccountId, UUID partyId, AffiliationStatus status, Instant requestedAt, Instant updatedAt) {
+  private Affiliation(
+      UUID id,
+      UUID citizenAccountId,
+      UUID partyId,
+      AffiliationStatus status,
+      Instant requestedAt,
+      Instant updatedAt,
+      String voterRegistrationNumber,
+      String electoralZone,
+      String electoralSection,
+      String electoralState,
+      String electoralMunicipality,
+      String identityPhotoUrl) {
     this.id = Objects.requireNonNull(id);
     this.citizenAccountId = Objects.requireNonNull(citizenAccountId);
     this.partyId = Objects.requireNonNull(partyId);
     this.status = Objects.requireNonNull(status);
     this.requestedAt = requestedAt;
     this.updatedAt = Objects.requireNonNull(updatedAt);
+    this.voterRegistrationNumber = voterRegistrationNumber;
+    this.electoralZone = electoralZone;
+    this.electoralSection = electoralSection;
+    this.electoralState = electoralState;
+    this.electoralMunicipality = electoralMunicipality;
+    this.identityPhotoUrl = identityPhotoUrl;
   }
 
-  public static Affiliation request(UUID id, UUID citizenAccountId, UUID partyId, Instant now) {
-    return new Affiliation(id, citizenAccountId, partyId, AffiliationStatus.REQUESTED, now, now);
+  public static Affiliation request(
+      UUID id,
+      UUID citizenAccountId,
+      UUID partyId,
+      String voterRegistrationNumber,
+      String electoralZone,
+      String electoralSection,
+      String electoralState,
+      String electoralMunicipality,
+      String identityPhotoUrl,
+      Instant now) {
+    return new Affiliation(
+        id, citizenAccountId, partyId, AffiliationStatus.REQUESTED, now, now, voterRegistrationNumber, electoralZone, electoralSection,
+        electoralState, electoralMunicipality, identityPhotoUrl);
   }
 
   public static Affiliation reconstitute(
-      UUID id, UUID citizenAccountId, UUID partyId, AffiliationStatus status, Instant requestedAt, Instant updatedAt) {
-    return new Affiliation(id, citizenAccountId, partyId, status, requestedAt, updatedAt);
+      UUID id,
+      UUID citizenAccountId,
+      UUID partyId,
+      AffiliationStatus status,
+      Instant requestedAt,
+      Instant updatedAt,
+      String voterRegistrationNumber,
+      String electoralZone,
+      String electoralSection,
+      String electoralState,
+      String electoralMunicipality,
+      String identityPhotoUrl) {
+    return new Affiliation(
+        id, citizenAccountId, partyId, status, requestedAt, updatedAt, voterRegistrationNumber, electoralZone, electoralSection, electoralState,
+        electoralMunicipality, identityPhotoUrl);
   }
 
   public void startReview(Instant now) {
@@ -95,6 +149,30 @@ public final class Affiliation {
 
   public Instant updatedAt() {
     return updatedAt;
+  }
+
+  public Optional<String> voterRegistrationNumber() {
+    return Optional.ofNullable(voterRegistrationNumber);
+  }
+
+  public Optional<String> electoralZone() {
+    return Optional.ofNullable(electoralZone);
+  }
+
+  public Optional<String> electoralSection() {
+    return Optional.ofNullable(electoralSection);
+  }
+
+  public Optional<String> electoralState() {
+    return Optional.ofNullable(electoralState);
+  }
+
+  public Optional<String> electoralMunicipality() {
+    return Optional.ofNullable(electoralMunicipality);
+  }
+
+  public Optional<String> identityPhotoUrl() {
+    return Optional.ofNullable(identityPhotoUrl);
   }
 
   @Override

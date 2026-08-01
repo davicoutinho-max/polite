@@ -11,10 +11,22 @@ import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-button';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiTabs, UiTab } from '../../../../shared/ui/ui-tabs/ui-tabs';
+import { UiDialog } from '../../../../shared/ui/ui-dialog/ui-dialog';
 import { PlatformService } from '../../../../core/services/platform.service';
 import { TranslateService } from '../../../../core/services/translate.service';
+import { AiAssistantService, SocialVariants } from '../../../../core/services/ai-assistant.service';
+import { AlertsService } from '../../../../core/services/alerts.service';
+import { SocialConnection, SocialConnectionService, SocialPlatform } from '../../../../core/services/social-connection.service';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { PostDraft, PostKind, PostVisibility, UserSummary } from '../../../../core/models';
+
+const VARIANT_TABS: UiTab[] = [
+  { id: 'instagram', label: 'Instagram', key: 'tab.variant-instagram', icon: 'photo_camera' },
+  { id: 'facebook', label: 'Facebook', key: 'tab.variant-facebook', icon: 'thumb_up' },
+  { id: 'x', label: 'X', key: 'tab.variant-x', icon: 'flutter_dash' },
+  { id: 'linkedin', label: 'LinkedIn', key: 'tab.variant-linkedin', icon: 'work' },
+  { id: 'simpleSummary', label: 'Simple summary', key: 'tab.variant-simple-summary', icon: 'chat_bubble' },
+];
 
 export type PostComposerMode = PostKind;
 
@@ -41,6 +53,7 @@ const MODES: UiTab[] = [
     UiIconButton,
     UiIcon,
     UiTabs,
+    UiDialog,
     TranslatePipe,
   ],
   templateUrl: './post-composer.html',
@@ -49,6 +62,9 @@ const MODES: UiTab[] = [
 export class PostComposer {
   private readonly platform = inject(PlatformService);
   protected readonly translate = inject(TranslateService);
+  private readonly aiAssistant = inject(AiAssistantService);
+  private readonly alerts = inject(AlertsService);
+  private readonly socialConnectionService = inject(SocialConnectionService);
 
   readonly author = input.required<UserSummary>();
   readonly publish = output<PostDraft>();
@@ -117,6 +133,34 @@ export class PostComposer {
         return this.draft().trim().length > 0;
     }
   });
+
+  // ---- Cross-posting to connected real social networks (Facebook/Instagram/X) ----
+  protected readonly socialConnections = signal<SocialConnection[]>([]);
+  protected readonly selectedSocialPlatforms = signal<Set<SocialPlatform>>(new Set());
+  protected readonly hasSocialConnections = computed(() => this.socialConnections().length > 0);
+
+  constructor() {
+    this.socialConnectionService.listConnections().subscribe({
+      next: (list) => this.socialConnections.set(list),
+      error: () => undefined,
+    });
+  }
+
+  protected isSocialPlatformSelected(platform: SocialPlatform): boolean {
+    return this.selectedSocialPlatforms().has(platform);
+  }
+
+  protected toggleSocialPlatform(platform: SocialPlatform): void {
+    this.selectedSocialPlatforms.update((selected) => {
+      const next = new Set(selected);
+      if (next.has(platform)) {
+        next.delete(platform);
+      } else {
+        next.add(platform);
+      }
+      return next;
+    });
+  }
 
   protected setMode(id: string): void {
     this.mode.set(id as PostComposerMode);
@@ -193,6 +237,70 @@ export class PostComposer {
     return new Date(Date.now() + hours * 3600_000).toISOString();
   }
 
+  // ---- AI-generated social-media variants (Instagram/Facebook/X/LinkedIn + plain summary) ----
+  // A preview of what could be cross-posted once real network connections exist (see item 2 of
+  // this feature) — for now, a politician reviews/edits and copies each version by hand.
+  protected readonly variantTabs = VARIANT_TABS;
+  protected readonly showVariantsDialog = signal(false);
+  protected readonly variantsLoading = signal(false);
+  protected readonly variantsError = signal(false);
+  protected readonly variants = signal<SocialVariants | null>(null);
+  protected readonly activeVariantTab = signal('instagram');
+
+  protected readonly canGenerateVariants = computed(() => this.draft().trim().length > 0);
+
+  protected openVariantsDialog(): void {
+    const text = this.draft().trim();
+    if (!text) {
+      return;
+    }
+    this.showVariantsDialog.set(true);
+    this.variantsError.set(false);
+    this.variantsLoading.set(true);
+    this.activeVariantTab.set('instagram');
+    this.aiAssistant.generateSocialVariants(text).subscribe({
+      next: (result) => {
+        this.variantsLoading.set(false);
+        this.variants.set(result);
+      },
+      error: () => {
+        this.variantsLoading.set(false);
+        this.variantsError.set(true);
+      },
+    });
+  }
+
+  protected closeVariantsDialog(): void {
+    this.showVariantsDialog.set(false);
+  }
+
+  protected activeVariantText(): string {
+    const variants = this.variants();
+    if (!variants) {
+      return '';
+    }
+    return variants[this.activeVariantTab() as keyof SocialVariants];
+  }
+
+  protected copyActiveVariant(): void {
+    const text = this.activeVariantText();
+    if (!text) {
+      return;
+    }
+    navigator.clipboard
+      .writeText(text)
+      .then(() =>
+        this.alerts.push({
+          category: 'project',
+          icon: 'content_copy',
+          title: this.translate.t('title.copied-to-clipboard', 'Copied to clipboard'),
+          message: this.translate.t('hint.copied-to-clipboard', 'Paste it directly into the app of your choice.'),
+          timeLabel: this.translate.t('label.just-now', 'Just now'),
+        }),
+      )
+      .catch(() => undefined);
+  }
+
   protected onPublish(): void {
     if (!this.canPublish() || this.submitting()) {
       return;
@@ -204,6 +312,7 @@ export class PostComposer {
       attachedFile: this.attachedFile() ?? undefined,
       pollOptions: this.pollMode() ? this.pollOptionInputs().map((o) => o.trim()).filter((o) => o.length > 0) : undefined,
       pollClosesAt: this.pollMode() ? this.computePollClosesAt() : undefined,
+      socialPlatforms: this.selectedSocialPlatforms().size > 0 ? Array.from(this.selectedSocialPlatforms()) : undefined,
     };
 
     if (kind === 'agenda') {
@@ -277,5 +386,6 @@ export class PostComposer {
     this.pollOptionInputs.set(['', '']);
     this.pollDuration.set('1d');
     this.mode.set('text');
+    this.selectedSocialPlatforms.set(new Set());
   }
 }

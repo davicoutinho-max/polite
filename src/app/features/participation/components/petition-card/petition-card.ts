@@ -11,6 +11,7 @@ import { LegislativeOpenDataService } from '../../../../core/services/legislativ
 import { ParticipationService } from '../../../../core/services/participation.service';
 import { SessionService } from '../../../../core/services/session.service';
 import { TranslateService } from '../../../../core/services/translate.service';
+import { formatCpf } from '../../../../shared/utils/br-documents';
 import { CompactNumberPipe } from '../../../../shared/pipes/compact-number.pipe';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { AskAi, AskAiPromptOption } from '../../../../shared/ai/ask-ai/ask-ai';
@@ -136,6 +137,14 @@ export class PetitionCard {
   protected readonly verificationId = signal<string | null>(null);
   protected readonly codeInput = signal('');
 
+  /** True once the account's real, registered name/CPF/email have loaded — the corresponding
+   * form fields become read-only at that point so a signer can never type a name or CPF other
+   * than the one already on file with their account (this is a legal signature, not free text). */
+  protected readonly identityLocked = signal(false);
+  /** The account's email is always known (no extra fetch needed) — locked the same way as
+   * name/CPF so a signer can't redirect their verification code to an inbox that isn't theirs. */
+  protected readonly emailLocked = computed(() => !!this.session.account().email);
+
   protected openDetails(): void {
     this.showDetails.set(true);
   }
@@ -207,12 +216,25 @@ export class PetitionCard {
     this.birthDate.set(null);
     this.city.set('');
     this.state.set('');
-    this.contact.set('');
+    this.contact.set(account.email ?? '');
     this.electoralData.set('');
     this.eSignatureConsent.set(false);
     this.typedSignature.set('');
     this.signError.set('');
+    this.identityLocked.set(false);
     this.signStep.set('confirm');
+
+    // Best-effort: prefills and locks name/CPF against the account's real registered document so
+    // a signer can't type a different one. Falls back to a free-text CPF field (previous
+    // behavior) if this account genuinely has none on file rather than blocking signing outright.
+    this.session.getMyDocumentProfile().subscribe({
+      next: (profile) => {
+        this.fullName.set(profile.name);
+        this.cpf.set(formatCpf(profile.documentNumber));
+        this.identityLocked.set(true);
+      },
+      error: () => undefined,
+    });
   }
 
   protected closeSignWizard(): void {

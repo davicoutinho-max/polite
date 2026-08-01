@@ -109,6 +109,18 @@ export class ElectionDetailPage {
     return SCOPE_SEVERITY[scope] ?? 'neutral';
   }
 
+  /** "MDB · No. 15" — the party's real registered ballot number, resolved from the already-loaded
+   * directory cache (each candidacy only carries the party acronym/id, not a per-candidate
+   * number — this platform doesn't track individual TSE candidate numbers, only who's linked to
+   * which party). */
+  protected candidateParty(partyId: string): string | null {
+    const party = this.directory.parties().find((p) => p.id === partyId);
+    if (!party) {
+      return null;
+    }
+    return `${party.acronym} · ${this.translate.t('label.ballot-number-abbr', 'No.')} ${party.number}`;
+  }
+
   // ---- Pre-candidate nomination (party accounts only, upcoming elections only) ----
   protected readonly canNominate = computed(() => this.session.can('party-admin') && this.isUpcoming());
   protected readonly nominationSuggestions = signal<PoliticianSummary[]>([]);

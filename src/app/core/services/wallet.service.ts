@@ -206,11 +206,20 @@ export class WalletService {
     );
   }
 
-  requestFiliation(partyId: string, city: string): void {
+  requestFiliation(payload: {
+    partyId: string;
+    city: string;
+    voterRegistrationNumber: string;
+    electoralZone: string;
+    electoralSection: string;
+    electoralState: string;
+    electoralMunicipality: string;
+    identityPhotoUrl: string;
+  }): void {
     if (this._status() !== 'not-started') {
       return;
     }
-    this.http.post<AffiliationResponseDto>(`${this.membershipApiBase}/affiliations`, { partyId, city }).subscribe({
+    this.http.post<AffiliationResponseDto>(`${this.membershipApiBase}/affiliations`, payload).subscribe({
       next: (affiliation) => {
         this._affiliationId.set(affiliation.id);
         this._status.set(STATUS_MAP[affiliation.status] ?? 'requested');

@@ -34,6 +34,10 @@ spring:
 server:
   port: ${SERVER_PORT:8096}
 
+legislative:
+  assistant-service:
+    base-url: ${ASSISTANT_SERVICE_BASE_URL:http://localhost:8099}
+
 management:
   endpoints:
     web:

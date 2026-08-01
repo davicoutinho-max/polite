@@ -34,7 +34,17 @@ public class AffiliationController {
   @PostMapping
   public ResponseEntity<AffiliationResponse> request(
       @RequestHeader("X-Account-Id") UUID citizenAccountId, @Valid @RequestBody RequestAffiliationRequest request) {
-    var affiliation = manageAffiliationUseCase.requestAffiliation(citizenAccountId, request.partyId(), request.city());
+    var affiliation =
+        manageAffiliationUseCase.requestAffiliation(
+            citizenAccountId,
+            request.partyId(),
+            request.city(),
+            request.voterRegistrationNumber(),
+            request.electoralZone(),
+            request.electoralSection(),
+            request.electoralState(),
+            request.electoralMunicipality(),
+            request.identityPhotoUrl());
     AffiliationResponse body = AffiliationResponse.from(affiliation);
     return ResponseEntity.created(URI.create("/affiliations/" + body.id())).body(body);
   }

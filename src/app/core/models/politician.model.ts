@@ -24,7 +24,7 @@ export interface Politician extends UserSummary {
   readonly partyId: string;
   readonly position: string;
   readonly servingSince: number;
-  readonly coverUrl: string;
+  readonly coverUrl: string | null;
 
   // Personal / civic dossier
   readonly education: string;

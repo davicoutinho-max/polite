@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PartyService } from '../../core/services/party.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { FeedService } from '../../core/services/feed.service';
+import { MediaService } from '../../core/services/media.service';
 import { SessionService } from '../../core/services/session.service';
 import { ProfileTab } from '../../core/models';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
@@ -51,6 +52,7 @@ export class PartyPage {
   private readonly partyService = inject(PartyService);
   private readonly directory = inject(DirectoryService);
   private readonly feedService = inject(FeedService);
+  private readonly media = inject(MediaService);
   private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
@@ -69,6 +71,12 @@ export class PartyPage {
    * showing this button to anyone without that permission (visitors, politicians, parties,
    * admins) sent them straight into a route-guard redirect back to /feed with no explanation. */
   protected readonly canJoinParty = computed(() => this.session.can('membership'));
+  protected readonly isOwnParty = computed(() => !!this.party().id && this.session.account().id === this.party().id);
+
+  protected readonly uploadingLogo = signal(false);
+  protected readonly uploadingCover = signal(false);
+  private readonly logoInput = viewChild<ElementRef<HTMLInputElement>>('logoInput');
+  private readonly coverInput = viewChild<ElementRef<HTMLInputElement>>('coverInput');
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -81,6 +89,44 @@ export class PartyPage {
 
   protected setActiveTab(id: string): void {
     this.activeTab.set(id);
+  }
+
+  protected pickLogo(): void {
+    this.logoInput()?.nativeElement.click();
+  }
+
+  protected pickCover(): void {
+    this.coverInput()?.nativeElement.click();
+  }
+
+  protected onLogoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) {
+      return;
+    }
+    this.uploadingLogo.set(true);
+    this.media.upload(file).subscribe({
+      next: (url) => this.partyService.updateLogo(url).subscribe({
+        complete: () => this.uploadingLogo.set(false),
+        error: () => this.uploadingLogo.set(false),
+      }),
+      error: () => this.uploadingLogo.set(false),
+    });
+  }
+
+  protected onCoverSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) {
+      return;
+    }
+    this.uploadingCover.set(true);
+    this.media.upload(file).subscribe({
+      next: (url) => this.partyService.updateCoverPhoto(url).subscribe({
+        complete: () => this.uploadingCover.set(false),
+        error: () => this.uploadingCover.set(false),
+      }),
+      error: () => this.uploadingCover.set(false),
+    });
   }
 
   protected toggleFollow(): void {

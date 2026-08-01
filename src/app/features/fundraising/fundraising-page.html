@@ -67,6 +67,24 @@
           />
         </label>
       </div>
+      <label class="fund__field">
+        <span>{{ 'label.cover-image-optional' | translate: 'Cover image (optional)' }}</span>
+        @if (imagePreviewUrl(); as preview) {
+          <div class="fund__image-preview">
+            <img [src]="preview" alt="" />
+            <ui-icon-button icon="close" [ariaLabel]="'aria.remove-image' | translate: 'Remove image'" [iconSize]="16" (click)="removeImage()" />
+          </div>
+        } @else {
+          <p-fileupload
+            mode="basic"
+            accept="image/*"
+            chooseIcon="pi pi-image"
+            [chooseLabel]="'label.choose-image' | translate: 'Choose image'"
+            [auto]="true"
+            (onSelect)="onImageSelected($event)"
+          />
+        }
+      </label>
       <ui-button [label]="'button.publish-action' | translate: 'Publish action'" icon="check" variant="filled" type="submit" />
     </form>
   }
@@ -74,6 +92,11 @@
   <div class="fund__grid">
     @for (f of fundraisers(); track f.id) {
       <article class="fund__card">
+        @if (f.imageUrl) {
+          <button type="button" class="fund__card-image" (click)="openDetails(f)">
+            <img [src]="f.imageUrl" alt="" />
+          </button>
+        }
         <header class="fund__card-head">
           <span class="fund__card-icon"><ui-icon [name]="categoryMeta(f.category).icon" [size]="20" [fill]="true" /></span>
           <div>
@@ -106,15 +129,24 @@
           <span><ui-icon name="event" [size]="16" /> {{ 'label.until' | translate: 'until' }} {{ f.deadline }}</span>
         </div>
 
-        @if (isAuthenticated()) {
+        <div class="fund__actions">
           <ui-button
-            [label]="'button.contribute' | translate: 'Contribute'"
-            icon="volunteer_activism"
-            variant="filled"
-            [block]="true"
-            (click)="openCheckout(f)"
+            [label]="'button.view-details' | translate: 'View details'"
+            icon="info"
+            variant="outlined"
+            (click)="openDetails(f)"
           />
-        } @else {
+          @if (isAuthenticated()) {
+            <ui-button
+              [label]="'button.contribute' | translate: 'Contribute'"
+              icon="volunteer_activism"
+              variant="filled"
+              [block]="true"
+              (click)="openCheckout(f)"
+            />
+          }
+        </div>
+        @if (!isAuthenticated()) {
           <p class="fund__signin-hint">{{ 'hint.sign-in-to-contribute' | translate: 'Sign in to contribute.' }}</p>
         }
       </article>
@@ -187,6 +219,57 @@
         <ui-icon name="lock" [size]="14" />
         {{ 'hint.asaas-secure-checkout' | translate: "You'll complete payment on Asaas's secure page — CivicPulse never sees your card details." }}
       </p>
+    </div>
+  }
+</ui-dialog>
+
+<!-- View details: full description/image, with a way straight into the checkout dialog above -->
+<ui-dialog
+  [open]="!!detailsFundraiser()"
+  [title]="detailsFundraiser()?.title ?? ''"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  [maxWidth]="560"
+  (close)="closeDetails()"
+>
+  @if (detailsFundraiser(); as f) {
+    <div class="details">
+      @if (f.imageUrl) {
+        <img class="details__image" [src]="f.imageUrl" alt="" />
+      }
+      <div class="details__meta">
+        <ui-tag [label]="('category.' + f.category) | translate: categoryMeta(f.category).label" severity="info" />
+        @if (f.ledgerPublic) {
+          <ui-tag [label]="'label.public-ledger' | translate: 'Public ledger'" severity="success" icon="receipt_long" />
+        } @else {
+          <ui-tag [label]="'label.ledger-pending' | translate: 'Ledger pending'" severity="warning" />
+        }
+      </div>
+      <p class="details__organizer">{{ 'label.organized-by' | translate: 'Organized by' }} {{ f.organizer }}</p>
+      <p class="details__desc">{{ f.description }}</p>
+
+      <div class="fund__progress">
+        <ui-progress [value]="progress(f)" color="tertiary" />
+        <div class="fund__amounts">
+          <strong>{{ money(f.raised) }}</strong>
+          <span>{{ 'label.of' | translate: 'of' }} {{ money(f.goal) }}</span>
+        </div>
+      </div>
+      <div class="fund__meta">
+        <span><ui-icon name="groups" [size]="16" /> {{ f.supporters }} {{ 'label.supporters-lower' | translate: 'supporters' }}</span>
+        <span><ui-icon name="event" [size]="16" /> {{ 'label.until' | translate: 'until' }} {{ f.deadline }}</span>
+      </div>
+
+      @if (isAuthenticated()) {
+        <ui-button
+          [label]="'button.contribute' | translate: 'Contribute'"
+          icon="volunteer_activism"
+          variant="filled"
+          [block]="true"
+          (click)="openCheckout(f)"
+        />
+      } @else {
+        <p class="fund__signin-hint">{{ 'hint.sign-in-to-contribute' | translate: 'Sign in to contribute.' }}</p>
+      }
     </div>
   }
 </ui-dialog>

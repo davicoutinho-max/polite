@@ -3,6 +3,8 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, forkJoin, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
+  AccountabilityCategory,
+  AccountabilityDisclosure,
   CareerMilestone,
   Mandate,
   ParliamentaryActivity,
@@ -58,6 +60,19 @@ export function formatCents(cents: number): string {
   return `R$ ${Math.round(cents / 100).toLocaleString('pt-BR')}`;
 }
 
+function toAccountabilityDisclosure(dto: AccountabilityDisclosureResponseDto): AccountabilityDisclosure {
+  return {
+    id: dto.id,
+    category: dto.category as AccountabilityCategory,
+    declaredAmountCents: dto.declaredAmountCents,
+    documentUrl: dto.documentUrl,
+    status: dto.status,
+    extractedAmountCents: dto.extractedAmountCents,
+    aiFeedback: dto.aiFeedback,
+    submittedAt: dto.submittedAt,
+  };
+}
+
 function firstYear(period: string): number | null {
   const match = period.match(/\d{4}/);
   return match ? Number(match[0]) : null;
@@ -73,7 +88,7 @@ const EMPTY_POLITICIAN: Politician = {
   partyId: '',
   position: '',
   servingSince: new Date().getFullYear(),
-  coverUrl: FALLBACK_AVATAR,
+  coverUrl: null,
   education: '',
   profession: '',
   patrimony: '',
@@ -194,6 +209,17 @@ interface CareerMilestoneResponseDto {
   readonly detail: string | null;
 }
 
+interface AccountabilityDisclosureResponseDto {
+  readonly id: string;
+  readonly category: string;
+  readonly declaredAmountCents: number;
+  readonly documentUrl: string;
+  readonly status: 'approved' | 'rejected';
+  readonly extractedAmountCents: number | null;
+  readonly aiFeedback: string;
+  readonly submittedAt: string;
+}
+
 /**
  * A politician's full dossier: basic identity fields come from directory-service (already
  * loaded by DirectoryService), everything else — dossier, mandates, social links, team,
@@ -215,6 +241,9 @@ export class PoliticianService {
 
   private readonly _transparency = signal<TransparencyReport>(EMPTY_TRANSPARENCY);
   readonly transparency = this._transparency.asReadonly();
+
+  private readonly _accountabilityDisclosures = signal<AccountabilityDisclosure[]>([]);
+  readonly accountabilityDisclosures = this._accountabilityDisclosures.asReadonly();
 
   private readonly _career = signal<CareerMilestone[]>([]);
   readonly career = this._career.asReadonly();
@@ -255,7 +284,7 @@ export class PoliticianService {
           partyId: directoryEntry.partyId || '',
           position: directoryEntry.office,
           servingSince,
-          coverUrl: directoryEntry.avatarUrl || FALLBACK_AVATAR,
+          coverUrl: directoryEntry.coverImageUrl,
           education: dossier.education ?? '',
           profession: dossier.profession ?? '',
           patrimony: dossier.patrimony ?? '',
@@ -270,6 +299,22 @@ export class PoliticianService {
         };
       }),
       tap((politician) => this._politician.set(politician)),
+    );
+  }
+
+  /** Updates whichever image(s) are provided both server-side and on the currently-loaded
+   * profile signal, so a politician sees their own change reflected immediately without a
+   * reload. Only meaningful when the loaded profile is the caller's own — ProfileHeader only
+   * renders the upload controls in that case. */
+  updateProfileImages(avatarUrl?: string, coverUrl?: string): Observable<void> {
+    return this.directory.updatePoliticianProfileImages(avatarUrl, coverUrl).pipe(
+      tap(() =>
+        this._politician.update((p) => ({
+          ...p,
+          avatarUrl: avatarUrl ?? p.avatarUrl,
+          coverUrl: coverUrl ?? p.coverUrl,
+        })),
+      ),
     );
   }
 
@@ -328,6 +373,30 @@ export class PoliticianService {
       ),
       tap((transparency) => this._transparency.set(transparency)),
     );
+  }
+
+  loadAccountabilityDisclosures(accountId: string): Observable<AccountabilityDisclosure[]> {
+    return this.http.get<AccountabilityDisclosureResponseDto[]>(`${this.apiBase}/politicians/${accountId}/accountability-disclosures`).pipe(
+      map((list) => list.map(toAccountabilityDisclosure)),
+      tap((disclosures) => this._accountabilityDisclosures.set(disclosures)),
+    );
+  }
+
+  /** Self-service — the submitting politician always comes from the gateway-validated session
+   * header on the backend, never a parameter here. Always resolves to a scored (approved or
+   * rejected) result; see ManageAccountabilityDisclosureUseCase's javadoc for why this is never
+   * "pending". */
+  submitAccountabilityDisclosure(category: AccountabilityCategory, declaredAmountCents: number, documentUrl: string): Observable<AccountabilityDisclosure> {
+    return this.http
+      .post<AccountabilityDisclosureResponseDto>(`${this.apiBase}/politicians/accountability-disclosures`, {
+        category,
+        declaredAmountCents,
+        documentUrl,
+      })
+      .pipe(
+        map(toAccountabilityDisclosure),
+        tap((disclosure) => this._accountabilityDisclosures.update((list) => [disclosure, ...list])),
+      );
   }
 
   loadCareer(accountId: string): Observable<CareerMilestone[]> {

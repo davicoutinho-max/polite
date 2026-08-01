@@ -18,6 +18,7 @@ interface CandidateResponseDto {
   readonly name: string;
   readonly avatarUrl: string | null;
   readonly office: string | null;
+  readonly partyId: string | null;
   readonly partyAcronym: string | null;
 }
 
@@ -121,6 +122,7 @@ export class ElectionService {
             name: c.name,
             avatarUrl: c.avatarUrl ?? '',
             office: c.office ?? '',
+            partyId: c.partyId ?? '',
             partyAcronym: c.partyAcronym ?? '',
           }),
         ),

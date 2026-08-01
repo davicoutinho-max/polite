@@ -10,6 +10,7 @@ export interface PoliticianSummary {
   readonly name: string;
   readonly handle: string;
   readonly avatarUrl: string | null;
+  readonly coverImageUrl: string | null;
   readonly verified: boolean;
   readonly office: string;
   readonly level: GovLevel;

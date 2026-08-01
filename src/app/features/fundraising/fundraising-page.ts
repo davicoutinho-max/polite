@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { ContributionGateway, FundraisingService } from '../../core/services/fundraising.service';
+import { MediaService } from '../../core/services/media.service';
 import { SessionService } from '../../core/services/session.service';
 import { TranslateService } from '../../core/services/translate.service';
 import { AlertsService } from '../../core/services/alerts.service';
@@ -14,6 +17,7 @@ import { CanDirective } from '../../core/directives/can.directive';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiDialog } from '../../shared/ui/ui-dialog/ui-dialog';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
+import { UiIconButton } from '../../shared/ui/ui-icon-button/ui-icon-button';
 import { UiProgress } from '../../shared/ui/ui-progress/ui-progress';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
@@ -29,6 +33,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
     PageHeader,
     UiDialog,
     UiIcon,
+    UiIconButton,
     UiProgress,
     UiTag,
     UiButton,
@@ -39,6 +44,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
     TextareaModule,
     Select,
     DatePicker,
+    FileUpload,
     TranslatePipe,
   ],
   templateUrl: './fundraising-page.html',
@@ -46,6 +52,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 })
 export class FundraisingPage {
   private readonly fundraising = inject(FundraisingService);
+  private readonly media = inject(MediaService);
   private readonly session = inject(SessionService);
   private readonly translate = inject(TranslateService);
   private readonly alerts = inject(AlertsService);
@@ -69,6 +76,7 @@ export class FundraisingPage {
   protected readonly checkoutProcessing = signal(false);
 
   protected openCheckout(fundraiser: Fundraiser): void {
+    this.detailsFundraiser.set(null);
     this.checkoutFundraiser.set(fundraiser);
     this.checkoutAmount.set(null);
     this.checkoutGateway.set('pix');
@@ -82,6 +90,17 @@ export class FundraisingPage {
     this.checkoutAmount.set(amount);
   }
 
+  // ---- View-details dialog: full description/image, and a way into the same checkout above ----
+  protected readonly detailsFundraiser = signal<Fundraiser | null>(null);
+
+  protected openDetails(fundraiser: Fundraiser): void {
+    this.detailsFundraiser.set(fundraiser);
+  }
+
+  protected closeDetails(): void {
+    this.detailsFundraiser.set(null);
+  }
+
   // ---- Create form state ----
   protected readonly showForm = signal(false);
   protected readonly title = signal('');
@@ -89,6 +108,22 @@ export class FundraisingPage {
   protected readonly category = signal<FundraiserCategory>('social');
   protected readonly goal = signal<number | null>(null);
   protected readonly deadline = signal<Date | null>(null);
+  protected readonly imageFile = signal<File | null>(null);
+  protected readonly imagePreviewUrl = computed(() => {
+    const file = this.imageFile();
+    return file ? URL.createObjectURL(file) : null;
+  });
+
+  protected onImageSelected(event: FileSelectEvent): void {
+    const file = event.files[0];
+    if (file) {
+      this.imageFile.set(file);
+    }
+  }
+
+  protected removeImage(): void {
+    this.imageFile.set(null);
+  }
 
   protected progress(f: Fundraiser): number {
     return f.goal > 0 ? (f.raised / f.goal) * 100 : 0;
@@ -119,14 +154,19 @@ export class FundraisingPage {
     const deadline = date
       ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
       : 'Open-ended';
-    this.fundraising.create({
-      title: this.title().trim(),
-      description: this.description().trim(),
-      category: this.category(),
-      goal,
-      deadline,
+    const imageFile = this.imageFile();
+    const upload$: Observable<string | null> = imageFile ? this.media.upload(imageFile) : of(null);
+    upload$.subscribe((imageUrl) => {
+      this.fundraising.create({
+        title: this.title().trim(),
+        description: this.description().trim(),
+        category: this.category(),
+        goal,
+        deadline,
+        imageUrl,
+      });
+      this.resetForm();
     });
-    this.resetForm();
   }
 
   /** Real Asaas Checkout — opens Asaas's own hosted invoice page in a new tab (Pix QR/copy-paste
@@ -185,6 +225,7 @@ export class FundraisingPage {
     this.category.set('social');
     this.goal.set(null);
     this.deadline.set(null);
+    this.imageFile.set(null);
     this.showForm.set(false);
   }
 }

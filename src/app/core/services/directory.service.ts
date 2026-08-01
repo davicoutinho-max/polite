@@ -35,6 +35,7 @@ interface PoliticianResponse {
   readonly name: string;
   readonly handle: string;
   readonly avatarUrl: string | null;
+  readonly coverImageUrl: string | null;
   readonly verified: boolean;
   readonly office: string | null;
   readonly level: string | null;
@@ -64,6 +65,7 @@ function toPoliticianSummary(response: PoliticianResponse): PoliticianSummary {
     name: response.name,
     handle: `@${response.handle}`,
     avatarUrl: response.avatarUrl,
+    coverImageUrl: response.coverImageUrl,
     verified: response.verified,
     office: response.office ?? '',
     level: (response.level as GovLevel) ?? 'federal',
@@ -162,6 +164,35 @@ export class DirectoryService {
 
   getPolitician(accountId: string): Observable<PoliticianSummary> {
     return this.http.get<PoliticianResponse>(`${this.apiBase}/politicians/${accountId}`).pipe(map(toPoliticianSummary));
+  }
+
+  /** Self-service only — the target account is always the caller's own (resolved gateway-side
+   * from the session token), never a path/body parameter. Either url may be omitted to leave
+   * that image untouched. */
+  updatePoliticianProfileImages(avatarUrl?: string, coverImageUrl?: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiBase}/politicians/profile-images`, { avatarUrl, coverImageUrl }).pipe(
+      tap(() => {
+        const accountId = this.session.account().id;
+        this._politicians.update((list) =>
+          list.map((p) =>
+            p.id === accountId
+              ? { ...p, avatarUrl: avatarUrl ?? p.avatarUrl, coverImageUrl: coverImageUrl ?? p.coverImageUrl }
+              : p,
+          ),
+        );
+      }),
+    );
+  }
+
+  /** Logo only — a party's cover photo lives in PartyService instead (party-management-service's
+   * own editable profile, alongside history/program/statute). */
+  updatePartyLogo(logoUrl: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiBase}/parties/profile-images`, { avatarUrl: logoUrl }).pipe(
+      tap(() => {
+        const partyId = this.session.account().id;
+        this._parties.update((list) => list.map((p) => (p.id === partyId ? { ...p, logoUrl } : p)));
+      }),
+    );
   }
 
   reloadFollowing(targetType: 'politician' | 'party'): Observable<string[]> {

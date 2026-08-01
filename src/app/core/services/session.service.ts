@@ -130,6 +130,15 @@ export class SessionService {
     return this._accessToken();
   }
 
+  /** The signed-in citizen's own real, decrypted CPF — fetched on demand (not eagerly with the
+   * rest of the session) since it's sensitive and only a couple of flows need it (e.g. the
+   * petition-signature form prefilling and locking the CPF field so a signer can't type someone
+   * else's document number). Self-service only — see AccountController.getMyDocumentProfile's
+   * javadoc. */
+  getMyDocumentProfile(): Observable<{ name: string; documentNumber: string }> {
+    return this.http.get<{ name: string; documentNumber: string }>(`${this.apiBase}/accounts/me/document-profile`);
+  }
+
   /** Real login against identity-service. Persists tokens, decodes the JWT for immediate
    * account-type/permissions, then fetches the account's display fields. */
   login(email: string, password: string): Observable<Account> {
@@ -213,6 +222,7 @@ export class SessionService {
           verified: response.verified,
           accountType: response.accountType,
           avatarUrl: response.avatarUrl ?? GUEST_AVATAR,
+          email: response.email,
         };
         this._account.set(account);
         return account;

@@ -15,4 +15,5 @@ export interface UserSummary {
  */
 export interface Account extends UserSummary {
   readonly accountType: import('./permission.model').AccountType;
+  readonly email?: string;
 }

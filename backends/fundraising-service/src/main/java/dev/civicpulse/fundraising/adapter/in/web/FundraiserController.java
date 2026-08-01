@@ -46,7 +46,8 @@ public class FundraiserController {
             FundraiserCategory.fromCode(request.category()),
             request.goalCents(),
             request.deadline(),
-            request.ledgerPublic() == null || request.ledgerPublic());
+            request.ledgerPublic() == null || request.ledgerPublic(),
+            request.imageUrl());
     FundraiserResponse body = FundraiserResponse.from(fundraiser);
     return ResponseEntity.created(URI.create("/fundraisers/" + body.id())).body(body);
   }

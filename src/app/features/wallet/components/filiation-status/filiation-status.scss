@@ -33,6 +33,105 @@
     width: 100%;
   }
 }
+.filiation__row { display: flex; gap: var(--cp-space-md); width: 100%; }
+.filiation__lock-icon { vertical-align: -2px; margin-left: 2px; }
+.filiation__input--locked {
+  background: var(--cp-surface-container-low) !important;
+  color: var(--cp-on-surface-variant);
+  cursor: default;
+}
+.filiation__error { margin: 0; color: var(--cp-error); font-size: 13px; }
+
+// ---- Pre-submission TSE data-collection wizard ----
+.wizard { display: flex; flex-direction: column; gap: var(--cp-space-md); margin-bottom: var(--cp-space-lg); }
+
+.wizard__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  margin-bottom: var(--cp-space-sm);
+}
+.wizard__progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cp-on-surface-variant);
+}
+.wizard__progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--cp-radius-full);
+  background: var(--cp-outline-variant);
+}
+.wizard__progress-step--active .wizard__progress-dot { background: var(--cp-secondary); box-shadow: 0 0 0 4px var(--cp-secondary-container); }
+.wizard__progress-step--active { color: var(--cp-on-surface); }
+.wizard__progress-step--done .wizard__progress-dot { background: var(--cp-success, #2e7d32); }
+.wizard__progress-bar { flex: 1; height: 2px; background: var(--cp-outline-variant); margin-bottom: 16px; }
+.wizard__progress-bar--filled { background: var(--cp-success, #2e7d32); }
+
+.wizard__photo-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cp-space-sm);
+  width: 100%;
+  min-height: 160px;
+  border: 2px dashed var(--cp-outline-variant);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface-container-lowest);
+  color: var(--cp-on-surface-variant);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  &:hover { border-color: var(--cp-secondary); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+.wizard__photo-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cp-space-sm);
+  img { max-width: 100%; max-height: 220px; border-radius: var(--cp-radius-lg); object-fit: cover; }
+}
+
+.wizard__instructions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-sm);
+  padding: var(--cp-space-md);
+  background: var(--cp-surface-container-low);
+  border-radius: var(--cp-radius);
+}
+.wizard__instructions-title { font-size: 13px; font-weight: 700; color: var(--cp-on-surface); }
+.wizard__instruction {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-sm);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
+}
+.wizard__instruction-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--cp-radius-full);
+  background: var(--cp-secondary-container);
+  color: var(--cp-on-secondary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.wizard__actions { display: flex; justify-content: space-between; gap: var(--cp-space-md); }
 
 .steps { list-style: none; margin: 0; padding: 0; }
 

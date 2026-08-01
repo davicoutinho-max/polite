@@ -91,4 +91,7 @@ export interface PostDraft {
   readonly pollOptions?: string[];
   /** ISO timestamp the poll locks at — undefined/omitted means it never closes on its own. */
   readonly pollClosesAt?: string;
+  /** Connected social network codes ('facebook'/'instagram'/'x') to also cross-post this to,
+   * once the post itself is created — see SocialConnectionService.publish. */
+  readonly socialPlatforms?: string[];
 }

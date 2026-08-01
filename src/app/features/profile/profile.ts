@@ -60,6 +60,9 @@ export class Profile {
    * by an unconditional navigate() into a route guard that bounced them straight back to /feed. */
   protected readonly canContact = computed(() => this.session.can('message'));
   protected readonly isFollowing = computed(() => this.directory.isFollowing('politician', this.politician().id));
+  protected readonly isOwnProfile = computed(
+    () => !!this.politician().id && this.session.account().id === this.politician().id,
+  );
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
 
   protected readonly activeTab = signal('activity');
@@ -76,6 +79,7 @@ export class Profile {
         this.politicianService.loadActivity(id),
         this.politicianService.loadTransparency(id),
         this.politicianService.loadCareer(id),
+        this.politicianService.loadAccountabilityDisclosures(id),
       ]).subscribe({
         // A failed load (e.g. this id belongs to a party, not a politician) used to leave
         // whichever politician had loaded here previously on screen with no indication anything

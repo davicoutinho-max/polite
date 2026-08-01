@@ -94,7 +94,7 @@ class ElectionQueryServiceTest {
     when(electionCandidacyRepository.findByElectionId(electionId))
         .thenReturn(List.of(ElectionCandidacy.nominate(electionId, resolvableId), ElectionCandidacy.nominate(electionId, goneId)));
     when(politicianDirectoryGateway.lookup(resolvableId))
-        .thenReturn(Optional.of(new PoliticianSummary(resolvableId, "Jane Doe", "jane", null, true, "Deputy", "PRO")));
+        .thenReturn(Optional.of(new PoliticianSummary(resolvableId, "Jane Doe", "jane", null, true, "Deputy", UUID.randomUUID(), "PRO")));
     when(politicianDirectoryGateway.lookup(goneId)).thenReturn(Optional.empty());
 
     List<PoliticianSummary> candidates = service.listCandidates(electionId);

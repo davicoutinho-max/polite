@@ -5,6 +5,7 @@
     [canFollow]="canFollow()"
     [canContact]="canContact()"
     [canAffiliate]="canAffiliate()"
+    [isOwnProfile]="isOwnProfile()"
     (toggleFollow)="onToggleFollow()"
     (contact)="onContact()"
   />
@@ -44,7 +45,7 @@
         <app-profile-parliamentary [activity]="activity()" />
       }
       @case ('transparency') {
-        <app-profile-transparency [report]="transparency()" />
+        <app-profile-transparency [report]="transparency()" [politicianId]="politician().id" [isOwnProfile]="isOwnProfile()" />
       }
       @case ('timeline') {
         <app-profile-career [milestones]="career()" />

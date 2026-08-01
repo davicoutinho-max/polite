@@ -5,4 +5,10 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 
 public record CreateFundraiserRequest(
-    @NotBlank String title, String description, @NotBlank String category, @Positive long goalCents, LocalDate deadline, Boolean ledgerPublic) {}
+    @NotBlank String title,
+    String description,
+    @NotBlank String category,
+    @Positive long goalCents,
+    LocalDate deadline,
+    Boolean ledgerPublic,
+    String imageUrl) {}

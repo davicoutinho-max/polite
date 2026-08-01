@@ -44,7 +44,7 @@ class FundraiserServiceTest {
     when(fundraiserRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     UUID organizerId = UUID.randomUUID();
 
-    Fundraiser fundraiser = service.create(organizerId, "Help rebuild", "desc", FundraiserCategory.SOCIAL, 100_000, null, true);
+    Fundraiser fundraiser = service.create(organizerId, "Help rebuild", "desc", FundraiserCategory.SOCIAL, 100_000, null, true, null);
 
     assertThat(fundraiser.organizerAccountId()).isEqualTo(organizerId);
     ArgumentCaptor<FundraiserCreated> captor = ArgumentCaptor.forClass(FundraiserCreated.class);

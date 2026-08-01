@@ -1,10 +1,39 @@
 <div class="party">
   <header class="hero">
-    <div class="hero__cover" [style.background-image]="'url(' + party().coverUrl + ')'"></div>
+    @if (party().coverUrl) {
+      <div class="hero__cover" [style.background-image]="'url(' + party().coverUrl + ')'"></div>
+    } @else {
+      <div class="hero__cover hero__cover--placeholder"></div>
+    }
     <div class="hero__scrim"></div>
+    @if (isOwnParty()) {
+      <button
+        type="button"
+        class="hero__cover-edit"
+        [disabled]="uploadingCover()"
+        [attr.aria-label]="'aria.change-cover-photo' | translate: 'Change cover photo'"
+        (click)="pickCover()"
+      >
+        <ui-icon [name]="uploadingCover() ? 'progress_activity' : 'photo_camera'" [size]="18" />
+        {{ 'button.change-cover' | translate: 'Change cover' }}
+      </button>
+      <input #coverInput type="file" accept="image/*" hidden (change)="onCoverSelected($event)" />
+    }
     <div class="hero__body">
       <div class="hero__logo">
         <img [src]="party().logoUrl" [alt]="party().name" referrerpolicy="no-referrer" />
+        @if (isOwnParty()) {
+          <button
+            type="button"
+            class="hero__logo-edit"
+            [disabled]="uploadingLogo()"
+            [attr.aria-label]="'aria.change-profile-photo' | translate: 'Change profile photo'"
+            (click)="pickLogo()"
+          >
+            <ui-icon [name]="uploadingLogo() ? 'progress_activity' : 'photo_camera'" [size]="16" />
+          </button>
+          <input #logoInput type="file" accept="image/*" hidden (change)="onLogoSelected($event)" />
+        }
       </div>
       <div class="hero__info">
         <div class="hero__title-row">

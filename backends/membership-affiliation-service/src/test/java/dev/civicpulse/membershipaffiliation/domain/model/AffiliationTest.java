@@ -14,7 +14,7 @@ class AffiliationTest {
 
   @Test
   void requestStartsInRequestedStatus() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
 
     assertThat(affiliation.status()).isEqualTo(AffiliationStatus.REQUESTED);
     assertThat(affiliation.requestedAt()).contains(NOW);
@@ -22,7 +22,7 @@ class AffiliationTest {
 
   @Test
   void happyPathAdvancesThroughEveryStatusInOrder() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
 
     affiliation.startReview(NOW);
     assertThat(affiliation.status()).isEqualTo(AffiliationStatus.UNDER_REVIEW);
@@ -39,14 +39,14 @@ class AffiliationTest {
 
   @Test
   void cannotSkipAStatus() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
 
     assertThatThrownBy(() -> affiliation.approveByParty(NOW)).isInstanceOf(InvalidAffiliationTransitionException.class);
   }
 
   @Test
   void cannotAdvancePastAffiliated() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
     affiliation.startReview(NOW);
     affiliation.approveByParty(NOW);
     affiliation.sendToElectoralJustice(NOW);
@@ -57,7 +57,7 @@ class AffiliationTest {
 
   @Test
   void rejectIsReachableFromAnyNonTerminalStatus() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
 
     affiliation.reject(NOW);
 
@@ -66,7 +66,7 @@ class AffiliationTest {
 
   @Test
   void cannotRejectAnAlreadyAffiliatedRecord() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
     affiliation.startReview(NOW);
     affiliation.approveByParty(NOW);
     affiliation.sendToElectoralJustice(NOW);
@@ -77,7 +77,7 @@ class AffiliationTest {
 
   @Test
   void cannotRejectAnAlreadyRejectedRecord() {
-    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
     affiliation.reject(NOW);
 
     assertThatThrownBy(() -> affiliation.reject(NOW)).isInstanceOf(InvalidAffiliationTransitionException.class);

@@ -51,13 +51,25 @@ public class AffiliationService implements ManageAffiliationUseCase {
 
   @Override
   @Transactional
-  public Affiliation requestAffiliation(UUID citizenAccountId, UUID partyId, String city) {
+  public Affiliation requestAffiliation(
+      UUID citizenAccountId,
+      UUID partyId,
+      String city,
+      String voterRegistrationNumber,
+      String electoralZone,
+      String electoralSection,
+      String electoralState,
+      String electoralMunicipality,
+      String identityPhotoUrl) {
     if (affiliationRepository.existsActiveByCitizenAndParty(citizenAccountId, partyId)) {
       throw new ActiveAffiliationAlreadyExistsException();
     }
     Instant now = clock.instant();
     UUID affiliationId = UUID.randomUUID();
-    Affiliation affiliation = Affiliation.request(affiliationId, citizenAccountId, partyId, now);
+    Affiliation affiliation =
+        Affiliation.request(
+            affiliationId, citizenAccountId, partyId, voterRegistrationNumber, electoralZone, electoralSection, electoralState,
+            electoralMunicipality, identityPhotoUrl, now);
     Affiliation saved = affiliationRepository.save(affiliation);
     recordHistory(affiliationId, null, saved.status(), ChangedBy.CITIZEN, now);
     eventPublisher.publish(new AffiliationRequested(affiliationId, partyId, citizenAccountId, city, now));

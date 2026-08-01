@@ -53,7 +53,7 @@ class MembershipAffiliationRepositoryIntegrationTest {
     UUID id = UUID.randomUUID();
     UUID citizenId = UUID.randomUUID();
     UUID partyId = UUID.randomUUID();
-    Affiliation affiliation = Affiliation.request(id, citizenId, partyId, Instant.now());
+    Affiliation affiliation = Affiliation.request(id, citizenId, partyId, "12345678901", "001", "0010", "SP", "São Paulo", null, Instant.now());
     affiliationRepository.save(affiliation);
 
     try {
@@ -75,7 +75,7 @@ class MembershipAffiliationRepositoryIntegrationTest {
     UUID id = UUID.randomUUID();
     UUID citizenId = UUID.randomUUID();
     UUID partyId = UUID.randomUUID();
-    Affiliation affiliation = Affiliation.request(id, citizenId, partyId, Instant.now());
+    Affiliation affiliation = Affiliation.request(id, citizenId, partyId, "12345678901", "001", "0010", "SP", "São Paulo", null, Instant.now());
     affiliation.reject(Instant.now());
     affiliationRepository.save(affiliation);
 
@@ -89,7 +89,7 @@ class MembershipAffiliationRepositoryIntegrationTest {
   @Test
   void savesAndRetrievesMembershipFee() {
     UUID affiliationId = UUID.randomUUID();
-    affiliationRepository.save(Affiliation.request(affiliationId, UUID.randomUUID(), UUID.randomUUID(), Instant.now()));
+    affiliationRepository.save(Affiliation.request(affiliationId, UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, Instant.now()));
 
     UUID feeId = UUID.randomUUID();
     MembershipFee fee = MembershipFee.generate(feeId, affiliationId, "2026-99-" + System.nanoTime(), 5000, LocalDate.now().plusDays(30));

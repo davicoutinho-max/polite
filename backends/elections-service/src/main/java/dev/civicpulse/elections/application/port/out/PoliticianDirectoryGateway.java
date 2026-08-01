@@ -14,5 +14,12 @@ public interface PoliticianDirectoryGateway {
   Optional<PoliticianSummary> lookup(UUID politicianAccountId);
 
   record PoliticianSummary(
-      UUID accountId, String name, String handle, String avatarUrl, boolean verified, String office, String partyAcronym) {}
+      UUID accountId,
+      String name,
+      String handle,
+      String avatarUrl,
+      boolean verified,
+      String office,
+      UUID partyId,
+      String partyAcronym) {}
 }

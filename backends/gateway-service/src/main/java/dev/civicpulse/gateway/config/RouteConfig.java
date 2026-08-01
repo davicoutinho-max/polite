@@ -68,6 +68,7 @@ public class RouteConfig {
             r ->
                 r.path(
                         "/api/identity/accounts/register",
+                        "/api/identity/accounts/me/document-profile",
                         "/api/identity/accounts/*",
                         "/api/identity/accounts/*/permissions",
                         "/api/identity/accounts/*/verify-document")

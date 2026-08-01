@@ -1,7 +1,9 @@
 package dev.civicpulse.assistant.adapter.out.client;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.civicpulse.assistant.application.port.out.GeminiGateway;
 import dev.civicpulse.assistant.domain.exception.AiUnavailableException;
+import java.util.Base64;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +24,12 @@ class GeminiApiClient implements GeminiGateway {
   // size itself is the guardrail against runaway API cost from a single abusive caller — the
   // system instruction is the guardrail against off-topic/malicious *content*.
   private static final double TEMPERATURE = 0.3;
-  private static final int MAX_OUTPUT_TOKENS = 400;
+  // 2500 rather than a tighter per-answer budget because this now also backs multi-field JSON
+  // answers (e.g. GenerateSocialVariantsService's five variants in one call, which was observed
+  // truncating mid-string at 1200 — five real social-media-length texts plus JSON overhead adds
+  // up fast) — a single short Q&A answer still finishes well under this, so raising it doesn't
+  // make normal answers longer.
+  private static final int MAX_OUTPUT_TOKENS = 2500;
 
   private final RestClient restClient;
   private final GeminiProperties properties;
@@ -34,14 +41,24 @@ class GeminiApiClient implements GeminiGateway {
 
   @Override
   public String generateAnswer(String systemInstruction, String userPrompt) {
+    return call(systemInstruction, List.of(Part.text(userPrompt)));
+  }
+
+  @Override
+  public String generateAnswerWithDocument(String systemInstruction, String userPrompt, byte[] documentBytes, String mimeType) {
+    String base64Data = Base64.getEncoder().encodeToString(documentBytes);
+    return call(systemInstruction, List.of(Part.text(userPrompt), Part.inlineData(mimeType, base64Data)));
+  }
+
+  private String call(String systemInstruction, List<Part> userParts) {
     if (properties.apiKey() == null || properties.apiKey().isBlank()) {
       throw new AiUnavailableException(
           "GEMINI_API_KEY is not configured — copy assistant-service/.env.example to .env and set a real key");
     }
     GenerateContentRequest request =
         new GenerateContentRequest(
-            new SystemInstruction(List.of(new Part(systemInstruction))),
-            List.of(new Content("user", List.of(new Part(userPrompt)))),
+            new SystemInstruction(List.of(Part.text(systemInstruction))),
+            List.of(new Content("user", userParts)),
             new GenerationConfig(TEMPERATURE, MAX_OUTPUT_TOKENS),
             List.of(
                 new SafetySetting("HARM_CATEGORY_HARASSMENT", "BLOCK_MEDIUM_AND_ABOVE"),
@@ -83,7 +100,18 @@ class GeminiApiClient implements GeminiGateway {
 
   private record Content(String role, List<Part> parts) {}
 
-  private record Part(String text) {}
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private record Part(String text, InlineData inlineData) {
+    static Part text(String text) {
+      return new Part(text, null);
+    }
+
+    static Part inlineData(String mimeType, String base64Data) {
+      return new Part(null, new InlineData(mimeType, base64Data));
+    }
+  }
+
+  private record InlineData(String mimeType, String data) {}
 
   private record GenerationConfig(double temperature, int maxOutputTokens) {}
 

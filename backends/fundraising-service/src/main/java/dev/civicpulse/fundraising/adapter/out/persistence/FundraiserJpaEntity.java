@@ -40,6 +40,9 @@ public class FundraiserJpaEntity {
   @Column(name = "ledger_public", nullable = false)
   private boolean ledgerPublic;
 
+  @Column(name = "image_url")
+  private String imageUrl;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -56,6 +59,7 @@ public class FundraiserJpaEntity {
       int supportersCount,
       LocalDate deadline,
       boolean ledgerPublic,
+      String imageUrl,
       Instant createdAt) {
     this.id = id;
     this.organizerAccountId = organizerAccountId;
@@ -67,6 +71,7 @@ public class FundraiserJpaEntity {
     this.supportersCount = supportersCount;
     this.deadline = deadline;
     this.ledgerPublic = ledgerPublic;
+    this.imageUrl = imageUrl;
     this.createdAt = createdAt;
   }
 
@@ -108,6 +113,10 @@ public class FundraiserJpaEntity {
 
   public boolean isLedgerPublic() {
     return ledgerPublic;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
   }
 
   public Instant getCreatedAt() {

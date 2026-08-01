@@ -30,7 +30,7 @@ class PoliticianDirectoryAdapter implements PoliticianDirectoryGateway {
       return Optional.of(
           new PoliticianSummary(
               response.accountId(), response.name(), response.handle(), response.avatarUrl(), response.verified(), response.office(),
-              response.partyAcronym()));
+              response.partyId(), response.partyAcronym()));
     } catch (RestClientResponseException e) {
       if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
         return Optional.empty();
@@ -43,5 +43,12 @@ class PoliticianDirectoryAdapter implements PoliticianDirectoryGateway {
   }
 
   private record PoliticianResponse(
-      UUID accountId, String name, String handle, String avatarUrl, boolean verified, String office, String partyAcronym) {}
+      UUID accountId,
+      String name,
+      String handle,
+      String avatarUrl,
+      boolean verified,
+      String office,
+      UUID partyId,
+      String partyAcronym) {}
 }

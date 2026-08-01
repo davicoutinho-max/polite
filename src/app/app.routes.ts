@@ -123,6 +123,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/party/party-page').then((m) => m.PartyPage),
       },
       {
+        path: 'settings/social-connections',
+        title: 'Social Networks — CivicPulse',
+        canMatch: [requirePermission('publish-content')],
+        loadComponent: () =>
+          import('./features/settings/social-connections-page/social-connections-page').then((m) => m.SocialConnectionsPage),
+      },
+      {
         path: 'profile/:id',
         title: 'Profile — CivicPulse',
         loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),

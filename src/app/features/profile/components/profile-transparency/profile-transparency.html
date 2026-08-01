@@ -1,0 +1,116 @@
+<div class="transparency">
+  <div class="transparency__note">
+    <ui-icon name="verified" [fill]="true" [size]="18" />
+    <span>{{ 'label.public-data' | translate: 'Public data' }} · {{ report().lastUpdate }}</span>
+  </div>
+
+  <div class="metrics">
+    @for (metric of report().metrics; track metric.id) {
+      <ui-stat [icon]="metric.icon" [label]="metric.label" [value]="metric.value" [caption]="metric.caption" />
+    }
+  </div>
+
+  <ui-section [title]="'section.expense-breakdown' | translate: 'Expense breakdown'" icon="pie_chart">
+    <div class="expense__total">
+      <span>{{ 'label.total-reported-expenses' | translate: 'Total reported expenses' }}</span>
+      <strong>{{ report().totalExpense }}</strong>
+    </div>
+    <ul class="expenses">
+      @for (line of report().expenses; track line.category) {
+        <li class="expense">
+          <div class="expense__row">
+            <span>{{ line.category }}</span>
+            <span class="expense__amount">R$ {{ line.amount.toLocaleString('pt-BR') }}</span>
+          </div>
+          <ui-progress [value]="line.share" color="secondary" />
+        </li>
+      }
+    </ul>
+  </ui-section>
+
+  <ui-section
+    [title]="'section.accountability-disclosures' | translate: 'Accountability (prestação de contas)'"
+    icon="fact_check"
+  >
+    <p class="disclosures__intro">
+      {{
+        'hint.accountability-intro'
+          | translate
+            : 'Each category below is one real type of public money this politician is accountable for. An AI reviewer reads the attached proof and checks it against the declared amount.'
+      }}
+    </p>
+
+    <div class="disclosures">
+      @for (category of categories; track category.value) {
+        <div class="disclosure">
+          <div class="disclosure__head">
+            <span class="disclosure__icon"><ui-icon [name]="category.icon" [size]="18" [fill]="true" /></span>
+            <span class="disclosure__label">{{ categoryLabel(category.value) }}</span>
+            @if (latestOf(category.value); as latest) {
+              @if (latest.status === 'approved') {
+                <ui-tag [label]="'label.approved' | translate: 'Approved'" severity="success" icon="check_circle" />
+              } @else {
+                <ui-tag [label]="'label.rejected' | translate: 'Rejected'" severity="danger" icon="cancel" />
+              }
+            } @else {
+              <ui-tag [label]="'label.not-submitted' | translate: 'Not submitted'" severity="neutral" />
+            }
+          </div>
+
+          @if (latestOf(category.value); as latest) {
+            <div class="disclosure__latest">
+              <span class="disclosure__amount">{{ money(latest.declaredAmountCents) }}</span>
+              <span class="disclosure__feedback">{{ latest.aiFeedback }}</span>
+            </div>
+          }
+
+          @if (isOwnProfile()) {
+            @if (isActive(category.value)) {
+              <div class="disclosure__form">
+                <label class="disclosure__field">
+                  <span>{{ 'label.declared-amount' | translate: 'Declared amount' }}</span>
+                  <p-inputnumber
+                    [ngModel]="declaredAmount()"
+                    (ngModelChange)="declaredAmount.set($event)"
+                    mode="currency"
+                    currency="BRL"
+                    locale="pt-BR"
+                    [min]="0"
+                  />
+                </label>
+                <label class="disclosure__field">
+                  <span>{{ 'label.supporting-document' | translate: 'Supporting document (receipt/invoice)' }}</span>
+                  <p-fileupload
+                    mode="basic"
+                    accept="image/*,.pdf"
+                    chooseIcon="pi pi-file"
+                    [chooseLabel]="documentFile()?.name ?? ('label.choose-file' | translate: 'Choose file')"
+                    [auto]="true"
+                    (onSelect)="onDocumentSelected($event)"
+                  />
+                </label>
+                <div class="disclosure__actions">
+                  <ui-button [label]="'button.cancel' | translate: 'Cancel'" variant="text" [disabled]="submitting()" (click)="cancelSubmission()" />
+                  <ui-button
+                    [label]="submitting() ? ('label.reviewing' | translate: 'AI is reviewing…') : ('button.submit-for-ai-review' | translate: 'Submit for AI review')"
+                    icon="smart_toy"
+                    variant="filled"
+                    [disabled]="!canSubmit() || submitting()"
+                    (click)="submit()"
+                  />
+                </div>
+              </div>
+            } @else {
+              <ui-button
+                [label]="latestOf(category.value) ? ('button.try-again' | translate: 'Try again') : ('button.submit-disclosure' | translate: 'Submit disclosure')"
+                icon="upload_file"
+                variant="outlined"
+                (click)="startSubmission(category.value)"
+              />
+            }
+          }
+        </div>
+      }
+    </div>
+  </ui-section>
+</div>

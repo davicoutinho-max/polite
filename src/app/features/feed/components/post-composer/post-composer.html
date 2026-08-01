@@ -162,11 +162,39 @@
       />
     </label>
 
+    @if (hasSocialConnections()) {
+      <div class="composer__social">
+        <span class="composer__social-label">{{ 'label.publish-to-networks' | translate: 'Also publish to' }}</span>
+        @for (connection of socialConnections(); track connection.platform) {
+          <button
+            type="button"
+            class="social-chip"
+            [class.social-chip--active]="isSocialPlatformSelected(connection.platform)"
+            (click)="toggleSocialPlatform(connection.platform)"
+          >
+            <ui-icon
+              [name]="connection.platform === 'x' ? 'flutter_dash' : connection.platform === 'instagram' ? 'photo_camera' : 'thumb_up'"
+              [size]="16"
+            />
+            <span>{{ connection.platform === 'x' ? 'X' : connection.platform === 'instagram' ? 'Instagram' : 'Facebook' }}</span>
+          </button>
+        }
+      </div>
+    }
+
     <div class="composer__actions">
       <div class="composer__tools">
         <p-fileupload mode="basic" accept="image/*" [auto]="true" chooseIcon="pi pi-image" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onImageSelected($event)" />
         <ui-icon-button icon="poll" [ariaLabel]="'aria.add-poll' | translate: 'Add poll'" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
         <p-fileupload mode="basic" [auto]="true" chooseIcon="pi pi-paperclip" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onFileSelected($event)" />
+        @if (canGenerateVariants()) {
+          <ui-icon-button
+            icon="auto_awesome"
+            [ariaLabel]="'aria.generate-social-variants' | translate: 'Generate social media versions'"
+            [iconSize]="20"
+            (click)="openVariantsDialog()"
+          />
+        }
       </div>
       <ui-button [label]="'button.post' | translate: 'Post'" variant="filled" [disabled]="!canPublish() || submitting()" (click)="onPublish()" />
     </div>
@@ -176,3 +204,32 @@
     }
   </div>
 </div>
+
+<ui-dialog
+  [open]="showVariantsDialog()"
+  [title]="'label.social-media-versions' | translate: 'Social media versions'"
+  [closeLabel]="'button.close' | translate: 'Close'"
+  [maxWidth]="560"
+  (close)="closeVariantsDialog()"
+>
+  @if (variantsLoading()) {
+    <div class="variants__loading">
+      <ui-icon name="progress_activity" [size]="24" class="variants__spinner" />
+      <span>{{ 'hint.generating-variants' | translate: 'The AI is writing versions for each network…' }}</span>
+    </div>
+  } @else if (variantsError()) {
+    <p class="composer__error">
+      <ui-icon name="error" [size]="16" />
+      {{ 'error.generate-variants-failed' | translate: 'Could not generate social media versions — please try again.' }}
+    </p>
+  } @else if (variants()) {
+    <div class="variants">
+      <ui-tabs [tabs]="variantTabs" [active]="activeVariantTab()" (activeChange)="activeVariantTab.set($event)" />
+      <textarea class="variants__text" rows="8" readonly [value]="activeVariantText()"></textarea>
+      <ui-button [label]="'button.copy' | translate: 'Copy'" icon="content_copy" variant="filled" [block]="true" (click)="copyActiveVariant()" />
+      <p class="variants__hint">
+        {{ 'hint.social-variants-manual' | translate: 'Review and edit as needed, then paste it into each network yourself for now.' }}
+      </p>
+    </div>
+  }
+</ui-dialog>

@@ -23,6 +23,7 @@ public final class Fundraiser {
   private int supportersCount;
   private final LocalDate deadline;
   private final boolean ledgerPublic;
+  private final String imageUrl;
   private final Instant createdAt;
 
   private Fundraiser(
@@ -36,6 +37,7 @@ public final class Fundraiser {
       int supportersCount,
       LocalDate deadline,
       boolean ledgerPublic,
+      String imageUrl,
       Instant createdAt) {
     this.id = Objects.requireNonNull(id);
     this.organizerAccountId = Objects.requireNonNull(organizerAccountId);
@@ -50,6 +52,7 @@ public final class Fundraiser {
     this.supportersCount = supportersCount;
     this.deadline = deadline;
     this.ledgerPublic = ledgerPublic;
+    this.imageUrl = imageUrl;
     this.createdAt = Objects.requireNonNull(createdAt);
   }
 
@@ -62,8 +65,9 @@ public final class Fundraiser {
       long goalCents,
       LocalDate deadline,
       boolean ledgerPublic,
+      String imageUrl,
       Instant now) {
-    return new Fundraiser(id, organizerAccountId, title, description, category, goalCents, 0, 0, deadline, ledgerPublic, now);
+    return new Fundraiser(id, organizerAccountId, title, description, category, goalCents, 0, 0, deadline, ledgerPublic, imageUrl, now);
   }
 
   public static Fundraiser reconstitute(
@@ -77,9 +81,11 @@ public final class Fundraiser {
       int supportersCount,
       LocalDate deadline,
       boolean ledgerPublic,
+      String imageUrl,
       Instant createdAt) {
     return new Fundraiser(
-        id, organizerAccountId, title, description, category, goalCents, raisedCents, supportersCount, deadline, ledgerPublic, createdAt);
+        id, organizerAccountId, title, description, category, goalCents, raisedCents, supportersCount, deadline, ledgerPublic, imageUrl,
+        createdAt);
   }
 
   /** Returns {@code true} exactly once — the call that pushes {@code raisedCents} from below the
@@ -140,6 +146,10 @@ public final class Fundraiser {
 
   public boolean ledgerPublic() {
     return ledgerPublic;
+  }
+
+  public Optional<String> imageUrl() {
+    return Optional.ofNullable(imageUrl);
   }
 
   public Instant createdAt() {

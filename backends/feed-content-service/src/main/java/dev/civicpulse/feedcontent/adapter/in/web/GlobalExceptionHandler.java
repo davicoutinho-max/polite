@@ -5,6 +5,8 @@ import dev.civicpulse.feedcontent.domain.exception.MediaUploadFailedException;
 import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
 import dev.civicpulse.feedcontent.domain.exception.PollClosedException;
 import dev.civicpulse.feedcontent.domain.exception.PostNotFoundException;
+import dev.civicpulse.feedcontent.domain.exception.SocialConnectionNotFoundException;
+import dev.civicpulse.feedcontent.domain.exception.SocialOAuthException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -52,6 +54,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MediaUploadFailedException.class)
   public ProblemDetail handleMediaUploadFailed(MediaUploadFailedException ex) {
     return problem(HttpStatus.BAD_GATEWAY, "Media upload failed", ex.getMessage());
+  }
+
+  @ExceptionHandler(SocialConnectionNotFoundException.class)
+  public ProblemDetail handleSocialConnectionNotFound(SocialConnectionNotFoundException ex) {
+    return problem(HttpStatus.NOT_FOUND, "Social connection not found", ex.getMessage());
+  }
+
+  @ExceptionHandler(SocialOAuthException.class)
+  public ProblemDetail handleSocialOAuth(SocialOAuthException ex) {
+    return problem(HttpStatus.BAD_GATEWAY, "Social network connection failed", ex.getMessage());
   }
 
   private static ProblemDetail problem(HttpStatus status, String title, String detail) {

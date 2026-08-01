@@ -18,6 +18,7 @@ class FundraiserMapper {
         entity.getSupportersCount(),
         entity.getDeadline(),
         entity.isLedgerPublic(),
+        entity.getImageUrl(),
         entity.getCreatedAt());
   }
 
@@ -33,6 +34,7 @@ class FundraiserMapper {
         fundraiser.supportersCount(),
         fundraiser.deadline().orElse(null),
         fundraiser.ledgerPublic(),
+        fundraiser.imageUrl().orElse(null),
         fundraiser.createdAt());
   }
 }

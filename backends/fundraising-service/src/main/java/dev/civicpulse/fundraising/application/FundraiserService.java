@@ -31,9 +31,17 @@ public class FundraiserService implements ManageFundraiserUseCase, GetFundraiser
   @Override
   @Transactional
   public Fundraiser create(
-      UUID organizerAccountId, String title, String description, FundraiserCategory category, long goalCents, LocalDate deadline, boolean ledgerPublic) {
+      UUID organizerAccountId,
+      String title,
+      String description,
+      FundraiserCategory category,
+      long goalCents,
+      LocalDate deadline,
+      boolean ledgerPublic,
+      String imageUrl) {
     Fundraiser fundraiser =
-        Fundraiser.create(UUID.randomUUID(), organizerAccountId, title, description, category, goalCents, deadline, ledgerPublic, clock.instant());
+        Fundraiser.create(
+            UUID.randomUUID(), organizerAccountId, title, description, category, goalCents, deadline, ledgerPublic, imageUrl, clock.instant());
     Fundraiser saved = fundraiserRepository.save(fundraiser);
     eventPublisher.publish(new FundraiserCreated(saved.id(), organizerAccountId, category.code(), goalCents, clock.instant()));
     return saved;

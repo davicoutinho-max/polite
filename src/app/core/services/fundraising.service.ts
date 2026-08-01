@@ -17,6 +17,7 @@ interface FundraiserResponseDto {
   readonly supportersCount: number;
   readonly deadline: string | null;
   readonly ledgerPublic: boolean;
+  readonly imageUrl: string | null;
 }
 
 interface AccountResponseDto {
@@ -76,6 +77,7 @@ export class FundraisingService {
         goalCents: Math.round(input.goal * 100),
         deadline: input.deadline || null,
         ledgerPublic: true,
+        imageUrl: input.imageUrl || null,
       })
       .pipe(switchMap((dto) => this.toFundraiser(dto)))
       .subscribe({
@@ -127,6 +129,7 @@ export class FundraisingService {
           supporters: dto.supportersCount,
           deadline: dto.deadline ?? 'Open-ended',
           ledgerPublic: dto.ledgerPublic,
+          imageUrl: dto.imageUrl,
         }),
       ),
     );

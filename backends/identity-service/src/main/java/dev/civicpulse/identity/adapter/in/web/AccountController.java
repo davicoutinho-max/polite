@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -108,6 +109,15 @@ public class AccountController {
   @GetMapping("/{id}/payment-profile")
   public AccountPaymentProfileResponse getPaymentProfile(@PathVariable UUID id) {
     return AccountPaymentProfileResponse.from(getAccountUseCase.getPaymentProfile(AccountId.of(id)));
+  }
+
+  /** Self-service, Gateway-routed — lets a citizen's own client prefill their real name/CPF
+   * (e.g. on the petition-signature form) without ever letting them type a different one. The id
+   * always comes from the gateway-validated session header, never a path parameter, so this can
+   * only ever reveal the caller's own document — see AccountPaymentProfileResponse's javadoc. */
+  @GetMapping("/me/document-profile")
+  public AccountPaymentProfileResponse getMyDocumentProfile(@RequestHeader("X-Account-Id") UUID accountId) {
+    return AccountPaymentProfileResponse.from(getAccountUseCase.getPaymentProfile(AccountId.of(accountId)));
   }
 
   @PostMapping("/{id}/verify-document")

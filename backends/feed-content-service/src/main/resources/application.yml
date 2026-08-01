@@ -2,6 +2,12 @@ spring:
   application:
     name: feed-content-service
 
+  # Loads feed-content-service/.env (KEY=VALUE, gitignored — see .env.example) as extra properties,
+  # so the Meta/X keys below can be edited in a local file instead of exported as a shell env var
+  # every time this service is launched with `java -jar`. Safe if the file doesn't exist.
+  config:
+    import: "optional:file:.env[.properties]"
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/feed_content_service
     username: ${DB_USERNAME:feed_content_service_app}
@@ -47,6 +53,25 @@ minio:
   # Browser-facing origin for object URLs — same MinIO instance, but this is the host-reachable
   # address (the app itself may talk to MinIO over a different network path than the browser).
   public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
+
+feed:
+  social:
+    # Real values live in feed-content-service/.env (gitignored), never here — see MetaProperties.
+    meta:
+      app-id: ${META_APP_ID:}
+      app-secret: ${META_APP_SECRET:}
+      # Must hit the gateway (the browser-facing entry point), not this service's own port
+      # directly — Meta/X redirect the citizen's own browser here after consent.
+      redirect-uri: ${META_REDIRECT_URI:http://localhost:8080/api/feed/social-connections/meta/callback}
+      graph-api-version: ${META_GRAPH_API_VERSION:v21.0}
+    x:
+      client-id: ${X_CLIENT_ID:}
+      client-secret: ${X_CLIENT_SECRET:}
+      redirect-uri: ${X_REDIRECT_URI:http://localhost:8080/api/feed/social-connections/x/callback}
+    # Where a citizen's browser lands after finishing (or cancelling) an OAuth connect flow —
+    # SocialConnectionController redirects here rather than returning JSON, since the callback is
+    # the provider's own browser redirect, not an XHR from the frontend.
+    frontend-redirect-base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
 
 management:
   endpoints:

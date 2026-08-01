@@ -165,13 +165,45 @@
     @case ('form') {
       <form class="sign-form" (submit)="submitSignatureForm(); $event.preventDefault()">
         <label class="sign-form__field">
-          <span>{{ 'label.full-name' | translate: 'Full name' }}</span>
-          <input pInputText type="text" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+          <span>
+            {{ 'label.full-name' | translate: 'Full name' }}
+            @if (identityLocked()) {
+              <ui-icon name="lock" [size]="13" class="sign-form__lock-icon" />
+            }
+          </span>
+          <input
+            pInputText
+            type="text"
+            [ngModel]="fullName()"
+            (ngModelChange)="fullName.set($event)"
+            name="fullName"
+            [readonly]="identityLocked()"
+            [class.sign-form__input--locked]="identityLocked()"
+          />
         </label>
         <label class="sign-form__field">
-          <span>{{ 'label.cpf' | translate: 'CPF' }}</span>
-          <input pInputText type="text" [ngModel]="cpf()" (ngModelChange)="cpf.set($event)" name="cpf" placeholder="000.000.000-00" />
+          <span>
+            {{ 'label.cpf' | translate: 'CPF' }}
+            @if (identityLocked()) {
+              <ui-icon name="lock" [size]="13" class="sign-form__lock-icon" />
+            }
+          </span>
+          <input
+            pInputText
+            type="text"
+            [ngModel]="cpf()"
+            (ngModelChange)="cpf.set($event)"
+            name="cpf"
+            placeholder="000.000.000-00"
+            [readonly]="identityLocked()"
+            [class.sign-form__input--locked]="identityLocked()"
+          />
         </label>
+        @if (identityLocked()) {
+          <p class="sign-form__locked-hint">
+            {{ 'hint.identity-locked' | translate: "This is the name and CPF already on file with your account — it can't be changed here." }}
+          </p>
+        }
         <div class="sign-form__row">
           <label class="sign-form__field">
             <span>{{ 'label.birth-date' | translate: 'Birth date' }}</span>
@@ -195,8 +227,22 @@
         }
 
         <label class="sign-form__field">
-          <span>{{ 'label.email-for-code' | translate: 'Email (your verification code is sent here)' }}</span>
-          <input pInputText type="email" [ngModel]="contact()" (ngModelChange)="contact.set($event)" name="contact" placeholder="you@example.com" />
+          <span>
+            {{ 'label.email-for-code' | translate: 'Email (your verification code is sent here)' }}
+            @if (emailLocked()) {
+              <ui-icon name="lock" [size]="13" class="sign-form__lock-icon" />
+            }
+          </span>
+          <input
+            pInputText
+            type="email"
+            [ngModel]="contact()"
+            (ngModelChange)="contact.set($event)"
+            name="contact"
+            placeholder="you@example.com"
+            [readonly]="emailLocked()"
+            [class.sign-form__input--locked]="emailLocked()"
+          />
         </label>
 
         <label class="sign-form__field">

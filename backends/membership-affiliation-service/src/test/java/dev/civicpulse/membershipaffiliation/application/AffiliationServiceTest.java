@@ -53,7 +53,7 @@ class AffiliationServiceTest {
     when(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).thenReturn(false);
     when(affiliationRepository.save(any(Affiliation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    Affiliation result = service.requestAffiliation(citizenId, partyId, "São Paulo");
+    Affiliation result = service.requestAffiliation(citizenId, partyId, "São Paulo", "12345678901", "001", "0010", "SP", "São Paulo", null);
 
     assertThat(result.status()).isEqualTo(AffiliationStatus.UNDER_REVIEW);
     verify(eventPublisher, times(2)).publish(org.mockito.ArgumentMatchers.any(DomainEvent.class));
@@ -66,7 +66,7 @@ class AffiliationServiceTest {
     UUID partyId = UUID.randomUUID();
     when(affiliationRepository.existsActiveByCitizenAndParty(citizenId, partyId)).thenReturn(true);
 
-    assertThatThrownBy(() -> service.requestAffiliation(citizenId, partyId, "São Paulo"))
+    assertThatThrownBy(() -> service.requestAffiliation(citizenId, partyId, "São Paulo", "12345678901", "001", "0010", "SP", "São Paulo", null))
         .isInstanceOf(ActiveAffiliationAlreadyExistsException.class);
 
     verify(affiliationRepository, never()).save(any());
@@ -75,7 +75,7 @@ class AffiliationServiceTest {
   @Test
   void confirmAffiliationIssuesACardAndPublishesConfirmedAndCardIssuedEvents() {
     UUID affiliationId = UUID.randomUUID();
-    Affiliation affiliation = Affiliation.request(affiliationId, UUID.randomUUID(), UUID.randomUUID(), NOW);
+    Affiliation affiliation = Affiliation.request(affiliationId, UUID.randomUUID(), UUID.randomUUID(), "12345678901", "001", "0010", "SP", "São Paulo", null, NOW);
     affiliation.startReview(NOW);
     affiliation.approveByParty(NOW);
     affiliation.sendToElectoralJustice(NOW);

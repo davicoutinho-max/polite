@@ -61,7 +61,7 @@ export class WalletPage {
   }
 
   protected onRequest(payload: AffiliationRequestPayload): void {
-    this.wallet.requestFiliation(payload.partyId, payload.city);
+    this.wallet.requestFiliation(payload);
   }
 
   protected onAdvance(): void {

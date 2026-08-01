@@ -79,6 +79,14 @@ public final class Party {
     return new Party(id, name, acronym, number, ideology, spectrum, foundedYear, president, logoUrl, memberCount, updatedAt);
   }
 
+  /** Self-service update — a party changing its own logo. (Cover photo lives in
+   * party-management-service's {@code PartyProfile} instead, alongside history/program/statute —
+   * see that service's {@code ManagePartyProfileUseCase}.) */
+  public void updateLogo(String logoUrl, Instant now) {
+    this.logoUrl = logoUrl;
+    this.updatedAt = now;
+  }
+
   public void incrementMembers(Instant now) {
     this.memberCount++;
     this.updatedAt = now;
