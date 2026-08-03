@@ -2,12 +2,6 @@
 
 .parliamentary { display: flex; flex-direction: column; gap: var(--cp-space-lg); }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--cp-space-md);
-}
-
 .committees {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: 1fr; gap: var(--cp-space-md);

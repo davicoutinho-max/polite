@@ -9,6 +9,7 @@ import dev.civicpulse.legislative.adapter.in.web.dto.SocialLinkResponse;
 import dev.civicpulse.legislative.adapter.in.web.dto.TeamMemberResponse;
 import dev.civicpulse.legislative.adapter.in.web.dto.UpdateDossierRequest;
 import dev.civicpulse.legislative.application.port.in.PoliticianDossierUseCase;
+import dev.civicpulse.legislative.domain.exception.NotDossierOwnerException;
 import dev.civicpulse.legislative.domain.model.SocialPlatform;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,8 +41,12 @@ public class PoliticianDossierController {
     return DossierResponse.from(dossierUseCase.getDossier(politicianAccountId));
   }
 
+  /** Self-service only — writes require the gateway-validated caller to be the same politician
+   * the dossier belongs to (see NotDossierOwnerException); reads above stay public. */
   @PutMapping("/dossier")
-  public DossierResponse updateDossier(@PathVariable UUID politicianAccountId, @RequestBody UpdateDossierRequest request) {
+  public DossierResponse updateDossier(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @RequestBody UpdateDossierRequest request) {
+    requireOwner(politicianAccountId, accountId);
     return DossierResponse.from(
         dossierUseCase.updateDossier(
             politicianAccountId, request.education(), request.profession(), request.patrimony(), request.email(), request.phone(), request.officeDetail()));
@@ -53,7 +59,9 @@ public class PoliticianDossierController {
 
   @PostMapping("/mandates")
   @ResponseStatus(HttpStatus.CREATED)
-  public MandateResponse addMandate(@PathVariable UUID politicianAccountId, @Valid @RequestBody AddMandateRequest request) {
+  public MandateResponse addMandate(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @Valid @RequestBody AddMandateRequest request) {
+    requireOwner(politicianAccountId, accountId);
     return MandateResponse.from(dossierUseCase.addMandate(politicianAccountId, request.role(), request.period(), request.current()));
   }
 
@@ -64,7 +72,9 @@ public class PoliticianDossierController {
 
   @PostMapping("/social-links")
   @ResponseStatus(HttpStatus.CREATED)
-  public SocialLinkResponse addSocialLink(@PathVariable UUID politicianAccountId, @Valid @RequestBody AddSocialLinkRequest request) {
+  public SocialLinkResponse addSocialLink(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @Valid @RequestBody AddSocialLinkRequest request) {
+    requireOwner(politicianAccountId, accountId);
     return SocialLinkResponse.from(
         dossierUseCase.addSocialLink(
             politicianAccountId, SocialPlatform.fromCode(request.platform()), request.label(), request.handle(), request.url()));
@@ -77,7 +87,15 @@ public class PoliticianDossierController {
 
   @PostMapping("/team")
   @ResponseStatus(HttpStatus.CREATED)
-  public TeamMemberResponse addTeamMember(@PathVariable UUID politicianAccountId, @Valid @RequestBody AddTeamMemberRequest request) {
+  public TeamMemberResponse addTeamMember(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @Valid @RequestBody AddTeamMemberRequest request) {
+    requireOwner(politicianAccountId, accountId);
     return TeamMemberResponse.from(dossierUseCase.addTeamMember(politicianAccountId, request.name(), request.role(), request.avatarUrl()));
+  }
+
+  private static void requireOwner(UUID politicianAccountId, UUID callerAccountId) {
+    if (!politicianAccountId.equals(callerAccountId)) {
+      throw new NotDossierOwnerException(politicianAccountId);
+    }
   }
 }

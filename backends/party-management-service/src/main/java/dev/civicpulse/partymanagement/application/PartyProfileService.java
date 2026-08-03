@@ -41,9 +41,9 @@ public class PartyProfileService implements ManagePartyProfileUseCase {
 
   @Override
   @Transactional
-  public PartyProfile updateProfile(UUID partyId, String history, String program, String statuteUrl, String coverUrl) {
+  public PartyProfile updateProfile(UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl) {
     PartyProfile profile = profileRepository.findByPartyId(partyId).orElseThrow(() -> new PartyProfileNotFoundException(partyId));
-    profile.update(history, program, statuteUrl, coverUrl, clock.instant());
+    profile.update(history, program, statuteUrl, coverUrl, videoUrl, clock.instant());
     PartyProfile saved = profileRepository.save(profile);
     eventPublisher.publish(new PartyProfileUpdated(partyId, saved.updatedAt()));
     return saved;

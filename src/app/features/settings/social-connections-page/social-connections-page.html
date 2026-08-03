@@ -9,81 +9,69 @@
   />
 
   @if (loading()) {
-    <p class="hint">{{ 'hint.loading' | translate: 'Loading…' }}</p>
-  }
-
-  <div class="social-connections__grid">
-    <ui-section [title]="'section.meta-connection' | translate: 'Facebook & Instagram'" icon="thumb_up">
-      <p class="hint">
-        {{
-          'hint.meta-connection'
-            | translate: 'One login connects both your Facebook Page and its linked Instagram Business account.'
-        }}
-      </p>
-
+    <ul class="conn-list">
+      @for (i of [1, 2, 3]; track i) {
+        <li class="conn-list__row">
+          <ui-skeleton shape="circle" [width]="22" />
+          <div class="conn-list__body">
+            <ui-skeleton width="100px" height="14px" />
+            <ui-skeleton width="200px" height="12px" />
+          </div>
+          <ui-skeleton shape="rect" width="90px" height="24px" />
+          <ui-skeleton shape="rect" width="110px" height="32px" />
+        </li>
+      }
+    </ul>
+  } @else {
+    <ul class="conn-list">
       @for (platform of metaPlatforms; track platform) {
-        <div class="connection-row">
-          <div class="connection-row__info">
-            <ui-icon [name]="platform === 'facebook' ? 'thumb_up' : 'photo_camera'" [size]="20" />
-            <span>{{ platformLabel(platform) }}</span>
-            @if (connectionFor(platform); as conn) {
-              <ui-tag [label]="conn.externalAccountName ?? conn.externalAccountId" severity="success" icon="check_circle" />
-            } @else {
-              <ui-tag [label]="'label.not-connected' | translate: 'Not connected'" severity="neutral" />
+        <li class="conn-list__row">
+          <ui-icon [name]="platform === 'facebook' ? 'thumb_up' : 'photo_camera'" [size]="22" />
+          <div class="conn-list__body">
+            <span class="conn-list__name">{{ platformLabel(platform) }}</span>
+            @if (platform === 'facebook') {
+              <span class="conn-list__hint">
+                {{ 'hint.meta-connection' | translate: "One login connects both your Facebook Page and Instagram." }}
+              </span>
             }
           </div>
-          @if (connectionFor(platform)) {
-            <ui-button
-              [label]="'button.disconnect' | translate: 'Disconnect'"
-              variant="outlined"
-              icon="link_off"
-              (click)="disconnect(platform)"
-            />
-          }
-        </div>
-      }
-
-      @if (!connectionFor('facebook')) {
-        <ui-button
-          [label]="'button.connect-meta' | translate: 'Connect with Facebook'"
-          icon="link"
-          [disabled]="connecting() === 'meta'"
-          (click)="connectMeta()"
-        />
-      }
-    </ui-section>
-
-    <ui-section [title]="'section.x-connection' | translate: 'X (Twitter)'" icon="flutter_dash">
-      <p class="hint">
-        {{
-          'hint.x-connection'
-            | translate: "Posting via X's API requires paid access on our app — connecting is still useful once that's active."
-        }}
-      </p>
-
-      <div class="connection-row">
-        <div class="connection-row__info">
-          <ui-icon name="flutter_dash" [size]="20" />
-          <span>X</span>
-          @if (connectionFor('x'); as conn) {
-            <ui-tag [label]="'@' + (conn.externalAccountName ?? conn.externalAccountId)" severity="success" icon="check_circle" />
+          @if (connectionFor(platform); as conn) {
+            <ui-tag [label]="conn.externalAccountName ?? conn.externalAccountId" severity="success" icon="check_circle" />
           } @else {
             <ui-tag [label]="'label.not-connected' | translate: 'Not connected'" severity="neutral" />
           }
+          @if (connectionFor(platform)) {
+            <ui-button [label]="'button.disconnect' | translate: 'Disconnect'" variant="outlined" icon="link_off" (click)="disconnect(platform)" />
+          } @else if (platform === 'facebook') {
+            <ui-button
+              [label]="'button.connect-meta' | translate: 'Connect'"
+              icon="link"
+              [disabled]="connecting() === 'meta'"
+              (click)="connectMeta()"
+            />
+          }
+        </li>
+      }
+
+      <li class="conn-list__row">
+        <ui-icon name="flutter_dash" [size]="22" />
+        <div class="conn-list__body">
+          <span class="conn-list__name">X</span>
+          <span class="conn-list__hint">
+            {{ 'hint.x-connection' | translate: "Posting via X's API requires paid access on our app." }}
+          </span>
         </div>
+        @if (connectionFor('x'); as conn) {
+          <ui-tag [label]="'@' + (conn.externalAccountName ?? conn.externalAccountId)" severity="success" icon="check_circle" />
+        } @else {
+          <ui-tag [label]="'label.not-connected' | translate: 'Not connected'" severity="neutral" />
+        }
         @if (connectionFor('x')) {
           <ui-button [label]="'button.disconnect' | translate: 'Disconnect'" variant="outlined" icon="link_off" (click)="disconnect('x')" />
+        } @else {
+          <ui-button [label]="'button.connect-x' | translate: 'Connect'" icon="link" [disabled]="connecting() === 'x'" (click)="connectX()" />
         }
-      </div>
-
-      @if (!connectionFor('x')) {
-        <ui-button
-          [label]="'button.connect-x' | translate: 'Connect with X'"
-          icon="link"
-          [disabled]="connecting() === 'x'"
-          (click)="connectX()"
-        />
-      }
-    </ui-section>
-  </div>
+      </li>
+    </ul>
+  }
 </div>

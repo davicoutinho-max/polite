@@ -13,6 +13,7 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiAvatar } from '../../shared/ui/ui-avatar/ui-avatar';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { CompactNumberPipe } from '../../shared/pipes/compact-number.pipe';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../core/services/translate.service';
@@ -37,6 +38,7 @@ const PAGE_SIZE = 12;
     UiIcon,
     UiAvatar,
     UiTag,
+    UiSkeleton,
     CompactNumberPipe,
     TranslatePipe,
   ],
@@ -49,6 +51,7 @@ export class PoliticiansPage {
   private readonly translate = inject(TranslateService);
 
   protected readonly canFollow = computed(() => this.session.can('follow'));
+  protected readonly loading = this.directory.politiciansLoading;
 
   // ---- Select options (with an "all" entry) ----
   protected readonly officeSelect = computed<FilterOption[]>(() => [

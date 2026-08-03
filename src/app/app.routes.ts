@@ -130,6 +130,14 @@ export const routes: Routes = [
           import('./features/settings/social-connections-page/social-connections-page').then((m) => m.SocialConnectionsPage),
       },
       {
+        // Must come before 'profile/:id' — otherwise that route's :id param would swallow the
+        // literal "edit" segment.
+        path: 'profile/edit',
+        title: 'Edit Profile — CivicPulse',
+        canMatch: [requirePermission('publish-content')],
+        loadComponent: () => import('./features/profile/edit-profile-page/edit-profile-page').then((m) => m.EditProfilePage),
+      },
+      {
         path: 'profile/:id',
         title: 'Profile — CivicPulse',
         loadComponent: () => import('./features/profile/profile').then((m) => m.Profile),

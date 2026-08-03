@@ -14,6 +14,7 @@ import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
 import { UiAvatar } from '../../../shared/ui/ui-avatar/ui-avatar';
 import { UiIcon } from '../../../shared/ui/ui-icon/ui-icon';
 import { UiEmpty } from '../../../shared/ui/ui-empty/ui-empty';
+import { UiSkeleton } from '../../../shared/ui/ui-skeleton/ui-skeleton';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../../core/services/translate.service';
 
@@ -32,7 +33,7 @@ const RESULTS_PREVIEW_LIMIT = 10;
 @Component({
   selector: 'app-election-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe, FormsModule, AutoComplete, PageHeader, UiButton, UiCard, UiTag, UiAvatar, UiIcon, UiEmpty, TranslatePipe],
+  imports: [RouterLink, DecimalPipe, FormsModule, AutoComplete, PageHeader, UiButton, UiCard, UiTag, UiAvatar, UiIcon, UiEmpty, UiSkeleton, TranslatePipe],
   templateUrl: './election-detail.html',
   styleUrl: './election-detail.scss',
 })
@@ -49,6 +50,7 @@ export class ElectionDetailPage {
   protected readonly election = computed(() => this.electionService.byId(this.id()));
   protected readonly candidates = computed(() => this.electionService.candidatesOf(this.id()));
   protected readonly results = computed(() => this.electionService.resultsOf(this.id()));
+  protected readonly resultsLoading = computed(() => this.electionService.resultsLoadingOf(this.id()));
 
   protected readonly resultsByOffice = computed(() => {
     const byOffice = new Map<string, ElectionResult[]>();

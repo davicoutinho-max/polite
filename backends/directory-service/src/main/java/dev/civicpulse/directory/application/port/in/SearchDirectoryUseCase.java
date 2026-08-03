@@ -11,9 +11,9 @@ public interface SearchDirectoryUseCase {
 
   Politician getPolitician(UUID accountId);
 
-  List<Politician> searchPoliticians(String state, GovLevel level, UUID partyId, int page, int pageSize);
+  List<Politician> searchPoliticians(String state, GovLevel level, UUID partyId, String q, int page, int pageSize);
 
   Party getParty(UUID id);
 
-  List<Party> searchParties(PartySpectrum spectrum, int page, int pageSize);
+  List<Party> searchParties(PartySpectrum spectrum, String q, int page, int pageSize);
 }

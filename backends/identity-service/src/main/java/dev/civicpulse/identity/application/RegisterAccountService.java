@@ -1,11 +1,13 @@
 package dev.civicpulse.identity.application;
 
+import dev.civicpulse.identity.application.port.in.CheckDocumentUseCase;
 import dev.civicpulse.identity.application.port.in.RegisterAccountUseCase;
 import dev.civicpulse.identity.application.port.out.AccountRepository;
 import dev.civicpulse.identity.application.port.out.DocumentCipher;
 import dev.civicpulse.identity.application.port.out.EventPublisher;
 import dev.civicpulse.identity.application.port.out.PasswordHasher;
 import dev.civicpulse.identity.domain.event.AccountRegistered;
+import dev.civicpulse.identity.domain.exception.AccountNotFoundException;
 import dev.civicpulse.identity.domain.exception.DuplicateAccountException;
 import dev.civicpulse.identity.domain.exception.InvalidDocumentNumberException;
 import dev.civicpulse.identity.domain.model.Account;
@@ -15,11 +17,12 @@ import dev.civicpulse.identity.domain.model.DocumentNumberValidator;
 import dev.civicpulse.identity.domain.model.DocumentType;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RegisterAccountService implements RegisterAccountUseCase {
+public class RegisterAccountService implements RegisterAccountUseCase, CheckDocumentUseCase {
 
   private final AccountRepository accountRepository;
   private final PasswordHasher passwordHasher;
@@ -44,6 +47,54 @@ public class RegisterAccountService implements RegisterAccountUseCase {
   @Transactional
   public Account registerCitizen(RegisterAccountCommand command) {
     return provisionAccount(AccountType.CITIZEN, command);
+  }
+
+  @Override
+  @Transactional
+  public Account registerCitizen(RegisterAccountCommand command, AccountId claimAccountId) {
+    Account existing =
+        accountRepository.findById(claimAccountId).orElseThrow(() -> new AccountNotFoundException(claimAccountId.toString()));
+    if (!existing.isSynced()) {
+      // Either not a government-sourced profile at all, or someone already claimed it since the
+      // citizen picked it from the directory-search results — same "already taken" story as the
+      // email/handle checks below, just surfaced against the id they explicitly chose.
+      throw new DuplicateAccountException("account");
+    }
+
+    DocumentType documentType = command.documentType();
+    String digitsOnly = command.rawDocumentNumber() == null ? "" : command.rawDocumentNumber().replaceAll("\\D", "");
+    if (documentType == null || !DocumentNumberValidator.isValid(documentType, digitsOnly)) {
+      throw new InvalidDocumentNumberException(documentType == null ? DocumentType.CPF : documentType);
+    }
+    String documentNumberHash = documentCipher.hash(digitsOnly);
+    if (accountRepository.existsByDocumentNumberHash(documentNumberHash)) {
+      throw new DuplicateAccountException(documentType.code().toUpperCase());
+    }
+    byte[] documentNumberEncrypted = documentCipher.encrypt(digitsOnly);
+
+    Instant now = clock.instant();
+    existing.claimWithRealDocument(passwordHasher.hash(command.rawPassword()), documentType, documentNumberHash, documentNumberEncrypted, now);
+    Account saved = accountRepository.save(existing);
+
+    eventPublisher.publish(
+        new AccountRegistered(saved.id().value(), saved.accountType().code(), saved.documentNumberHash().orElse(null), now));
+
+    return saved;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<SyncedAccountPreview> checkDocument(String rawDocumentNumber) {
+    String digitsOnly = rawDocumentNumber == null ? "" : rawDocumentNumber.replaceAll("\\D", "");
+    DocumentType documentType = DocumentType.fromDigitCount(digitsOnly.length());
+    if (!DocumentNumberValidator.isValid(documentType, digitsOnly)) {
+      throw new InvalidDocumentNumberException(documentType);
+    }
+    String documentNumberHash = documentCipher.hash(digitsOnly);
+    return accountRepository
+        .findByDocumentNumberHash(documentNumberHash)
+        .filter(Account::isSynced)
+        .map(a -> new SyncedAccountPreview(a.id().value(), a.name(), a.avatarUrl().orElse(null), a.accountType().code()));
   }
 
   @Override

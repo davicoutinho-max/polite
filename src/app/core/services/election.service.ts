@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { Observable, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Election, ElectionCandidateSummary, ElectionResult, ElectionScope, PersonalVote } from '../models';
 
@@ -66,6 +66,7 @@ export class ElectionService {
    * (every Deputado Estadual candidate, not just winners), so preloading them for every election
    * up front the way candidates are would be wasteful. */
   private readonly _resultsByElection = signal<Map<string, ElectionResult[]>>(new Map());
+  private readonly _resultsLoading = signal<Map<string, boolean>>(new Map());
 
   readonly upcomingCount = computed(() => this._elections().filter((e) => this.isUpcoming(e)).length);
   readonly totalCandidates = computed(() => {
@@ -136,6 +137,7 @@ export class ElectionService {
   }
 
   loadResults(electionId: string): Observable<ElectionResult[]> {
+    this._resultsLoading.update((map) => new Map(map).set(electionId, true));
     return this.http.get<ResultResponseDto[]>(`${this.apiBase}/elections/${electionId}/results`).pipe(
       map((list) =>
         list.map(
@@ -152,7 +154,12 @@ export class ElectionService {
         ),
       ),
       tap((results) => this._resultsByElection.update((map) => new Map(map).set(electionId, results))),
+      finalize(() => this._resultsLoading.update((map) => new Map(map).set(electionId, false))),
     );
+  }
+
+  resultsLoadingOf(electionId: string): boolean {
+    return this._resultsLoading().get(electionId) ?? false;
   }
 
   resultsOf(electionId: string): ElectionResult[] {

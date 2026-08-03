@@ -36,6 +36,29 @@ interface AccountResponse {
   readonly avatarUrl: string | null;
 }
 
+/** Result of the registration flow's "does this CPF/CNPJ match a real, unclaimed
+ * government-sourced profile?" pre-check — see identity-service's CheckDocumentUseCase. Only
+ * ever matches federal deputies (the one source with a real CPF on file); everyone else is found
+ * instead through DirectoryService's name search. */
+export interface CheckDocumentResult {
+  readonly matched: boolean;
+  readonly accountId: string | null;
+  readonly name: string | null;
+  readonly avatarUrl: string | null;
+  readonly accountType: string | null;
+}
+
+/** A party/politician invite token, previewed before redeeming it — see identity-service's
+ * RegistrationToken domain javadoc. {@code prefillData} is a JSON string the register page
+ * parses itself (shape depends on {@code accountType}: name/acronym/number/ideology/president
+ * for a party, name/roleTitle/state/partyId for a politician). */
+export interface RegistrationTokenPreview {
+  readonly accountType: 'party' | 'politician';
+  readonly targetEmail: string | null;
+  readonly prefillData: string | null;
+  readonly status: string;
+}
+
 interface JwtPayload {
   readonly sub: string;
   readonly account_type: AccountType;
@@ -151,11 +174,36 @@ export class SessionService {
   /** Quick demo login — same real `login()` call, just against one of the seeded demo accounts
    * (see DEMO_CREDENTIALS). Preserves the old demo-switcher UX without faking the session. */
   /** Citizen self-registration, then an immediate real login (register itself doesn't return
-   * tokens — see identity-service's AccountController). */
-  register(name: string, handle: string, email: string, password: string, cpf: string): Observable<Account> {
+   * tokens — see identity-service's AccountController). Ends up a plain citizen unless
+   * `claimAccountId` is set (the citizen confirmed, earlier in the registration flow, that a
+   * specific unclaimed government-sourced profile — found via check-document or directory
+   * search — is really them) or the document happens to exact-match one anyway. */
+  register(
+    name: string,
+    handle: string,
+    email: string,
+    password: string,
+    documentNumber: string,
+    claimAccountId?: string,
+  ): Observable<Account> {
     return this.http
-      .post<AccountResponse>(`${this.apiBase}/accounts/register`, { name, handle, email, password, cpf })
+      .post<AccountResponse>(`${this.apiBase}/accounts/register`, { name, handle, email, password, documentNumber, claimAccountId })
       .pipe(switchMap(() => this.login(email, password)));
+  }
+
+  /** Read-only pre-check, called before the account is actually created — see
+   * CheckDocumentResult's javadoc. */
+  checkDocument(documentNumber: string): Observable<CheckDocumentResult> {
+    return this.http.get<CheckDocumentResult>(`${this.apiBase}/accounts/check-document`, { params: { documentNumber } });
+  }
+
+  /** Read-only preview of a party/politician invite token — never consumes it, see
+   * RegistrationTokenPreview's javadoc. Returns null for a missing/expired/already-used token
+   * (a 410 from identity-service) rather than erroring the whole page. */
+  validateRegistrationToken(token: string): Observable<RegistrationTokenPreview | null> {
+    return this.http.get<RegistrationTokenPreview>(`${this.apiBase}/registration-tokens/validate`, { params: { token } }).pipe(
+      catchError(() => of(null)),
+    );
   }
 
   private refreshInFlight: Observable<boolean> | null = null;

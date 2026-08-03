@@ -20,6 +20,7 @@ import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiCard } from '../../../../shared/ui/ui-card/ui-card';
 import { UiDialog } from '../../../../shared/ui/ui-dialog/ui-dialog';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
+import { UiSkeleton } from '../../../../shared/ui/ui-skeleton/ui-skeleton';
 import { UiProgress } from '../../../../shared/ui/ui-progress/ui-progress';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 
@@ -62,6 +63,7 @@ const BILLS_PAGE_SIZE = 8;
     UiProgress,
     UiIcon,
     UiDialog,
+    UiSkeleton,
     BillCard,
     AskAi,
     CompactNumberPipe,

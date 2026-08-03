@@ -12,14 +12,23 @@ import org.springframework.data.repository.query.Param;
 
 interface PoliticianJpaRepository extends JpaRepository<PoliticianJpaEntity, UUID> {
 
+  // :q is cast explicitly — see PartyJpaRepository.search's comment: a null :q left untyped can
+  // make Postgres infer the '%'||:q||'%' concatenation as bytea instead of text and 500 the
+  // plain, no-search listing every visitor hits (confirmed for the party query; this one hasn't
+  // reproduced it, but the pattern is identical and just as fragile without the cast).
   @Query(
       "select p from PoliticianJpaEntity p "
           + "where (:state is null or p.state = :state) "
           + "and (:level is null or p.level = :level) "
           + "and (:partyId is null or p.partyId = :partyId) "
+          + "and (:q is null or lower(p.name) like lower(concat('%', cast(:q as string), '%'))) "
           + "order by p.name asc")
   List<PoliticianJpaEntity> search(
-      @Param("state") String state, @Param("level") GovLevel level, @Param("partyId") UUID partyId, Pageable pageable);
+      @Param("state") String state,
+      @Param("level") GovLevel level,
+      @Param("partyId") UUID partyId,
+      @Param("q") String q,
+      Pageable pageable);
 
   @Modifying
   @Query("update PoliticianJpaEntity p set p.partyId = :partyId, p.partyAcronym = :partyAcronym, p.updatedAt = :now where p.accountId = :accountId")

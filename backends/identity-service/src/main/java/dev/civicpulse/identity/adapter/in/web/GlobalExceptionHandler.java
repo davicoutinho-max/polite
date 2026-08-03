@@ -4,6 +4,7 @@ import dev.civicpulse.identity.domain.exception.AccountNotFoundException;
 import dev.civicpulse.identity.domain.exception.DuplicateAccountException;
 import dev.civicpulse.identity.domain.exception.InvalidCredentialsException;
 import dev.civicpulse.identity.domain.exception.InvalidDocumentNumberException;
+import dev.civicpulse.identity.domain.exception.InvalidRegistrationTokenException;
 import dev.civicpulse.identity.domain.exception.SessionNotActiveException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,13 @@ public class GlobalExceptionHandler {
   public ProblemDetail handleSessionNotActive(SessionNotActiveException ex) {
     ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     problem.setTitle("Session not active");
+    return problem;
+  }
+
+  @ExceptionHandler(InvalidRegistrationTokenException.class)
+  public ProblemDetail handleInvalidRegistrationToken(InvalidRegistrationTokenException ex) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
+    problem.setTitle("Invalid invite token");
     return problem;
   }
 

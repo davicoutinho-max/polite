@@ -1,9 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 import { Select } from 'primeng/select';
-import { PlatformService } from '../../core/services/platform.service';
+import { PartyInvite, PlatformService } from '../../core/services/platform.service';
+import { DirectoryService } from '../../core/services/directory.service';
 import { TranslateService } from '../../core/services/translate.service';
+import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
+import { PartyRegistryEntry } from '../../core/models';
+import { digitsOnly, formatCnpj, isValidCnpj } from '../../shared/utils/br-documents';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
@@ -12,21 +19,44 @@ import { UiAvatar } from '../../shared/ui/ui-avatar/ui-avatar';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { UiTabs, UiTab } from '../../shared/ui/ui-tabs/ui-tabs';
+import { CompactNumberPipe } from '../../shared/pipes/compact-number.pipe';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 type PlatformTab = 'directory' | 'regions' | 'positions' | 'languages';
 type SelectOption = { value: string; label: string };
+type PartySortKey = 'members' | 'name';
+
+const PARTY_PAGE_SIZE = 9;
 
 /** Platform administration: party registry, politician assignment and platform-wide parameters. */
 @Component({
   selector: 'app-platform-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeader, UiSection, UiIcon, UiButton, UiAvatar, UiTag, UiEmpty, UiTabs, FormsModule, InputText, Select, TranslatePipe],
+  imports: [
+    RouterLink,
+    PageHeader,
+    UiSection,
+    UiIcon,
+    UiButton,
+    UiAvatar,
+    UiTag,
+    UiEmpty,
+    UiTabs,
+    FormsModule,
+    InputText,
+    IconField,
+    InputIcon,
+    Select,
+    InfiniteScrollDirective,
+    CompactNumberPipe,
+    TranslatePipe,
+  ],
   templateUrl: './platform-page.html',
   styleUrl: './platform-page.scss',
 })
 export class PlatformPage {
   private readonly platform = inject(PlatformService);
+  private readonly directory = inject(DirectoryService);
   private readonly translate = inject(TranslateService);
 
   protected readonly tabs: UiTab[] = [
@@ -52,19 +82,79 @@ export class PlatformPage {
   protected readonly avatarPlaceholder =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23c7ccd1'/%3E%3Ccircle cx='20' cy='15' r='7' fill='%23fff'/%3E%3Cpath d='M6 38c0-8 6-13 14-13s14 5 14 13z' fill='%23fff'/%3E%3C/svg%3E";
 
-  // ---- New party form ----
+  // ---- Registered-parties search/sort/infinite-scroll — same pattern as the public parties
+  // directory (parties-page.ts), since this registry has no upper bound either (every real party
+  // plus anything ever registered through it) and rendering it all at once doesn't scale. ----
+  protected readonly partySearch = signal('');
+  protected readonly partySort = signal<PartySortKey>('members');
+  protected readonly partyVisibleCount = signal(PARTY_PAGE_SIZE);
+
+  protected readonly partySortOptions: SelectOption[] = [
+    { value: 'members', label: this.translate.t('label.largest', 'Largest') },
+    { value: 'name', label: this.translate.t('label.name-az', 'Name (A–Z)') },
+  ];
+
+  protected readonly filteredParties = computed<PartyRegistryEntry[]>(() => {
+    const q = this.partySearch().trim().toLowerCase();
+    const list = this.parties().filter((p) => {
+      if (!q) return true;
+      return p.name.toLowerCase().includes(q) || p.acronym.toLowerCase().includes(q) || p.ideology.toLowerCase().includes(q);
+    });
+    const sort = this.partySort();
+    return [...list].sort((a, b) => (sort === 'name' ? a.name.localeCompare(b.name) : b.memberCount - a.memberCount));
+  });
+
+  protected readonly partyResultCount = computed(() => this.filteredParties().length);
+  protected readonly visibleParties = computed(() => this.filteredParties().slice(0, this.partyVisibleCount()));
+  protected readonly allPartiesLoaded = computed(() => this.partyVisibleCount() >= this.partyResultCount());
+
+  protected setPartySearch(value: string): void {
+    this.partySearch.set(value);
+  }
+
+  protected loadMoreParties(): void {
+    if (!this.allPartiesLoaded()) {
+      this.partyVisibleCount.update((c) => c + PARTY_PAGE_SIZE);
+    }
+  }
+
+  protected partyLogo(id: string): string | null {
+    return this.directory.parties().find((p) => p.id === id)?.logoUrl ?? null;
+  }
+
+  // ---- Party invite form (replaces the old "admin sets the party's password directly" flow —
+  // the party's own contact now redeems the token and picks their own password, see
+  // ManagePartyInviteUseCase's javadoc on the backend) ----
   protected readonly showForm = signal(false);
   protected readonly name = signal('');
   protected readonly acronym = signal('');
   protected readonly number = signal<number | null>(null);
   protected readonly president = signal('');
   protected readonly ideology = signal('');
-  protected readonly handle = signal('');
-  protected readonly email = signal('');
-  protected readonly password = signal('');
-  protected readonly documentNumber = signal('');
+  protected readonly cnpj = signal('');
+  protected readonly targetEmail = signal('');
   protected readonly createSubmitting = signal(false);
   protected readonly createError = signal('');
+
+  protected onCnpjInput(raw: string): void {
+    this.cnpj.set(formatCnpj(raw));
+  }
+
+  protected readonly invites = signal<PartyInvite[]>([]);
+  protected readonly resendingInviteId = signal<string | null>(null);
+
+  constructor() {
+    this.reloadInvites();
+    const partyFilterKey = computed(() => `${this.partySearch()}|${this.partySort()}`);
+    effect(() => {
+      partyFilterKey();
+      this.partyVisibleCount.set(PARTY_PAGE_SIZE);
+    });
+  }
+
+  private reloadInvites(): void {
+    this.platform.listPartyInvites().subscribe((list) => this.invites.set(list));
+  }
 
   protected partyName(id: string | null): string {
     return this.platform.partyName(id);
@@ -76,41 +166,47 @@ export class PlatformPage {
 
   protected createParty(): void {
     const number = this.number();
-    if (
-      !this.name().trim() ||
-      !this.acronym().trim() ||
-      !number ||
-      !this.handle().trim() ||
-      !this.email().trim() ||
-      !this.password().trim() ||
-      !this.documentNumber().trim()
-    ) {
+    if (!this.name().trim() || !this.acronym().trim() || !number || !this.cnpj().trim() || !this.targetEmail().trim()) {
+      return;
+    }
+    if (!isValidCnpj(this.cnpj())) {
+      this.createError.set(this.translate.t('error.invalid-cnpj', 'Enter a valid CNPJ.'));
       return;
     }
     this.createSubmitting.set(true);
     this.createError.set('');
     this.platform
-      .createParty({
+      .issuePartyInvite({
         name: this.name().trim(),
         acronym: this.acronym().trim().toUpperCase(),
         number,
         president: this.president().trim() || '—',
         ideology: this.ideology().trim() || '—',
-        handle: this.handle().trim(),
-        email: this.email().trim(),
-        password: this.password(),
-        documentNumber: this.documentNumber().trim(),
+        cnpj: digitsOnly(this.cnpj()),
+        targetEmail: this.targetEmail().trim(),
       })
       .subscribe({
-        next: () => {
+        next: (invite) => {
           this.createSubmitting.set(false);
+          this.invites.update((list) => [invite, ...list]);
           this.resetForm();
         },
         error: () => {
           this.createSubmitting.set(false);
-          this.createError.set('Could not create the party. Check the fields and try again.');
+          this.createError.set('Could not create the invite. Check the fields and try again.');
         },
       });
+  }
+
+  protected resendInvite(id: string): void {
+    this.resendingInviteId.set(id);
+    this.platform.resendPartyInvite(id).subscribe({
+      next: () => {
+        this.resendingInviteId.set(null);
+        this.reloadInvites();
+      },
+      error: () => this.resendingInviteId.set(null),
+    });
   }
 
   protected assign(politicianId: string, value: string): void {
@@ -123,10 +219,8 @@ export class PlatformPage {
     this.number.set(null);
     this.president.set('');
     this.ideology.set('');
-    this.handle.set('');
-    this.email.set('');
-    this.password.set('');
-    this.documentNumber.set('');
+    this.cnpj.set('');
+    this.targetEmail.set('');
     this.showForm.set(false);
   }
 

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, Observable, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { catchError, Observable, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   FiliationRequestSummary,
@@ -15,14 +15,42 @@ import {
 import { relativeTime } from '../utils/relative-time';
 import { DirectoryService } from './directory.service';
 
-export interface RegisterPoliticianInput {
-  readonly name: string;
+/** Redeeming a politician invite token (see PoliticianInvite's javadoc) — the politician's name/
+ * role/state were already vetted by the party at invite time, not typed here. */
+export interface RedeemPoliticianInviteInput {
+  readonly registrationToken: string;
   readonly handle: string;
   readonly email: string;
   readonly password: string;
   readonly documentNumber: string;
+}
+
+/** A politician invite token issued from the party's own admin panel — replaces the old "party
+ * types the new politician's password directly" flow. See identity-service's RegistrationToken
+ * javadoc. */
+export interface PoliticianInvite {
+  readonly id: string;
+  readonly token: string;
+  readonly targetEmail: string | null;
+  readonly status: 'pending' | 'consumed' | 'expired';
+}
+
+export interface NewPoliticianInviteInput {
+  readonly name: string;
   readonly roleTitle: string;
   readonly state: string;
+  readonly targetEmail: string;
+}
+
+interface PoliticianInviteResponseDto {
+  readonly id: string;
+  readonly token: string;
+  readonly targetEmail: string | null;
+  readonly status: string;
+}
+
+function toPoliticianInvite(dto: PoliticianInviteResponseDto): PoliticianInvite {
+  return { id: dto.id, token: dto.token, targetEmail: dto.targetEmail, status: dto.status as PoliticianInvite['status'] };
 }
 
 interface RepresentativeResponseDto {
@@ -38,6 +66,7 @@ interface PartyProfileResponseDto {
   readonly program: string | null;
   readonly statuteUrl: string | null;
   readonly coverUrl: string | null;
+  readonly videoUrl: string | null;
 }
 
 interface OfficeResponseDto {
@@ -85,7 +114,8 @@ const EMPTY_PARTY: Party = {
   acronym: '',
   number: 0,
   logoUrl: FALLBACK_AVATAR,
-  coverUrl: FALLBACK_AVATAR,
+  coverUrl: '',
+  videoUrl: '',
   ideology: '',
   foundedYear: null,
   president: '',
@@ -118,6 +148,8 @@ export class PartyService {
 
   private readonly _party = signal<Party>(EMPTY_PARTY);
   readonly party = this._party.asReadonly();
+  private readonly _loading = signal(true);
+  readonly loading = this._loading.asReadonly();
 
   private readonly _requests = signal<FiliationRequestSummary[]>([]);
   readonly requests = this._requests.asReadonly();
@@ -135,6 +167,7 @@ export class PartyService {
    * here before that fetch resolves permanently baked "Unknown" into every representative's name,
    * since the mapping runs once and never re-resolves. */
   load(partyId: string): Observable<Party> {
+    this._loading.set(true);
     return forkJoin({
       profile: this.http.get<PartyProfileResponseDto>(`${this.apiBase}/parties/${partyId}/profile`),
       offices: this.http.get<OfficeResponseDto[]>(`${this.apiBase}/parties/${partyId}/offices`),
@@ -151,7 +184,10 @@ export class PartyService {
           acronym: summary?.acronym ?? '',
           number: summary?.number ?? 0,
           logoUrl: summary?.logoUrl || FALLBACK_AVATAR,
-          coverUrl: profile.coverUrl || summary?.logoUrl || FALLBACK_AVATAR,
+          // Never falls back to the logo — an unset cover shows the neutral placeholder gradient
+          // (party-page.html's .hero__cover--placeholder) instead of silently reusing the logo.
+          coverUrl: profile.coverUrl || '',
+          videoUrl: profile.videoUrl || '',
           ideology: summary?.ideology ?? '',
           foundedYear: summary?.founded ?? null,
           president: summary?.president ?? '',
@@ -177,6 +213,7 @@ export class PartyService {
         );
       }),
       tap((party) => this._party.set(party)),
+      finalize(() => this._loading.set(false)),
     );
   }
 
@@ -190,17 +227,52 @@ export class PartyService {
    * every other field must be resent with its current value or it would be silently blanked. */
   updateCoverPhoto(coverUrl: string): Observable<void> {
     const party = this._party();
+    return this.updateProfile(party.history, party.program, party.statuteUrl === '#' ? '' : party.statuteUrl, coverUrl, party.videoUrl);
+  }
+
+  /** Self-service party profile editing (history/program/statute/cover/video) — same full-replace
+   * PUT as {@link updateCoverPhoto}, see its javadoc for why every field is always resent together. */
+  updateProfile(history: string, program: string, statuteUrl: string, coverUrl?: string, videoUrl?: string): Observable<void> {
+    const party = this._party();
+    const resolvedCoverUrl = coverUrl ?? (party.coverUrl || null);
+    const resolvedVideoUrl = videoUrl ?? (party.videoUrl || null);
     return this.http
       .put<PartyProfileResponseDto>(`${this.apiBase}/parties/${party.id}/profile`, {
-        history: party.history || null,
-        program: party.program || null,
-        statuteUrl: party.statuteUrl === '#' ? null : party.statuteUrl,
-        coverUrl,
+        history: history || null,
+        program: program || null,
+        statuteUrl: statuteUrl || null,
+        coverUrl: resolvedCoverUrl,
+        videoUrl: resolvedVideoUrl,
       })
       .pipe(
         map(() => undefined),
-        tap(() => this._party.update((p) => ({ ...p, coverUrl }))),
+        tap(() =>
+          this._party.update((p) => ({
+            ...p,
+            history,
+            program,
+            statuteUrl: statuteUrl || '#',
+            coverUrl: resolvedCoverUrl ?? p.coverUrl,
+            videoUrl: resolvedVideoUrl ?? p.videoUrl,
+          })),
+        ),
       );
+  }
+
+  /** Self-service update of the party's own registry-style fields (name/acronym/number/ideology/
+   * founded year/president) on directory-service — see that service's Party.updateDetails javadoc
+   * for why this exists alongside the government-sync projection that normally owns them. */
+  updatePartyDetails(
+    name: string,
+    acronym: string,
+    number: number,
+    ideology: string,
+    foundedYear: number | null,
+    president: string,
+  ): Observable<void> {
+    return this.directory.updatePartyDetails(name, acronym, number, ideology, foundedYear, president).pipe(
+      tap(() => this._party.update((p) => ({ ...p, name, acronym, number, ideology, foundedYear, president }))),
+    );
   }
 
   reloadRequests(partyId: string): Observable<FiliationRequestSummary[]> {
@@ -314,10 +386,20 @@ export class PartyService {
     });
   }
 
-  createEvent(title: string, eventDate: string, location: string, tagLabel: string, tagSeverity: TagSeverity): Observable<PartyEvent> {
-    const partyId = this._party().id;
+  /** `partyId` defaults to whatever party profile is currently loaded (the admin panel's own
+   * usage) — pass it explicitly when creating an event for the signed-in party account without
+   * necessarily having loaded its own profile first (e.g. from an agenda post in the main feed). */
+  createEvent(
+    title: string,
+    eventDate: string,
+    location: string,
+    tagLabel: string,
+    tagSeverity: TagSeverity,
+    partyId?: string,
+  ): Observable<PartyEvent> {
+    const resolvedPartyId = partyId ?? this._party().id;
     return this.http
-      .post<EventResponseDto>(`${this.apiBase}/parties/${partyId}/events`, { title, eventDate, location, tagLabel, tagSeverity })
+      .post<EventResponseDto>(`${this.apiBase}/parties/${resolvedPartyId}/events`, { title, eventDate, location, tagLabel, tagSeverity })
       .pipe(
         map(
           (e): PartyEvent => ({
@@ -328,39 +410,67 @@ export class PartyService {
             tag: { label: e.tagLabel ?? '', severity: (e.tagSeverity as TagSeverity) ?? 'neutral' },
           }),
         ),
-        tap((event) => this._party.update((party) => ({ ...party, events: [...party.events, event] }))),
+        tap((event) => {
+          if (resolvedPartyId === this._party().id) {
+            this._party.update((party) => ({ ...party, events: [...party.events, event] }));
+          }
+        }),
       );
   }
 
-  /** Real registration against party-management-service — creates the politician's
-   * authenticatable identity AND links it to this party in one call (see
-   * RegisterPoliticianService.registerPolitician's javadoc). On success the new representative
-   * is added to the local party signal immediately; the caller should also refresh
-   * DirectoryService so the new politician shows up in the public directory. */
-  registerPolitician(partyId: string, input: RegisterPoliticianInput): Observable<RepresentativeResponseDto> {
+  /** Redeems a politician invite token against party-management-service — called from the
+   * public register page (not the party admin panel, which only issues invites now, see
+   * {@link issuePoliticianInvite}). Creates the politician's authenticatable identity AND links
+   * it to {@code partyId} in one call (see RegisterPoliticianService.registerPolitician's
+   * javadoc); the caller is typically anonymous at this point, so there's usually no locally
+   * loaded party to update, but the optimistic update below is harmless either way. */
+  registerPolitician(partyId: string, input: RedeemPoliticianInviteInput): Observable<RepresentativeResponseDto> {
     return this.http
       .post<RepresentativeResponseDto>(`${this.apiBase}/parties/${partyId}/representatives/register`, {
-        name: input.name,
+        registrationToken: input.registrationToken,
         handle: input.handle,
         email: input.email,
         password: input.password,
         documentType: 'cpf',
         documentNumber: input.documentNumber,
-        roleTitle: input.roleTitle,
-        state: input.state,
       })
       .pipe(
         tap((response) => {
           const rep: PartyRepresentative = {
             id: response.politicianAccountId,
-            name: input.name,
-            role: input.roleTitle,
+            name: '',
+            role: response.roleTitle ?? '',
             avatarUrl: '',
-            location: input.state,
+            location: '',
           };
-          this._party.update((party) => ({ ...party, representatives: [...party.representatives, rep] }));
+          this._party.update((party) =>
+            party.id === partyId ? { ...party, representatives: [...party.representatives, rep] } : party,
+          );
         }),
       );
+  }
+
+  /** Party admin issuing a politician invite (name/roleTitle/state vetted here, emailed as a
+   * token the politician's own contact redeems with their own password). */
+  issuePoliticianInvite(partyId: string, input: NewPoliticianInviteInput): Observable<PoliticianInvite> {
+    return this.http
+      .post<PoliticianInviteResponseDto>(`${this.apiBase}/parties/${partyId}/politician-invites`, {
+        name: input.name,
+        roleTitle: input.roleTitle,
+        state: input.state,
+        targetEmail: input.targetEmail,
+      })
+      .pipe(map(toPoliticianInvite));
+  }
+
+  resendPoliticianInvite(partyId: string, id: string): Observable<PoliticianInvite> {
+    return this.http.post<PoliticianInviteResponseDto>(`${this.apiBase}/parties/${partyId}/politician-invites/${id}/resend`, {}).pipe(map(toPoliticianInvite));
+  }
+
+  listPoliticianInvites(partyId: string): Observable<PoliticianInvite[]> {
+    return this.http
+      .get<PoliticianInviteResponseDto[]>(`${this.apiBase}/parties/${partyId}/politician-invites`)
+      .pipe(map((list) => list.map(toPoliticianInvite)));
   }
 
   /** Resolves a representative against the already-loaded directory cache first; on a cache miss

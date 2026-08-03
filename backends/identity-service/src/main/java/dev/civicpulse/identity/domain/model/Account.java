@@ -20,9 +20,9 @@ public final class Account {
   private final String handle;
   private final String email;
   private String passwordHash;
-  private final DocumentType documentType;
-  private final String documentNumberHash;
-  private final byte[] documentNumberEncrypted;
+  private DocumentType documentType;
+  private String documentNumberHash;
+  private byte[] documentNumberEncrypted;
   private boolean verified;
   private Instant anonymizedAt;
   private String avatarUrl;
@@ -243,6 +243,21 @@ public final class Account {
     this.externalSource = null;
     this.externalId = null;
     this.updatedAt = now;
+  }
+
+  /** Same as {@link #claim}, for the case where the citizen found this profile themselves
+   * through directory search rather than typing the exact CPF/CNPJ a sync run happened to use
+   * (state/municipal politicians and every party carry a synthetic document number — see
+   * DocumentNumberFallback — so an exact-hash match can never fire for them). The real,
+   * newly-validated document number the citizen typed at registration replaces whatever
+   * (synthetic or otherwise) document was on file, since this account now has a real owner who
+   * can be asked to reconfirm it. */
+  public void claimWithRealDocument(
+      String passwordHash, DocumentType documentType, String documentNumberHash, byte[] documentNumberEncrypted, Instant now) {
+    claim(passwordHash, now);
+    this.documentType = Objects.requireNonNull(documentType, "documentType");
+    this.documentNumberHash = Objects.requireNonNull(documentNumberHash, "documentNumberHash");
+    this.documentNumberEncrypted = Objects.requireNonNull(documentNumberEncrypted, "documentNumberEncrypted");
   }
 
   private static String requireNonBlank(String value, String field) {

@@ -60,7 +60,23 @@
     <section class="election-detail__results">
       <h2 class="election-detail__section-title">{{ 'label.results' | translate: 'Results' }}</h2>
 
-      @if (resultsByOffice().length) {
+      @if (resultsLoading()) {
+        @for (i of [1, 2]; track i) {
+          <ui-card padding="lg" class="results-office">
+            <ui-skeleton class="results-office__title" width="160px" height="20px" />
+            <div class="results-office__list">
+              @for (j of [1, 2, 3]; track j) {
+                <div class="result-row">
+                  <ui-skeleton width="24px" height="14px" />
+                  <ui-skeleton width="160px" height="14px" />
+                  <ui-skeleton shape="rect" width="50px" height="20px" />
+                  <ui-skeleton width="50px" height="14px" />
+                </div>
+              }
+            </div>
+          </ui-card>
+        }
+      } @else if (resultsByOffice().length) {
         @for (group of resultsByOffice(); track group.office) {
           <ui-card padding="lg" class="results-office">
             <h3 class="results-office__title">{{ group.office }}</h3>

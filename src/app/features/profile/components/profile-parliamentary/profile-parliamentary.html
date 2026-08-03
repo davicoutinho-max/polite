@@ -1,12 +1,5 @@
 <div class="parliamentary">
-  <div class="stats">
-    <ui-stat icon="event_available" [label]="'label.attendance' | translate: 'Attendance'" [value]="activity().attendance.presenceRate + '%'" [caption]="activity().attendance.present + ' ' + ('label.sessions-present' | translate: 'sessions present')" />
-    <ui-stat icon="event_busy" [label]="'label.absences' | translate: 'Absences'" [value]="activity().attendance.absent.toString()" [caption]="'label.recorded-absences' | translate: 'Recorded absences'" />
-    <ui-stat icon="record_voice_over" [label]="'label.speeches' | translate: 'Speeches'" [value]="activity().speeches.toString()" [caption]="'label.floor-speeches' | translate: 'Floor speeches'" />
-    <ui-stat icon="mic" [label]="'label.interviews' | translate: 'Interviews'" [value]="activity().interviews.toString()" [caption]="'label.press-media' | translate: 'Press & media'" />
-    <ui-stat icon="flight_takeoff" [label]="'label.official-trips' | translate: 'Official trips'" [value]="activity().trips.toString()" [caption]="'label.this-term' | translate: 'This term'" />
-    <ui-stat icon="how_to_vote" [label]="'label.votes' | translate: 'Votes'" [value]="activity().votes.length.toString()" [caption]="'label.recent-records' | translate: 'Recent records'" />
-  </div>
+  <ui-stat-strip [items]="statItems()" />
 
   <ui-section [title]="'section.committees' | translate: 'Committees, fronts & inquiries'" icon="gavel">
     <ul class="committees">

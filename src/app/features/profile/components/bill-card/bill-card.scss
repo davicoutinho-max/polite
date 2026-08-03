@@ -29,6 +29,11 @@
     font-size: 14px;
     line-height: 20px;
     color: var(--cp-on-surface-variant);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    overflow-wrap: anywhere;
   }
 
   &__progress {

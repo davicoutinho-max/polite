@@ -28,6 +28,9 @@
             </a>
           }
           @if (canPublish()) {
+            <a class="acct__link" routerLink="/profile/edit" (click)="close()">
+              <ui-icon name="edit" [size]="18" /><span>{{ 'account.edit-profile' | translate: 'Edit profile' }}</span>
+            </a>
             <a class="acct__link" routerLink="/settings/social-connections" (click)="close()">
               <ui-icon name="share" [size]="18" /><span>{{ 'account.social-networks' | translate: 'Social networks' }}</span>
             </a>

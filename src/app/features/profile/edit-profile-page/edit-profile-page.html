@@ -1,0 +1,153 @@
+<div class="edit-profile">
+  <app-page-header
+    [title]="'page.edit-profile.title' | translate: 'Edit your profile'"
+    [subtitle]="'page.edit-profile.subtitle' | translate: 'This information appears on your public profile.'"
+    icon="edit"
+  >
+    <div slot="action">
+      <ui-button [label]="'button.view-profile' | translate: 'View profile'" icon="visibility" variant="tonal" (click)="goToProfile()" />
+    </div>
+  </app-page-header>
+
+  @if (saveResult(); as result) {
+    <div class="save-banner" [class.save-banner--error]="result === 'error'">
+      <ui-icon [name]="result === 'success' ? 'check_circle' : 'error'" [size]="20" />
+      <span>
+        {{
+          result === 'success'
+            ? ('hint.profile-saved' | translate: 'Your changes were saved.')
+            : ('hint.profile-save-failed' | translate: 'Please try again shortly.')
+        }}
+      </span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="edit-profile__skeleton">
+      <ui-skeleton shape="rect" width="100%" height="48px" />
+      <ui-skeleton shape="rect" width="100%" height="48px" />
+      <ui-skeleton shape="rect" width="100%" height="100px" />
+    </div>
+  } @else if (isPolitician()) {
+    <ui-section [title]="'section.dossier' | translate: 'Personal & civic dossier'" icon="badge">
+      <form class="edit-form" (submit)="saveDossier(); $event.preventDefault()">
+        <label class="edit-form__field">
+          <span>{{ 'field.office-detail' | translate: 'Office detail' }}</span>
+          <input pInputText type="text" [ngModel]="officeDetail()" (ngModelChange)="officeDetail.set($event)" name="officeDetail" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.education' | translate: 'Education' }}</span>
+          <textarea pTextarea rows="2" [ngModel]="education()" (ngModelChange)="education.set($event)" name="education"></textarea>
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.profession' | translate: 'Profession' }}</span>
+          <input pInputText type="text" [ngModel]="profession()" (ngModelChange)="profession.set($event)" name="profession" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.patrimony' | translate: 'Declared assets' }}</span>
+          <textarea pTextarea rows="2" [ngModel]="patrimony()" (ngModelChange)="patrimony.set($event)" name="patrimony"></textarea>
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.contact-email' | translate: 'Public contact email' }}</span>
+          <input pInputText type="email" [ngModel]="dossierEmail()" (ngModelChange)="dossierEmail.set($event)" name="dossierEmail" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.contact-phone' | translate: 'Public contact phone' }}</span>
+          <input pInputText type="text" [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone" />
+        </label>
+
+        <ui-button
+          [label]="saving() ? ('button.saving' | translate: 'Saving…') : ('button.save' | translate: 'Save')"
+          icon="save"
+          variant="filled"
+          type="submit"
+          [disabled]="saving()"
+        />
+      </form>
+    </ui-section>
+
+    <ui-section [title]="'section.social-links' | translate: 'Social links'" icon="link">
+      @if (socialLinks().length > 0) {
+        <ul class="link-list">
+          @for (link of socialLinks(); track link.url) {
+            <li class="link-list__item">
+              <ui-icon [name]="link.icon" [size]="18" />
+              <span>{{ link.label }}</span>
+              <a [href]="link.url" target="_blank" rel="noopener">{{ link.handle || link.url }}</a>
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="edit-form edit-form--inline" (submit)="addSocialLink(); $event.preventDefault()">
+        <p-select [options]="socialPlatformOptions" optionLabel="label" optionValue="value" [ngModel]="newLinkPlatform()" (ngModelChange)="newLinkPlatform.set($event)" name="newLinkPlatform" appendTo="body" />
+        <input pInputText type="text" [ngModel]="newLinkLabel()" (ngModelChange)="newLinkLabel.set($event)" name="newLinkLabel" [placeholder]="'label.label' | translate: 'Label'" />
+        <input pInputText type="text" [ngModel]="newLinkHandle()" (ngModelChange)="newLinkHandle.set($event)" name="newLinkHandle" [placeholder]="'label.handle-optional' | translate: 'Handle (optional)'" />
+        <input pInputText type="text" [ngModel]="newLinkUrl()" (ngModelChange)="newLinkUrl.set($event)" name="newLinkUrl" placeholder="https://…" />
+        <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="addingLink()" />
+      </form>
+    </ui-section>
+  } @else if (isParty()) {
+    <ui-section [title]="'section.party-profile' | translate: 'Party profile'" icon="flag">
+      <form class="edit-form" (submit)="saveParty(); $event.preventDefault()">
+        <label class="edit-form__field">
+          <span>{{ 'field.party-name' | translate: 'Party name' }}</span>
+          <input pInputText type="text" [ngModel]="partyName()" (ngModelChange)="partyName.set($event)" name="partyName" />
+        </label>
+        <div class="edit-form__row">
+          <label class="edit-form__field">
+            <span>{{ 'field.acronym' | translate: 'Acronym' }}</span>
+            <input pInputText type="text" [ngModel]="partyAcronym()" (ngModelChange)="partyAcronym.set($event)" name="partyAcronym" />
+          </label>
+          <label class="edit-form__field">
+            <span>{{ 'field.number' | translate: 'Number' }}</span>
+            <input pInputText type="text" inputmode="numeric" [ngModel]="partyNumber()" (ngModelChange)="partyNumber.set($event)" name="partyNumber" />
+          </label>
+          <label class="edit-form__field">
+            <span>{{ 'field.founded-year' | translate: 'Founded year' }}</span>
+            <input
+              pInputText
+              type="text"
+              inputmode="numeric"
+              [ngModel]="partyFoundedYear()"
+              (ngModelChange)="partyFoundedYear.set($event)"
+              name="partyFoundedYear"
+            />
+          </label>
+        </div>
+        <label class="edit-form__field">
+          <span>{{ 'label.ideology' | translate: 'Ideology' }}</span>
+          <input pInputText type="text" [ngModel]="partyIdeology()" (ngModelChange)="partyIdeology.set($event)" name="partyIdeology" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'label.president' | translate: 'President' }}</span>
+          <input pInputText type="text" [ngModel]="partyPresident()" (ngModelChange)="partyPresident.set($event)" name="partyPresident" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.history' | translate: 'History' }}</span>
+          <textarea pTextarea rows="4" [ngModel]="history()" (ngModelChange)="history.set($event)" name="history"></textarea>
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.program' | translate: 'Program' }}</span>
+          <textarea pTextarea rows="4" [ngModel]="program()" (ngModelChange)="program.set($event)" name="program"></textarea>
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.statute-url' | translate: 'Statute URL' }}</span>
+          <input pInputText type="text" [ngModel]="statuteUrl()" (ngModelChange)="statuteUrl.set($event)" name="statuteUrl" placeholder="https://…" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'field.video-url' | translate: 'Presentation video (YouTube or direct link)' }}</span>
+          <input pInputText type="text" [ngModel]="videoUrl()" (ngModelChange)="videoUrl.set($event)" name="videoUrl" placeholder="https://…" />
+        </label>
+
+        <ui-button
+          [label]="saving() ? ('button.saving' | translate: 'Saving…') : ('button.save' | translate: 'Save')"
+          icon="save"
+          variant="filled"
+          type="submit"
+          [disabled]="saving()"
+        />
+      </form>
+    </ui-section>
+  }
+</div>

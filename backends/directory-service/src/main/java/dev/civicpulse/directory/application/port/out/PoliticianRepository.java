@@ -13,7 +13,7 @@ public interface PoliticianRepository {
 
   Optional<Politician> findById(UUID accountId);
 
-  List<Politician> search(String state, GovLevel level, UUID partyId, int page, int pageSize);
+  List<Politician> search(String state, GovLevel level, UUID partyId, String q, int page, int pageSize);
 
   /** Targeted partial update — {@code PoliticianRegistered} and {@code PoliticianReassigned}
    * only ever carry the party linkage, never office/level/state. A read-modify-save round trip

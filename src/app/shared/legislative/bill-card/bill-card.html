@@ -44,7 +44,23 @@
   <p class="history-dialog__summary">{{ bill().summary }}</p>
 
   @if (historyLoading()) {
-    <p class="history-dialog__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+    <div class="timeline">
+      @for (i of [1, 2, 3]; track i; let isLast = $last) {
+        <div class="timeline__item">
+          <div class="timeline__marker">
+            <ui-skeleton shape="circle" [width]="12" />
+            @if (!isLast) {
+              <span class="timeline__line"></span>
+            }
+          </div>
+          <div class="timeline__content">
+            <ui-skeleton width="90px" height="13px" />
+            <ui-skeleton width="100%" height="14px" />
+            <ui-skeleton width="70%" height="14px" />
+          </div>
+        </div>
+      }
+    </div>
   } @else if (!timeline() || timeline()!.length === 0) {
     <p class="history-dialog__status">{{ 'label.no-history' | translate: 'No processing history available.' }}</p>
   } @else {

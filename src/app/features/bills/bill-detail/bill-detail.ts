@@ -12,6 +12,7 @@ import { UiCard } from '../../../shared/ui/ui-card/ui-card';
 import { UiEmpty } from '../../../shared/ui/ui-empty/ui-empty';
 import { UiIcon } from '../../../shared/ui/ui-icon/ui-icon';
 import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
+import { UiSkeleton } from '../../../shared/ui/ui-skeleton/ui-skeleton';
 
 /** Detail view for a single real bill (Câmara/Senado open-data) — reached from a bill card on the
  * Bills page. Route is `/bills/:source/:id` (not just `:id`) because the two chambers' ids aren't
@@ -21,7 +22,7 @@ import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
 @Component({
   selector: 'app-bill-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PageHeader, UiCard, UiTag, UiIcon, UiEmpty, AskAi, TranslatePipe],
+  imports: [RouterLink, PageHeader, UiCard, UiTag, UiIcon, UiEmpty, UiSkeleton, AskAi, TranslatePipe],
   templateUrl: './bill-detail.html',
   styleUrl: './bill-detail.scss',
 })

@@ -30,4 +30,16 @@ public enum DocumentType {
     }
     throw new IllegalArgumentException("Unknown document_type code: " + code);
   }
+
+  /** Self-registration only ever collects a single "document number" field (no explicit type
+   * picker) and infers CPF vs. CNPJ purely from digit count — 11 for an individual, 14 for a
+   * party/committee entity. */
+  public static DocumentType fromDigitCount(int digitCount) {
+    for (DocumentType type : values()) {
+      if (type.digitCount == digitCount) {
+        return type;
+      }
+    }
+    throw new IllegalArgumentException("documentNumber must have 11 (CPF) or 14 (CNPJ) digits");
+  }
 }

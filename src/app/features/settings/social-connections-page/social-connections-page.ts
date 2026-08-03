@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
-import { UiSection } from '../../../shared/ui/ui-section/ui-section';
 import { UiButton } from '../../../shared/ui/ui-button/ui-button';
 import { UiTag } from '../../../shared/ui/ui-tag/ui-tag';
 import { UiIcon } from '../../../shared/ui/ui-icon/ui-icon';
+import { UiSkeleton } from '../../../shared/ui/ui-skeleton/ui-skeleton';
 import { TranslatePipe } from '../../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../../core/services/translate.service';
 import { AlertsService } from '../../../core/services/alerts.service';
@@ -16,7 +16,7 @@ import { SocialConnection, SocialConnectionService, SocialPlatform } from '../..
 @Component({
   selector: 'app-social-connections-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PageHeader, UiSection, UiButton, UiTag, UiIcon, TranslatePipe],
+  imports: [PageHeader, UiButton, UiTag, UiIcon, UiSkeleton, TranslatePipe],
   templateUrl: './social-connections-page.html',
   styleUrl: './social-connections-page.scss',
 })

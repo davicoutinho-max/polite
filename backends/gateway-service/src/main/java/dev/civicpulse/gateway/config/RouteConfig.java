@@ -75,6 +75,13 @@ public class RouteConfig {
                     .filters(f -> f.stripPrefix(2))
                     .uri(uris.identityUri()))
         .route("identity-auth", r -> r.path("/api/identity/auth/**").filters(f -> f.stripPrefix(2)).uri(uris.identityUri()))
+        // Public, read-only preview so the register page can show an invite before the visitor has
+        // any session at all — issuing/resending/listing/redeeming stay unreachable through the
+        // gateway (platform-configuration-service/party-management-service call identity-service
+        // directly for those, see RegistrationTokenAdapter in each).
+        .route(
+            "identity-registration-tokens-validate",
+            r -> r.path("/api/identity/registration-tokens/validate").filters(f -> f.stripPrefix(2)).uri(uris.identityUri()))
         // --- government-sync-only endpoints: same "structurally unreachable" treatment as
         // /accounts/provision above — party-management's /politicians/sync and platform's
         // /parties/sync must be blocked ahead of their services' own blanket /** routes below,

@@ -42,7 +42,17 @@ import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
     .item__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cp-space-sm); }
     .item__ref { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: var(--cp-secondary); }
     .item__title { font-size: 16px; font-weight: 600; color: var(--cp-on-surface); margin-top: var(--cp-space-xs); }
-    .item__summary { margin: var(--cp-space-xs) 0 0; font-size: 14px; line-height: 20px; color: var(--cp-on-surface-variant); }
+    .item__summary {
+      margin: var(--cp-space-xs) 0 0;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--cp-on-surface-variant);
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+    }
     .item__date { margin-top: var(--cp-space-sm); font-size: 12px; color: var(--cp-on-surface-variant); }
   `,
 })

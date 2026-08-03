@@ -4,6 +4,8 @@ import dev.civicpulse.partymanagement.domain.exception.AffiliationRequestNotFoun
 import dev.civicpulse.partymanagement.domain.exception.AffiliationRequestNotPendingException;
 import dev.civicpulse.partymanagement.domain.exception.AlreadyRepresentativeException;
 import dev.civicpulse.partymanagement.domain.exception.IdentityProvisioningException;
+import dev.civicpulse.partymanagement.domain.exception.InvalidRegistrationTokenException;
+import dev.civicpulse.partymanagement.domain.exception.NotPartyProfileOwnerException;
 import dev.civicpulse.partymanagement.domain.exception.PartyMemberNotFoundException;
 import dev.civicpulse.partymanagement.domain.exception.PartyProfileNotFoundException;
 import dev.civicpulse.partymanagement.domain.exception.RepresentativeNotFoundException;
@@ -50,6 +52,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IdentityProvisioningException.class)
   public ProblemDetail handleIdentityProvisioning(IdentityProvisioningException ex) {
     return problem(HttpStatus.BAD_GATEWAY, "Politician registration failed", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidRegistrationTokenException.class)
+  public ProblemDetail handleInvalidRegistrationToken(InvalidRegistrationTokenException ex) {
+    return problem(HttpStatus.GONE, "Invalid invite token", ex.getMessage());
+  }
+
+  @ExceptionHandler(NotPartyProfileOwnerException.class)
+  public ProblemDetail handleNotPartyProfileOwner(NotPartyProfileOwnerException ex) {
+    return problem(HttpStatus.FORBIDDEN, "Not the party profile owner", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

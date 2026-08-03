@@ -39,6 +39,35 @@
   &__spinner {
     animation: feed-spin 1s linear infinite;
   }
+
+  &__skeleton-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-sm);
+  }
+
+  &__skeleton-header {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+  }
+
+  &__skeleton-id {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-xs);
+    flex: 1;
+  }
+
+  &__skeleton-tags,
+  &__skeleton-actions {
+    display: flex;
+    gap: var(--cp-space-sm);
+  }
+
+  &__skeleton-actions {
+    margin-top: var(--cp-space-xs);
+  }
 }
 
 @keyframes feed-spin {

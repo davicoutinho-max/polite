@@ -12,6 +12,7 @@ import { UiCard } from '../../ui/ui-card/ui-card';
 import { UiDialog } from '../../ui/ui-dialog/ui-dialog';
 import { UiIcon } from '../../ui/ui-icon/ui-icon';
 import { UiTag } from '../../ui/ui-tag/ui-tag';
+import { UiSkeleton } from '../../ui/ui-skeleton/ui-skeleton';
 
 /** One real bill (Câmara/Senado open-data), with its own "View history" (real tramitação, shown
  * as a timeline) and "Ask AI" (real Gemini call, see shared/legislative/ask-ai) modal. Shared
@@ -20,7 +21,7 @@ import { UiTag } from '../../ui/ui-tag/ui-tag';
 @Component({
   selector: 'app-bill-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiCard, UiTag, UiButton, UiIcon, UiDialog, AskAi, TranslatePipe],
+  imports: [RouterLink, UiCard, UiTag, UiButton, UiIcon, UiDialog, UiSkeleton, AskAi, TranslatePipe],
   templateUrl: './bill-card.html',
   styleUrl: './bill-card.scss',
 })

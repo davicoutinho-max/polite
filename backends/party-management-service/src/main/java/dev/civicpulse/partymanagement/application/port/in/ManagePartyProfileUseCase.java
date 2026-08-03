@@ -11,5 +11,5 @@ public interface ManagePartyProfileUseCase {
 
   PartyProfile getProfile(UUID partyId);
 
-  PartyProfile updateProfile(UUID partyId, String history, String program, String statuteUrl, String coverUrl);
+  PartyProfile updateProfile(UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl);
 }

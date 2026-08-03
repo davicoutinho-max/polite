@@ -8,17 +8,20 @@ import { MediaService } from '../../core/services/media.service';
 import { SessionService } from '../../core/services/session.service';
 import { ProfileTab } from '../../core/models';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
-import { UiStat } from '../../shared/ui/ui-stat/ui-stat';
+import { StatStripItem, UiStatStrip } from '../../shared/ui/ui-stat-strip/ui-stat-strip';
 import { DataListItem, UiDataList } from '../../shared/ui/ui-data-list/ui-data-list';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
 import { UiAvatar } from '../../shared/ui/ui-avatar/ui-avatar';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { ProfileTabs } from '../profile/components/profile-tabs/profile-tabs';
 import { PostCard, CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { TranslateService } from '../../core/services/translate.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
+import { UiYoutube } from '../../shared/ui/ui-youtube/ui-youtube';
+import { extractYouTubeId } from '../../shared/utils/video-url';
 
 const TABS: ProfileTab[] = [
   { id: 'activity', label: 'Activity', key: 'tab.activity', icon: 'forum' },
@@ -33,17 +36,19 @@ const TABS: ProfileTab[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     UiSection,
-    UiStat,
+    UiStatStrip,
     UiDataList,
     UiTag,
     UiAvatar,
     UiButton,
     UiIcon,
     UiEmpty,
+    UiSkeleton,
     RouterLink,
     ProfileTabs,
     PostCard,
     TranslatePipe,
+    UiYoutube,
   ],
   templateUrl: './party-page.html',
   styleUrl: './party-page.scss',
@@ -58,6 +63,7 @@ export class PartyPage {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly party = this.partyService.party;
+  protected readonly loading = this.partyService.loading;
   protected readonly following = computed(() => this.directory.isFollowing('party', this.party().id));
 
   protected readonly tabs = TABS;
@@ -156,6 +162,11 @@ export class PartyPage {
 
   protected readonly hasStatute = computed(() => !!this.party().statuteUrl && this.party().statuteUrl !== '#');
 
+  protected readonly youtubeVideoId = computed(() => {
+    const url = this.party().videoUrl;
+    return url ? extractYouTubeId(url) : null;
+  });
+
   protected openStatute(): void {
     const url = this.party().statuteUrl;
     if (url && url !== '#') {
@@ -182,6 +193,37 @@ export class PartyPage {
   protected readonly foundedYearDisplay = computed(() => {
     const year = this.party().foundedYear;
     return year !== null ? String(year) : '—';
+  });
+
+  protected readonly statItems = computed<StatStripItem[]>(() => {
+    const p = this.party();
+    const t = (key: string, fallback: string) => this.translate.t(key, fallback);
+    return [
+      {
+        icon: 'groups',
+        label: t('label.members', 'Members'),
+        value: p.memberCount.toLocaleString('pt-BR'),
+        caption: t('label.nationwide', 'Nationwide'),
+      },
+      {
+        icon: 'location_city',
+        label: t('label.directories', 'Directories'),
+        value: p.directories.length.toString(),
+        caption: t('label.active-levels', 'Active levels'),
+      },
+      {
+        icon: 'event',
+        label: t('label.founded', 'Founded'),
+        value: this.foundedYearDisplay(),
+        caption: t('label.years-of-history', 'Years of history'),
+      },
+      {
+        icon: 'how_to_vote',
+        label: t('label.representatives', 'Representatives'),
+        value: p.representatives.length.toString(),
+        caption: t('label.in-office', 'In office'),
+      },
+    ];
   });
 
   protected readonly overview = computed<DataListItem[]>(() => {

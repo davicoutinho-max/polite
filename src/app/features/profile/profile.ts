@@ -10,6 +10,7 @@ import { MessagesService } from '../../core/services/messages.service';
 import { CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { PostCard } from '../feed/components/post-card/post-card';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { ProfileHeader } from './components/profile-header/profile-header';
 import { ProfileTabs } from './components/profile-tabs/profile-tabs';
 import { ProfileOverview } from './components/profile-overview/profile-overview';
@@ -31,6 +32,7 @@ import { TranslatePipe } from '../../shared/pipes/translate.pipe';
     ProfileParliamentary,
     ProfileTransparency,
     ProfileCareer,
+    UiSkeleton,
     TranslatePipe,
   ],
   templateUrl: './profile.html',
@@ -66,6 +68,7 @@ export class Profile {
   protected readonly currentUserAvatar = computed(() => this.session.currentUser().avatarUrl);
 
   protected readonly activeTab = signal('activity');
+  protected readonly loading = signal(true);
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -74,6 +77,7 @@ export class Profile {
       if (!id) {
         return;
       }
+      this.loading.set(true);
       forkJoin([
         this.politicianService.load(id),
         this.politicianService.loadActivity(id),
@@ -81,10 +85,14 @@ export class Profile {
         this.politicianService.loadCareer(id),
         this.politicianService.loadAccountabilityDisclosures(id),
       ]).subscribe({
+        next: () => this.loading.set(false),
         // A failed load (e.g. this id belongs to a party, not a politician) used to leave
         // whichever politician had loaded here previously on screen with no indication anything
         // was wrong — bouncing to /feed makes the failure visible instead of silently stale.
-        error: () => this.router.navigate(['/feed']),
+        error: () => {
+          this.loading.set(false);
+          this.router.navigate(['/feed']);
+        },
       });
     });
   }

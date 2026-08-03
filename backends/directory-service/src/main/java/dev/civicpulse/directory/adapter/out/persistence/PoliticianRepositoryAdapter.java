@@ -33,8 +33,8 @@ class PoliticianRepositoryAdapter implements PoliticianRepository {
   }
 
   @Override
-  public List<Politician> search(String state, GovLevel level, UUID partyId, int page, int pageSize) {
-    return jpaRepository.search(state, level, partyId, PageRequest.of(page, pageSize)).stream().map(mapper::toDomain).toList();
+  public List<Politician> search(String state, GovLevel level, UUID partyId, String q, int page, int pageSize) {
+    return jpaRepository.search(state, level, partyId, q, PageRequest.of(page, pageSize)).stream().map(mapper::toDomain).toList();
   }
 
   @Override

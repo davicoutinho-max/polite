@@ -31,7 +31,7 @@ class PartyRepositoryAdapter implements PartyRepository {
   }
 
   @Override
-  public List<Party> search(PartySpectrum spectrum, int page, int pageSize) {
-    return jpaRepository.search(spectrum, PageRequest.of(page, pageSize)).stream().map(mapper::toDomain).toList();
+  public List<Party> search(PartySpectrum spectrum, String q, int page, int pageSize) {
+    return jpaRepository.search(spectrum, q, PageRequest.of(page, pageSize)).stream().map(mapper::toDomain).toList();
   }
 }

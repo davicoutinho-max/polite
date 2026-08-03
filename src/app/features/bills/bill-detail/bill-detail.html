@@ -1,6 +1,23 @@
 @if (loading()) {
   <div class="bill-detail">
-    <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+    <ui-skeleton width="140px" height="16px" />
+    <div class="bill-detail__skeleton-header">
+      <ui-skeleton width="320px" height="28px" />
+      <ui-skeleton width="200px" height="16px" />
+    </div>
+    <ui-card padding="lg" class="bill-detail__skeleton-summary">
+      <div class="bill-detail__skeleton-tags">
+        <ui-skeleton shape="rect" width="90px" height="24px" />
+        <ui-skeleton shape="rect" width="90px" height="24px" />
+      </div>
+      <ui-skeleton width="100%" height="14px" />
+      <ui-skeleton width="100%" height="14px" />
+      <ui-skeleton width="80%" height="14px" />
+      <div class="bill-detail__skeleton-actions">
+        <ui-skeleton shape="rect" width="140px" height="36px" />
+        <ui-skeleton shape="rect" width="140px" height="36px" />
+      </div>
+    </ui-card>
   </div>
 } @else if (notFound() || !bill()) {
   <div class="bill-detail">
@@ -103,7 +120,25 @@
     <section class="bill-detail__section">
       <h2 class="bill-detail__section-title">{{ 'label.processing-timeline' | translate: 'Processing timeline' }}</h2>
       @if (timelineLoading()) {
-        <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+        <ui-card padding="lg">
+          <div class="timeline">
+            @for (i of [1, 2, 3]; track i; let isLast = $last) {
+              <div class="timeline__item">
+                <div class="timeline__marker">
+                  <ui-skeleton shape="circle" [width]="12" />
+                  @if (!isLast) {
+                    <span class="timeline__line"></span>
+                  }
+                </div>
+                <div class="timeline__content">
+                  <ui-skeleton width="90px" height="13px" />
+                  <ui-skeleton width="100%" height="14px" />
+                  <ui-skeleton width="70%" height="14px" />
+                </div>
+              </div>
+            }
+          </div>
+        </ui-card>
       } @else if (timeline().length === 0) {
         <ui-empty
           icon="history"
@@ -140,7 +175,23 @@
     <section class="bill-detail__section">
       <h2 class="bill-detail__section-title">{{ 'label.voting-status' | translate: 'Voting status' }}</h2>
       @if (votingLoading()) {
-        <p class="bill-detail__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
+        <div class="bill-detail__votes">
+          @for (i of [1, 2]; track i) {
+            <ui-card padding="md" class="vote-record">
+              <div class="vote-record__head">
+                <ui-skeleton shape="rect" width="90px" height="22px" />
+                <ui-skeleton width="80px" height="14px" />
+              </div>
+              <ui-skeleton width="90%" height="14px" />
+              <div class="vote-record__tally">
+                <ui-skeleton width="60px" height="13px" />
+                <ui-skeleton width="60px" height="13px" />
+                <ui-skeleton width="60px" height="13px" />
+                <ui-skeleton width="60px" height="13px" />
+              </div>
+            </ui-card>
+          }
+        </div>
       } @else if (votingRecords().length === 0) {
         <ui-empty
           icon="how_to_vote"

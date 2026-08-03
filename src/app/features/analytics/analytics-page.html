@@ -5,23 +5,46 @@
     icon="analytics"
   />
 
-  <div class="kpis">
-    @for (kpi of kpis(); track kpi.label) {
-      <ui-stat [icon]="kpi.icon" [label]="kpi.label" [value]="kpi.value" [caption]="kpi.caption" />
-    }
-  </div>
+  @if (loading()) {
+    <div class="kpis">
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+    </div>
 
-  <div class="grid">
-    <ui-section [title]="'section.engagement-last-7-days' | translate: 'Engagement — last 7 days'" icon="show_chart">
-      <ui-area-chart [points]="engagement()" />
-    </ui-section>
+    <div class="grid">
+      <ui-section [title]="'section.engagement-last-7-days' | translate: 'Engagement — last 7 days'" icon="show_chart">
+        <ui-skeleton shape="rect" width="100%" height="220px" />
+      </ui-section>
 
-    <ui-section [title]="'section.interactions-by-content-type' | translate: 'Interactions by content type'" icon="bar_chart">
-      <ui-bar-chart [data]="byContentType()" />
-    </ui-section>
+      <ui-section [title]="'section.interactions-by-content-type' | translate: 'Interactions by content type'" icon="bar_chart">
+        <ui-skeleton shape="rect" width="100%" height="220px" />
+      </ui-section>
 
-    <ui-section [title]="'section.reach-by-account-type' | translate: 'Reach by account type'" icon="map">
-      <ui-bar-chart [data]="byAccountType()" />
-    </ui-section>
-  </div>
+      <ui-section [title]="'section.reach-by-account-type' | translate: 'Reach by account type'" icon="map">
+        <ui-skeleton shape="rect" width="100%" height="220px" />
+      </ui-section>
+    </div>
+  } @else {
+    <div class="kpis">
+      @for (kpi of kpis(); track kpi.label) {
+        <ui-stat [icon]="kpi.icon" [label]="kpi.label" [value]="kpi.value" [caption]="kpi.caption" />
+      }
+    </div>
+
+    <div class="grid">
+      <ui-section [title]="'section.engagement-last-7-days' | translate: 'Engagement — last 7 days'" icon="show_chart">
+        <ui-area-chart [points]="engagement()" />
+      </ui-section>
+
+      <ui-section [title]="'section.interactions-by-content-type' | translate: 'Interactions by content type'" icon="bar_chart">
+        <ui-bar-chart [data]="byContentType()" />
+      </ui-section>
+
+      <ui-section [title]="'section.reach-by-account-type' | translate: 'Reach by account type'" icon="map">
+        <ui-bar-chart [data]="byAccountType()" />
+      </ui-section>
+    </div>
+  }
 </div>

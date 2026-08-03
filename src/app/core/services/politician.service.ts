@@ -318,6 +318,42 @@ export class PoliticianService {
     );
   }
 
+  /** Self-service dossier editing — see legislative-service's PoliticianDossierController
+   * (gateway injects X-Account-Id from the caller's own session, checked server-side against
+   * accountId to enforce this can only ever edit the caller's own dossier). A full replace, like
+   * the party profile's own PUT — every field must be resent or it's silently blanked. */
+  updateDossier(
+    accountId: string,
+    fields: { education: string; profession: string; patrimony: string; email: string; phone: string; officeDetail: string },
+  ): Observable<void> {
+    return this.http.put<void>(`${this.apiBase}/politicians/${accountId}/dossier`, fields).pipe(
+      tap(() =>
+        this._politician.update((p) => ({
+          ...p,
+          education: fields.education,
+          profession: fields.profession,
+          patrimony: fields.patrimony,
+          email: fields.email,
+          phone: fields.phone,
+          office: fields.officeDetail,
+        })),
+      ),
+    );
+  }
+
+  /** Append-only — there is no delete/edit endpoint for an individual social link yet. */
+  addSocialLink(accountId: string, platform: string, label: string, handle: string, url: string): Observable<void> {
+    return this.http.post<SocialLinkResponseDto>(`${this.apiBase}/politicians/${accountId}/social-links`, { platform, label, handle, url }).pipe(
+      tap((s) =>
+        this._politician.update((p) => ({
+          ...p,
+          socialLinks: [...p.socialLinks, { icon: PLATFORM_ICONS[s.platform] ?? 'link', label: s.label, handle: s.handle, url: s.url }],
+        })),
+      ),
+      map(() => undefined),
+    );
+  }
+
   loadActivity(accountId: string): Observable<ParliamentaryActivity> {
     return forkJoin({
       items: this.http.get<LegislativeItemResponseDto[]>(`${this.apiBase}/legislative-items`, { params: { politicianAccountId: accountId } }),

@@ -13,6 +13,7 @@ import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiAvatar } from '../../shared/ui/ui-avatar/ui-avatar';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiTag } from '../../shared/ui/ui-tag/ui-tag';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { CompactNumberPipe } from '../../shared/pipes/compact-number.pipe';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../core/services/translate.service';
@@ -37,6 +38,7 @@ const PAGE_SIZE = 9;
     UiAvatar,
     UiIcon,
     UiTag,
+    UiSkeleton,
     CompactNumberPipe,
     TranslatePipe,
   ],
@@ -53,6 +55,7 @@ export class PartiesPage {
     label: this.translate.t(`spectrum.${o.value}`, o.label),
   }));
   protected readonly canFollow = computed(() => this.session.can('follow'));
+  protected readonly loading = this.directory.partiesLoading;
 
   protected readonly spectrumSelect: FilterOption[] = [
     { value: 'all', label: this.translate.t('label.all-spectrums', 'All spectrums') },

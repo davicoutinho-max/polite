@@ -1,3 +1,29 @@
+@if (loading()) {
+  <div class="profile">
+    <div class="profile-skeleton__cover">
+      <ui-skeleton width="100%" height="256px" />
+      <ui-skeleton class="profile-skeleton__avatar" shape="circle" [width]="128" />
+    </div>
+    <div class="profile-skeleton__info">
+      <ui-skeleton width="220px" height="24px" />
+      <ui-skeleton width="280px" height="16px" />
+      <div class="profile-skeleton__actions">
+        <ui-skeleton shape="rect" width="120px" height="40px" />
+        <ui-skeleton shape="rect" width="120px" height="40px" />
+      </div>
+    </div>
+    <div class="profile-skeleton__tabs">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <ui-skeleton shape="rect" width="110px" height="36px" />
+      }
+    </div>
+    <div class="profile-skeleton__body">
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+    </div>
+  </div>
+} @else {
 <div class="profile">
   <app-profile-header
     [politician]="politician()"
@@ -53,3 +79,4 @@
     }
   </section>
 </div>
+}

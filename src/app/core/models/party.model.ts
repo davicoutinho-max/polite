@@ -31,7 +31,12 @@ export interface Party {
   readonly acronym: string;
   readonly number: number;
   readonly logoUrl: string;
+  /** Empty string means no cover has been set — never auto-filled from the logo, so the neutral
+   * placeholder gradient renders instead of stretching the party's own logo across the banner. */
   readonly coverUrl: string;
+  /** Empty string means no presentation video has been set. May be a YouTube link or a direct
+   * video file URL — see extractYouTubeId's javadoc for how the party page tells them apart. */
+  readonly videoUrl: string;
   readonly ideology: string;
   /** Null when unknown — see PartySummary.founded's javadoc for why this is never faked. */
   readonly foundedYear: number | null;

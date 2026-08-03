@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 /** Neutral silhouette shown whenever a real photo isn't available (e.g. politicians synced from
  * government open-data sources — TSE never publishes photos, and Câmara/Senado sometimes omit
@@ -21,6 +21,7 @@ const FALLBACK_AVATAR =
       [alt]="alt()"
       loading="lazy"
       referrerpolicy="no-referrer"
+      (error)="onError()"
     />
   `,
   host: {
@@ -55,5 +56,22 @@ export class UiAvatar {
   readonly size = input(40);
   readonly ring = input(false);
 
-  readonly displaySrc = computed(() => this.src() || FALLBACK_AVATAR);
+  /** Real photo URLs sometimes fail to load (e.g. Câmara's own photo server returning a 500) —
+   * this falls back to the same neutral silhouette used when there's no URL at all, instead of a
+   * broken-image icon. Reset whenever `src` itself changes so a later real photo isn't stuck
+   * showing the fallback forever. */
+  private readonly loadFailed = signal(false);
+
+  readonly displaySrc = computed(() => (this.src() && !this.loadFailed() ? this.src()! : FALLBACK_AVATAR));
+
+  constructor() {
+    effect(() => {
+      this.src();
+      this.loadFailed.set(false);
+    });
+  }
+
+  protected onError(): void {
+    this.loadFailed.set(true);
+  }
 }

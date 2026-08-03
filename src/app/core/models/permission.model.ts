@@ -14,6 +14,9 @@
  *               petitions/consultations/surveys, and group chats.
  * - admin:      platform administrator — creates/edits parties and handles
  *               independent-politician reassignment from a settings screen.
+ *               Also holds every other account type's permission: admin is
+ *               never blocked by a route guard or hidden action that a
+ *               citizen/politician/party could reach.
  */
 export type AccountType = 'visitor' | 'citizen' | 'politician' | 'party' | 'admin';
 
@@ -67,7 +70,25 @@ export const TYPE_PERMISSIONS: Record<AccountType, readonly Permission[]> = {
     'party-admin',
     'analytics',
   ],
-  admin: ['view-public', 'account', 'message', 'platform-admin', 'party-admin', 'analytics'],
+  // Admin can do anything on the platform — every permission that exists, not just the
+  // platform/party-management ones. Never grow another account type's list without also
+  // reviewing this one; admin is meant to be a strict superset.
+  admin: [
+    'view-public',
+    'account',
+    'follow',
+    'react',
+    'message',
+    'participate',
+    'request-affiliation',
+    'membership',
+    'create-fundraiser',
+    'create-participation',
+    'publish-content',
+    'party-admin',
+    'platform-admin',
+    'analytics',
+  ],
 };
 
 export interface AccountTypeOption {
@@ -106,7 +127,7 @@ export const ACCOUNT_TYPE_OPTIONS: readonly AccountTypeOption[] = [
   {
     type: 'admin',
     label: 'Platform Admin',
-    description: 'Creates parties and assigns politicians to them.',
+    description: 'Full access — everything on the platform, no restrictions.',
     icon: 'admin_panel_settings',
   },
 ];

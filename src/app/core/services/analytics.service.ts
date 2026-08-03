@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, inject, Injectable, signal } from '@angular/core';
-import { Observable, forkJoin, map, of, tap } from 'rxjs';
+import { Observable, finalize, forkJoin, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AreaPoint } from '../../shared/ui/ui-area-chart/ui-area-chart';
 import { BarDatum } from '../../shared/ui/ui-bar-chart/ui-bar-chart';
@@ -68,6 +68,11 @@ export class AnalyticsService {
   private readonly _kpis = signal<AnalyticsKpi[]>([]);
   readonly kpis = this._kpis.asReadonly();
 
+  /** Starts false (not true) — an unauthenticated visitor who somehow lands on the analytics page
+   * must never see a permanent skeleton; only flips true inside the authenticated branch below. */
+  private readonly _loading = signal(false);
+  readonly loading = this._loading.asReadonly();
+
   private readonly _engagement = signal<AreaPoint[]>([]);
   readonly engagement = this._engagement.asReadonly();
 
@@ -92,6 +97,7 @@ export class AnalyticsService {
       return of(undefined);
     }
     const authorId = this.session.account().id;
+    this._loading.set(true);
     return forkJoin({
       kpis: this.http.get<KpiSummaryResponseDto>(`${this.apiBase}/${authorId}/kpis`),
       engagement: this.http.get<DailyEngagementResponseDto[]>(`${this.apiBase}/${authorId}/engagement`, { params: { days: 7 } }),
@@ -144,6 +150,7 @@ export class AnalyticsService {
         );
       }),
       map(() => undefined),
+      finalize(() => this._loading.set(false)),
     );
   }
 }

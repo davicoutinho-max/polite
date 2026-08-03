@@ -28,6 +28,11 @@
   color: var(--cp-on-surface-variant);
   line-height: 20px;
   font-size: 14px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .bill__actions {
   display: flex;
@@ -56,6 +61,7 @@
   line-height: 20px;
   padding-bottom: var(--cp-space-md);
   border-bottom: 1px solid var(--cp-outline-variant);
+  overflow-wrap: anywhere;
 }
 .history-dialog__status {
   margin: 0;
@@ -103,6 +109,8 @@
   flex: 1;
   padding-bottom: var(--cp-space-lg);
 }
+.timeline__content ui-skeleton { margin-bottom: var(--cp-space-xs); }
+.timeline__content ui-skeleton:last-child { margin-bottom: 0; }
 .timeline__date {
   display: block;
   font-size: 12px;
@@ -115,6 +123,7 @@
   font-size: 13px;
   color: var(--cp-on-surface-variant);
   line-height: 18px;
+  overflow-wrap: anywhere;
 
   em {
     font-style: normal;

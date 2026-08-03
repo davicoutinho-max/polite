@@ -2,9 +2,11 @@ package dev.civicpulse.identity.adapter.in.web;
 
 import dev.civicpulse.identity.adapter.in.web.dto.AccountPaymentProfileResponse;
 import dev.civicpulse.identity.adapter.in.web.dto.AccountResponse;
+import dev.civicpulse.identity.adapter.in.web.dto.CheckDocumentResponse;
 import dev.civicpulse.identity.adapter.in.web.dto.ProvisionAccountRequest;
 import dev.civicpulse.identity.adapter.in.web.dto.ProvisionSyncedAccountRequest;
 import dev.civicpulse.identity.adapter.in.web.dto.RegisterAccountRequest;
+import dev.civicpulse.identity.application.port.in.CheckDocumentUseCase;
 import dev.civicpulse.identity.application.port.in.GetAccountUseCase;
 import dev.civicpulse.identity.application.port.in.ProvisionSyncedAccountUseCase;
 import dev.civicpulse.identity.application.port.in.ProvisionSyncedAccountUseCase.ProvisionSyncedAccountCommand;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -36,24 +39,43 @@ public class AccountController {
   private final ProvisionSyncedAccountUseCase provisionSyncedAccountUseCase;
   private final GetAccountUseCase getAccountUseCase;
   private final VerifyDocumentUseCase verifyDocumentUseCase;
+  private final CheckDocumentUseCase checkDocumentUseCase;
 
   public AccountController(
       RegisterAccountUseCase registerAccountUseCase,
       ProvisionSyncedAccountUseCase provisionSyncedAccountUseCase,
       GetAccountUseCase getAccountUseCase,
-      VerifyDocumentUseCase verifyDocumentUseCase) {
+      VerifyDocumentUseCase verifyDocumentUseCase,
+      CheckDocumentUseCase checkDocumentUseCase) {
     this.registerAccountUseCase = registerAccountUseCase;
     this.provisionSyncedAccountUseCase = provisionSyncedAccountUseCase;
     this.getAccountUseCase = getAccountUseCase;
     this.verifyDocumentUseCase = verifyDocumentUseCase;
+    this.checkDocumentUseCase = checkDocumentUseCase;
   }
 
-  /** Public self-registration — always a citizen account. */
+  /** Public, read-only — lets the registration flow ask "does this CPF/CNPJ match a real,
+   * unclaimed government-sourced profile?" before creating or changing anything, so it can show
+   * an explicit "is this you? import your data?" confirmation. See CheckDocumentUseCase's javadoc
+   * for why this only ever matches federal deputies (the one source with a real CPF on file). */
+  @GetMapping("/check-document")
+  public CheckDocumentResponse checkDocument(@RequestParam String documentNumber) {
+    return CheckDocumentResponse.from(checkDocumentUseCase.checkDocument(documentNumber));
+  }
+
+  /** Public self-registration — a plain citizen, unless {@code claimAccountId} is set (the
+   * citizen already confirmed, earlier in the flow, that a specific unclaimed synced profile is
+   * them) or the document happens to exact-match one anyway (see RegisterAccountService). */
   @PostMapping("/register")
   public ResponseEntity<AccountResponse> register(@Valid @RequestBody RegisterAccountRequest request) {
+    String digitsOnly = request.documentNumber().replaceAll("\\D", "");
+    DocumentType documentType = DocumentType.fromDigitCount(digitsOnly.length());
+    RegisterAccountCommand command =
+        new RegisterAccountCommand(request.name(), request.handle(), request.email(), request.password(), documentType, request.documentNumber());
     Account account =
-        registerAccountUseCase.registerCitizen(
-            new RegisterAccountCommand(request.name(), request.handle(), request.email(), request.password(), DocumentType.CPF, request.cpf()));
+        request.claimAccountId() == null
+            ? registerAccountUseCase.registerCitizen(command)
+            : registerAccountUseCase.registerCitizen(command, AccountId.of(request.claimAccountId()));
     return created(account);
   }
 

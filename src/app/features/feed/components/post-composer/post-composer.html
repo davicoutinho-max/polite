@@ -186,7 +186,15 @@
       <div class="composer__tools">
         <p-fileupload mode="basic" accept="image/*" [auto]="true" chooseIcon="pi pi-image" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onImageSelected($event)" />
         <ui-icon-button icon="poll" [ariaLabel]="'aria.add-poll' | translate: 'Add poll'" [iconSize]="20" [fill]="pollMode()" (click)="togglePoll()" />
-        <p-fileupload mode="basic" [auto]="true" chooseIcon="pi pi-paperclip" [chooseLabel]="''" styleClass="composer__tool-upload" (onSelect)="onFileSelected($event)" />
+        <p-fileupload
+          mode="basic"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.odt"
+          [auto]="true"
+          chooseIcon="pi pi-paperclip"
+          [chooseLabel]="''"
+          styleClass="composer__tool-upload"
+          (onSelect)="onFileSelected($event)"
+        />
         @if (canGenerateVariants()) {
           <ui-icon-button
             icon="auto_awesome"
@@ -213,9 +221,16 @@
   (close)="closeVariantsDialog()"
 >
   @if (variantsLoading()) {
-    <div class="variants__loading">
-      <ui-icon name="progress_activity" [size]="24" class="variants__spinner" />
-      <span>{{ 'hint.generating-variants' | translate: 'The AI is writing versions for each network…' }}</span>
+    <div class="variants">
+      <div class="variants__tabs-skeleton">
+        <ui-skeleton shape="rect" width="70px" height="28px" />
+        <ui-skeleton shape="rect" width="70px" height="28px" />
+        <ui-skeleton shape="rect" width="70px" height="28px" />
+        <ui-skeleton shape="rect" width="70px" height="28px" />
+        <ui-skeleton shape="rect" width="70px" height="28px" />
+      </div>
+      <ui-skeleton shape="rect" width="100%" height="140px" />
+      <ui-skeleton shape="rect" width="100%" height="40px" />
     </div>
   } @else if (variantsError()) {
     <p class="composer__error">

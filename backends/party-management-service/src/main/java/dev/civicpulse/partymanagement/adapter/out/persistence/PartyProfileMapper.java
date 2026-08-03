@@ -8,7 +8,13 @@ class PartyProfileMapper {
 
   PartyProfile toDomain(PartyProfileJpaEntity entity) {
     return PartyProfile.reconstitute(
-        entity.getPartyId(), entity.getHistory(), entity.getProgram(), entity.getStatuteUrl(), entity.getCoverUrl(), entity.getUpdatedAt());
+        entity.getPartyId(),
+        entity.getHistory(),
+        entity.getProgram(),
+        entity.getStatuteUrl(),
+        entity.getCoverUrl(),
+        entity.getVideoUrl(),
+        entity.getUpdatedAt());
   }
 
   PartyProfileJpaEntity toEntity(PartyProfile profile) {
@@ -18,6 +24,7 @@ class PartyProfileMapper {
         profile.program().orElse(null),
         profile.statuteUrl().orElse(null),
         profile.coverUrl().orElse(null),
+        profile.videoUrl().orElse(null),
         profile.updatedAt());
   }
 }

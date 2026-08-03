@@ -59,14 +59,35 @@
     </div>
   </div>
 
-  <div class="dir__meta">
-    <span>{{ resultCount() }} {{ (resultCount() === 1 ? 'label.politician' : 'label.politicians') | translate: (resultCount() === 1 ? 'politician' : 'politicians') }}</span>
-    <button type="button" class="dir__reset" (click)="clearFilters()">
-      <ui-icon name="filter_alt_off" [size]="16" /> {{ 'button.clear-filters' | translate: 'Clear filters' }}
-    </button>
-  </div>
+  @if (!loading()) {
+    <div class="dir__meta">
+      <span>{{ resultCount() }} {{ (resultCount() === 1 ? 'label.politician' : 'label.politicians') | translate: (resultCount() === 1 ? 'politician' : 'politicians') }}</span>
+      <button type="button" class="dir__reset" (click)="clearFilters()">
+        <ui-icon name="filter_alt_off" [size]="16" /> {{ 'button.clear-filters' | translate: 'Clear filters' }}
+      </button>
+    </div>
+  }
 
-  @if (resultCount() === 0) {
+  @if (loading()) {
+    <div class="dir__grid">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <article class="pcard">
+          <div class="pcard__main">
+            <ui-skeleton shape="circle" [width]="56" />
+            <div class="pcard__id">
+              <ui-skeleton width="140px" height="16px" />
+              <ui-skeleton width="100px" height="13px" />
+            </div>
+            <ui-skeleton shape="rect" width="48px" height="22px" />
+          </div>
+          <div class="pcard__tags">
+            <ui-skeleton width="90px" height="13px" />
+          </div>
+          <ui-skeleton shape="rect" width="100%" height="36px" />
+        </article>
+      }
+    </div>
+  } @else if (resultCount() === 0) {
     <div class="dir__empty">
       <ui-icon name="search_off" [size]="40" />
       <p>{{ 'empty.no-politicians-match' | translate: 'No politicians match your filters.' }}</p>

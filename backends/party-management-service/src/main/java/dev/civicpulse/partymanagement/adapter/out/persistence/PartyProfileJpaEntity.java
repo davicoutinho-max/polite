@@ -24,17 +24,22 @@ public class PartyProfileJpaEntity {
   @Column(name = "cover_url")
   private String coverUrl;
 
+  @Column(name = "video_url")
+  private String videoUrl;
+
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
   protected PartyProfileJpaEntity() {}
 
-  public PartyProfileJpaEntity(UUID partyId, String history, String program, String statuteUrl, String coverUrl, Instant updatedAt) {
+  public PartyProfileJpaEntity(
+      UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl, Instant updatedAt) {
     this.partyId = partyId;
     this.history = history;
     this.program = program;
     this.statuteUrl = statuteUrl;
     this.coverUrl = coverUrl;
+    this.videoUrl = videoUrl;
     this.updatedAt = updatedAt;
   }
 
@@ -56,6 +61,10 @@ public class PartyProfileJpaEntity {
 
   public String getCoverUrl() {
     return coverUrl;
+  }
+
+  public String getVideoUrl() {
+    return videoUrl;
   }
 
   public Instant getUpdatedAt() {

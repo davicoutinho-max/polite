@@ -130,9 +130,9 @@
             }
           </ui-section>
 
-          <ui-section [title]="'section.register-politician' | translate: 'Register a new politician'" icon="person_add_alt">
+          <ui-section [title]="'section.invite-politician' | translate: 'Invite a politician'" icon="person_add_alt">
             <p class="register-hint">
-              {{ 'hint.register-politician' | translate: 'Only parties can register a politician. Registering here links them to your party immediately.' }}
+              {{ 'hint.invite-politician' | translate: "Only parties can invite a politician. They'll receive an email to complete their own registration and pick their own password." }}
             </p>
             <form class="register-form" (submit)="submitNewPolitician(); $event.preventDefault()">
               <div class="register-row">
@@ -148,38 +148,8 @@
                     placeholder="e.g. Jane Doe"
                   />
                 </label>
-                <label class="register-field">
-                  <span>{{ 'field.handle' | translate: 'Handle' }}</span>
-                  <input
-                    pInputText
-                    type="text"
-                    maxlength="30"
-                    [value]="registerHandle()"
-                    (input)="onHandleInput($any($event.target).value)"
-                    placeholder="jane.doe"
-                  />
-                  @if (registerHandle() && !registerHandleValid()) {
-                    <span class="register-field__hint register-field__hint--error">{{ 'hint.handle-format' | translate: 'Lowercase letters, numbers, dots and underscores only.' }}</span>
-                  }
-                </label>
               </div>
               <div class="register-row">
-                <label class="register-field">
-                  <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
-                  <input
-                    pInputText
-                    type="text"
-                    inputmode="numeric"
-                    required
-                    maxlength="14"
-                    [value]="registerCpf()"
-                    (input)="onCpfInput($any($event.target).value)"
-                    placeholder="000.000.000-00"
-                  />
-                  @if (registerCpf() && !registerCpfValid()) {
-                    <span class="register-field__hint register-field__hint--error">{{ 'hint.cpf-invalid' | translate: 'Enter a valid CPF.' }}</span>
-                  }
-                </label>
                 <label class="register-field register-field--grow">
                   <span>{{ 'field.position' | translate: 'Position' }}</span>
                   <p-select
@@ -213,7 +183,7 @@
               </div>
               <div class="register-row">
                 <label class="register-field register-field--grow">
-                  <span>{{ 'field.email' | translate: 'Email' }}</span>
+                  <span>{{ 'field.invite-email' | translate: "Politician's email" }}</span>
                   <input
                     pInputText
                     type="email"
@@ -227,21 +197,6 @@
                     <span class="register-field__hint register-field__hint--error">{{ 'hint.email-invalid' | translate: 'Enter a valid email address.' }}</span>
                   }
                 </label>
-                <label class="register-field register-field--grow">
-                  <span>{{ 'field.password' | translate: 'Password' }}</span>
-                  <input
-                    pInputText
-                    type="password"
-                    required
-                    minlength="8"
-                    [value]="registerPassword()"
-                    (input)="registerPassword.set($any($event.target).value)"
-                    placeholder="••••••••"
-                  />
-                  @if (registerPassword() && !registerPasswordValid()) {
-                    <span class="register-field__hint register-field__hint--error">{{ 'hint.password-length' | translate: 'At least 8 characters.' }}</span>
-                  }
-                </label>
               </div>
 
               @if (registerError()) {
@@ -249,13 +204,43 @@
               }
 
               <ui-button
-                [label]="'button.register-link' | translate: 'Register & link'"
+                [label]="'button.send-invite' | translate: 'Send invite'"
                 icon="person_add_alt"
                 variant="filled"
                 type="submit"
                 [disabled]="registerSubmitting() || !registerFormValid()"
               />
             </form>
+          </ui-section>
+
+          <ui-section [title]="'section.politician-invites' | translate: 'Politician invites'" icon="mail">
+            @if (politicianInvites().length) {
+              <ul class="requests">
+                @for (invite of politicianInvites(); track invite.id) {
+                  <li class="request">
+                    <ui-icon name="mail" [size]="20" />
+                    <div class="request__body">
+                      <div class="request__name">{{ invite.targetEmail }}</div>
+                    </div>
+                    <ui-tag
+                      [label]="invite.status === 'pending' ? ('label.pending' | translate: 'Pending') : invite.status === 'consumed' ? ('label.registered' | translate: 'Registered') : ('label.expired' | translate: 'Expired')"
+                      [severity]="invite.status === 'pending' ? 'info' : invite.status === 'consumed' ? 'success' : 'danger'"
+                    />
+                    @if (invite.status !== 'consumed') {
+                      <ui-button
+                        [label]="'button.resend' | translate: 'Resend'"
+                        icon="refresh"
+                        variant="outlined"
+                        [disabled]="resendingInviteId() === invite.id"
+                        (click)="resendPoliticianInvite(invite.id)"
+                      />
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <ui-empty icon="mail" [title]="'empty.no-politician-invites.title' | translate: 'No invites sent yet'" />
+            }
           </ui-section>
         }
       }

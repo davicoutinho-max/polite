@@ -12,5 +12,5 @@ public interface PartyRepository {
 
   Optional<Party> findById(UUID id);
 
-  List<Party> search(PartySpectrum spectrum, int page, int pageSize);
+  List<Party> search(PartySpectrum spectrum, String q, int page, int pageSize);
 }

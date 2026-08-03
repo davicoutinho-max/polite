@@ -62,7 +62,60 @@
 }
 @media (min-width: 768px) { .party__content { padding: 0 var(--cp-space-xl) var(--cp-space-xl); } }
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--cp-space-md); }
+
+.party-skeleton {
+  &__body {
+    position: relative;
+    margin: -56px 0 0;
+    padding: 0 var(--cp-margin-mobile);
+    display: flex;
+    align-items: flex-end;
+    gap: var(--cp-space-lg);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-sm);
+    padding-bottom: var(--cp-space-sm);
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--cp-space-md);
+    margin: var(--cp-space-xl) 0 0;
+    padding: 0 var(--cp-margin-mobile);
+  }
+
+  &__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-sm);
+    margin: var(--cp-space-lg) 0 0;
+    padding: 0 var(--cp-margin-mobile);
+  }
+
+  &__blocks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-md);
+    margin: var(--cp-space-lg) 0 0;
+    padding: 0 var(--cp-margin-mobile) var(--cp-space-xl);
+  }
+}
+
+@media (min-width: 768px) {
+  .party-skeleton {
+    &__body,
+    &__stats,
+    &__tabs,
+    &__blocks {
+      padding-left: var(--cp-margin-desktop);
+      padding-right: var(--cp-margin-desktop);
+    }
+  }
+}
 
 .grid { display: grid; grid-template-columns: 1fr; gap: var(--cp-space-lg); }
 @media (min-width: 1024px) { .grid { grid-template-columns: 2fr 1fr; align-items: start; } }
@@ -70,7 +123,9 @@
 
 .party__activity { display: flex; flex-direction: column; gap: var(--cp-space-lg); }
 
-.prose { margin: 0; font-size: 16px; line-height: 24px; color: var(--cp-on-surface-variant); }
+.prose { margin: 0; font-size: 16px; line-height: 24px; color: var(--cp-on-surface-variant); overflow-wrap: anywhere; }
+
+.presentation-video { display: block; width: 100%; border-radius: var(--cp-radius); background: #000; }
 
 .directories, .events { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--cp-space-md); }
 .reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }

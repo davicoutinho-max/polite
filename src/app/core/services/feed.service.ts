@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { EMPTY, Observable, catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FeedSort, Post, PostComment, PostDraft, PostKind, PostPollOption, PostVisibility, StatusTag, TagSeverity, UserSummary } from '../models';
 import { relativeTime } from '../utils/relative-time';
@@ -114,6 +114,7 @@ export class FeedService {
   private readonly _page = signal(0);
   private readonly _hasMore = signal(true);
   private readonly _loadingMore = signal(false);
+  private readonly _loading = signal(true);
 
   readonly sort = this._sort.asReadonly();
   readonly liveNow = this._liveNow.asReadonly();
@@ -121,6 +122,9 @@ export class FeedService {
    * page (the standard "ran out of rows" signal for this style of offset pagination). */
   readonly hasMore = this._hasMore.asReadonly();
   readonly loadingMore = this._loadingMore.asReadonly();
+  /** True only around the initial `reloadFeed()` — never re-flips for `loadMore()`, which has its
+   * own `loadingMore` flag and a "Loading more…" affordance already correctly modeled. */
+  readonly loading = this._loading.asReadonly();
 
   /** Posts ordered according to the active sort. */
   readonly posts = computed<Post[]>(() => {
@@ -153,7 +157,11 @@ export class FeedService {
   reloadFeed(): Observable<Post[]> {
     this._page.set(0);
     this._hasMore.set(true);
-    return this.fetchPage(0).pipe(tap((posts) => this._posts.set(posts)));
+    this._loading.set(true);
+    return this.fetchPage(0).pipe(
+      tap((posts) => this._posts.set(posts)),
+      finalize(() => this._loading.set(false)),
+    );
   }
 
   /** Appends the next page — the infinite-scroll sentinel on the feed page calls this. A no-op

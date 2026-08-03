@@ -14,11 +14,41 @@ import {
   TranslationEntry,
 } from '../models';
 
-export interface NewPartyInput extends NewParty {
+/** Redeeming a party invite token (see PartyInvite's javadoc) — the party's name/acronym/number/
+ * ideology/president/CNPJ were already vetted by the admin at invite time, not typed here. */
+export interface RedeemPartyInviteInput {
+  readonly registrationToken: string;
   readonly handle: string;
   readonly email: string;
   readonly password: string;
-  readonly documentNumber: string;
+}
+
+/** A party invite token issued from the platform-admin panel — replaces the old "admin types the
+ * new party's password directly" flow. See identity-service's RegistrationToken javadoc. */
+export interface PartyInvite {
+  readonly id: string;
+  readonly token: string;
+  readonly targetEmail: string | null;
+  readonly status: 'pending' | 'consumed' | 'expired';
+}
+
+/** {@code cnpj} is required — a party is a pessoa jurídica under Lei 9.096/95, and its tax id is
+ * exactly the kind of fact the admin should already have on file when vetting a real party, not
+ * something left for whoever redeems the invite link to self-report unverified. */
+export interface NewPartyInviteInput extends NewParty {
+  readonly cnpj: string;
+  readonly targetEmail: string;
+}
+
+interface PartyInviteResponse {
+  readonly id: string;
+  readonly token: string;
+  readonly targetEmail: string | null;
+  readonly status: string;
+}
+
+function toPartyInvite(dto: PartyInviteResponse): PartyInvite {
+  return { id: dto.id, token: dto.token, targetEmail: dto.targetEmail, status: dto.status as PartyInvite['status'] };
 }
 
 interface PartyRegistryResponse {
@@ -139,24 +169,44 @@ export class PlatformService {
     return this.politicians().filter((p) => p.partyId === partyId);
   }
 
-  createParty(input: NewPartyInput): Observable<PartyRegistryEntry> {
+  /** Redeems a party invite token — called from the public register page, not the admin panel
+   * (which only issues invites now, see {@link issuePartyInvite}). */
+  createParty(input: RedeemPartyInviteInput): Observable<PartyRegistryEntry> {
     return this.http
       .post<PartyRegistryResponse>(`${this.apiBase}/parties`, {
-        name: input.name,
-        acronym: input.acronym,
-        number: input.number,
-        president: input.president,
-        ideology: input.ideology,
+        registrationToken: input.registrationToken,
         handle: input.handle,
         email: input.email,
         password: input.password,
-        documentType: 'cnpj',
-        documentNumber: input.documentNumber,
       })
       .pipe(
         map(toPartyRegistryEntry),
         tap((entry) => this._parties.update((list) => [...list, entry])),
       );
+  }
+
+  /** Platform-admin issuing a party invite (name/acronym/number/ideology/president/CNPJ vetted
+   * here, emailed as a token the party's own contact redeems with their own password). */
+  issuePartyInvite(input: NewPartyInviteInput): Observable<PartyInvite> {
+    return this.http
+      .post<PartyInviteResponse>(`${this.apiBase}/party-invites`, {
+        name: input.name,
+        acronym: input.acronym,
+        number: input.number,
+        ideology: input.ideology,
+        president: input.president,
+        cnpj: input.cnpj,
+        targetEmail: input.targetEmail,
+      })
+      .pipe(map(toPartyInvite));
+  }
+
+  resendPartyInvite(id: string): Observable<PartyInvite> {
+    return this.http.post<PartyInviteResponse>(`${this.apiBase}/party-invites/${id}/resend`, {}).pipe(map(toPartyInvite));
+  }
+
+  listPartyInvites(): Observable<PartyInvite[]> {
+    return this.http.get<PartyInviteResponse[]>(`${this.apiBase}/party-invites`).pipe(map((list) => list.map(toPartyInvite)));
   }
 
   assignPolitician(politicianId: string, partyId: string | null): Observable<void> {

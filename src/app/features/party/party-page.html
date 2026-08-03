@@ -1,3 +1,33 @@
+@if (loading()) {
+  <div class="party">
+    <div class="party-skeleton__cover">
+      <ui-skeleton width="100%" height="200px" />
+    </div>
+    <div class="party-skeleton__body">
+      <ui-skeleton shape="rect" [width]="112" [height]="112" />
+      <div class="party-skeleton__info">
+        <ui-skeleton width="220px" height="24px" />
+        <ui-skeleton width="160px" height="16px" />
+      </div>
+    </div>
+    <div class="party-skeleton__stats">
+      <ui-skeleton shape="rect" width="100%" height="86px" />
+      <ui-skeleton shape="rect" width="100%" height="86px" />
+      <ui-skeleton shape="rect" width="100%" height="86px" />
+      <ui-skeleton shape="rect" width="100%" height="86px" />
+    </div>
+    <div class="party-skeleton__tabs">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <ui-skeleton shape="rect" width="110px" height="36px" />
+      }
+    </div>
+    <div class="party-skeleton__blocks">
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+      <ui-skeleton shape="rect" width="100%" height="90px" />
+    </div>
+  </div>
+} @else {
 <div class="party">
   <header class="hero">
     @if (party().coverUrl) {
@@ -64,12 +94,7 @@
   </header>
 
   <div class="party__content">
-    <div class="stats">
-      <ui-stat icon="groups" [label]="'label.members' | translate: 'Members'" [value]="party().memberCount.toLocaleString('pt-BR')" [caption]="'label.nationwide' | translate: 'Nationwide'" />
-      <ui-stat icon="location_city" [label]="'label.directories' | translate: 'Directories'" [value]="party().directories.length.toString()" [caption]="'label.active-levels' | translate: 'Active levels'" />
-      <ui-stat icon="event" [label]="'label.founded' | translate: 'Founded'" [value]="foundedYearDisplay()" [caption]="'label.years-of-history' | translate: 'Years of history'" />
-      <ui-stat icon="how_to_vote" [label]="'label.representatives' | translate: 'Representatives'" [value]="party().representatives.length.toString()" [caption]="'label.in-office' | translate: 'In office'" />
-    </div>
+    <ui-stat-strip [items]="statItems()" />
 
     <app-profile-tabs [tabs]="tabs" [activeId]="activeTab()" (tabChange)="setActiveTab($event)" />
 
@@ -98,6 +123,16 @@
       @case ('overview') {
         <div class="grid">
           <div class="grid__main">
+            @if (youtubeVideoId(); as videoId) {
+              <ui-section [title]="'section.presentation-video' | translate: 'Presentation video'" icon="smart_display">
+                <ui-youtube [videoId]="videoId" [title]="party().name" />
+              </ui-section>
+            } @else if (party().videoUrl) {
+              <ui-section [title]="'section.presentation-video' | translate: 'Presentation video'" icon="smart_display">
+                <video class="presentation-video" [src]="party().videoUrl" controls></video>
+              </ui-section>
+            }
+
             <ui-section [title]="'section.history' | translate: 'History'" icon="history_edu">
               <p class="prose">{{ party().history }}</p>
             </ui-section>
@@ -212,3 +247,4 @@
     }
   </div>
 </div>
+}

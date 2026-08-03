@@ -48,10 +48,11 @@ public class PoliticianController {
       @RequestParam(required = false) String state,
       @RequestParam(required = false) String level,
       @RequestParam(required = false) UUID partyId,
+      @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int pageSize) {
     GovLevel govLevel = level == null ? null : GovLevel.fromCode(level);
-    return searchDirectoryUseCase.searchPoliticians(state, govLevel, partyId, page, pageSize).stream()
+    return searchDirectoryUseCase.searchPoliticians(state, govLevel, partyId, q, page, pageSize).stream()
         .map(PoliticianResponse::from)
         .toList();
   }

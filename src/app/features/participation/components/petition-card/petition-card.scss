@@ -20,6 +20,11 @@
   font-size: 14px;
   line-height: 20px;
   color: var(--cp-on-surface-variant);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .thumb {
   display: block;
@@ -77,6 +82,7 @@
   margin: 0 0 var(--cp-space-md);
   color: var(--cp-on-surface-variant);
   line-height: 22px;
+  overflow-wrap: anywhere;
 }
 .details__image {
   display: block;
@@ -156,6 +162,18 @@
 .bills__load-more {
   display: flex;
   justify-content: center;
+}
+.bill-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-sm);
+
+  &__head,
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+  }
 }
 
 // ---- Sign wizard ----

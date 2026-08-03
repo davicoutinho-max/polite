@@ -18,7 +18,10 @@
     @case ('directory') {
       @if (showForm()) {
         <form class="platform__form" (submit)="createParty(); $event.preventDefault()">
-          <h3>{{ 'section.register-party' | translate: 'Register a party' }}</h3>
+          <h3>{{ 'section.invite-party' | translate: 'Invite a party' }}</h3>
+          <p class="platform__form-hint">
+            {{ 'hint.invite-party' | translate: 'These fields become the party\'s official identity — the invite is emailed to their contact, who picks their own password when redeeming it.' }}
+          </p>
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
               <span>{{ 'field.name' | translate: 'Name' }}</span>
@@ -45,29 +48,28 @@
           </div>
           <div class="platform__row">
             <label class="platform__field platform__field--grow">
-              <span>{{ 'field.handle' | translate: 'Handle' }}</span>
-              <input pInputText type="text" required [value]="handle()" (input)="handle.set($any($event.target).value)" placeholder="greenfuture" />
+              <span>{{ 'field.party-cnpj' | translate: 'CNPJ' }}</span>
+              <input
+                pInputText
+                type="text"
+                inputmode="numeric"
+                required
+                maxlength="18"
+                [value]="cnpj()"
+                (input)="onCnpjInput($any($event.target).value)"
+                placeholder="00.000.000/0000-00"
+              />
             </label>
             <label class="platform__field platform__field--grow">
-              <span>{{ 'field.email' | translate: 'Email' }}</span>
-              <input pInputText type="email" required [value]="email()" (input)="email.set($any($event.target).value)" placeholder="party@example.org" />
-            </label>
-          </div>
-          <div class="platform__row">
-            <label class="platform__field platform__field--grow">
-              <span>{{ 'field.password' | translate: 'Password' }}</span>
-              <input pInputText type="password" required [value]="password()" (input)="password.set($any($event.target).value)" [placeholder]="'label.min-8-characters' | translate: 'Min. 8 characters'" />
-            </label>
-            <label class="platform__field platform__field--grow">
-              <span>{{ 'field.cnpj' | translate: 'CNPJ (gabinete/comitê)' }}</span>
-              <input pInputText type="text" required [value]="documentNumber()" (input)="documentNumber.set($any($event.target).value)" placeholder="00000000000000" />
+              <span>{{ 'field.invite-email' | translate: "Party contact's email" }}</span>
+              <input pInputText type="email" required [value]="targetEmail()" (input)="targetEmail.set($any($event.target).value)" placeholder="party@example.org" />
             </label>
           </div>
           @if (createError()) {
             <p class="platform__form-error">{{ createError() }}</p>
           }
           <ui-button
-            [label]="(createSubmitting() ? 'button.saving' : 'button.create-party') | translate: (createSubmitting() ? 'Saving…' : 'Create party')"
+            [label]="(createSubmitting() ? 'button.saving' : 'button.send-invite') | translate: (createSubmitting() ? 'Saving…' : 'Send invite')"
             icon="check"
             variant="filled"
             type="submit"
@@ -79,30 +81,101 @@
       <ui-section [title]="'section.registered-parties' | translate: 'Registered parties'" icon="flag">
         <ui-button
           slot="action"
-          [label]="(showForm() ? 'button.cancel' : 'button.register-party') | translate: (showForm() ? 'Cancel' : 'Register party')"
+          [label]="(showForm() ? 'button.cancel' : 'button.invite-party') | translate: (showForm() ? 'Cancel' : 'Invite party')"
           [icon]="showForm() ? 'close' : 'add'"
           variant="filled"
           (click)="toggleForm()"
         />
-        <div class="platform__parties">
-          @for (party of parties(); track party.id) {
-            <article class="platform__party">
-              <header class="platform__party-head">
-                <span class="platform__party-badge">{{ party.number }}</span>
-                <div class="platform__party-id">
-                  <span class="platform__party-name">{{ party.name }} <em>({{ party.acronym }})</em></span>
-                  <span class="platform__party-meta">{{ party.ideology }}</span>
-                </div>
-                <ui-tag [label]="party.memberCount + ' ' + ('label.members-lower' | translate: 'members')" severity="info" />
-              </header>
-              <div class="platform__party-body">
-                <span class="platform__party-president">
-                  <ui-icon name="person" [size]="16" /> {{ 'label.president' | translate: 'President' }}: {{ party.president }}
-                </span>
-              </div>
-            </article>
-          }
+
+        <div class="platform__party-filters">
+          <p-iconfield class="platform__party-search">
+            <p-inputicon class="pi pi-search" />
+            <input
+              pInputText
+              type="text"
+              [placeholder]="'placeholder.search-parties' | translate: 'Search by name, acronym or ideology…'"
+              [ngModel]="partySearch()"
+              (ngModelChange)="setPartySearch($event)"
+            />
+          </p-iconfield>
+          <p-select
+            [options]="partySortOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="partySort()"
+            (ngModelChange)="partySort.set($event)"
+            appendTo="body"
+          />
         </div>
+
+        <p class="platform__party-count">
+          {{ partyResultCount() }} {{ (partyResultCount() === 1 ? 'label.party' : 'label.parties') | translate: (partyResultCount() === 1 ? 'party' : 'parties') }}
+        </p>
+
+        @if (partyResultCount() === 0) {
+          <ui-empty icon="search_off" [title]="'empty.no-parties-match' | translate: 'No parties match your search.'" />
+        } @else {
+          <div class="platform__parties">
+            @for (party of visibleParties(); track party.id) {
+              <article class="platform__party">
+                <a class="platform__party-head" [routerLink]="['/party', party.id]">
+                  <ui-avatar [src]="partyLogo(party.id)" [alt]="party.name" [size]="44" [ring]="true" />
+                  <div class="platform__party-id">
+                    <span class="platform__party-name">{{ party.name }}</span>
+                    <span class="platform__party-meta">{{ party.acronym }} · Nº {{ party.number }}</span>
+                  </div>
+                </a>
+                <p class="platform__party-ideology">{{ party.ideology }}</p>
+                <div class="platform__party-tags">
+                  <ui-tag [label]="(party.memberCount | compactNumber) + ' ' + ('label.members-lower' | translate: 'members')" severity="info" />
+                </div>
+                <div class="platform__party-footer">
+                  <span class="platform__party-president">
+                    <ui-icon name="person" [size]="14" /> {{ party.president }}
+                  </span>
+                  <a class="platform__party-view" [routerLink]="['/party', party.id]">{{ 'button.view-party' | translate: 'View party' }}</a>
+                </div>
+              </article>
+            }
+          </div>
+
+          @if (!allPartiesLoaded()) {
+            <div class="platform__party-sentinel" appInfiniteScroll [disabled]="allPartiesLoaded()" (loadMore)="loadMoreParties()">
+              <ui-icon name="progress_activity" [size]="20" class="platform__party-spinner" />
+              <span>{{ 'label.loading-more' | translate: 'Loading more…' }}</span>
+            </div>
+          }
+        }
+      </ui-section>
+
+      <ui-section [title]="'section.party-invites' | translate: 'Party invites'" icon="mail">
+        @if (invites().length) {
+          <ul class="platform__invites">
+            @for (invite of invites(); track invite.id) {
+              <li class="platform__invite">
+                <ui-icon name="mail" [size]="18" />
+                <div class="platform__invite-body">
+                  <span class="platform__invite-email">{{ invite.targetEmail }}</span>
+                </div>
+                <ui-tag
+                  [label]="invite.status === 'pending' ? ('label.pending' | translate: 'Pending') : invite.status === 'consumed' ? ('label.registered' | translate: 'Registered') : ('label.expired' | translate: 'Expired')"
+                  [severity]="invite.status === 'pending' ? 'info' : invite.status === 'consumed' ? 'success' : 'danger'"
+                />
+                @if (invite.status !== 'consumed') {
+                  <ui-button
+                    [label]="'button.resend' | translate: 'Resend'"
+                    icon="refresh"
+                    variant="outlined"
+                    [disabled]="resendingInviteId() === invite.id"
+                    (click)="resendInvite(invite.id)"
+                  />
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <ui-empty icon="mail" [title]="'empty.no-party-invites.title' | translate: 'No invites sent yet'" />
+        }
       </ui-section>
 
       <ui-section [title]="'section.politician-assignment' | translate: 'Politician assignment'" icon="how_to_reg">

@@ -135,6 +135,7 @@
   padding: var(--cp-space-sm) var(--cp-space-md); border-radius: var(--cp-radius-lg);
   background: var(--cp-surface-container-high); color: var(--cp-on-surface);
   font-size: 14px; line-height: 20px; border-top-left-radius: var(--cp-radius);
+  overflow-wrap: anywhere;
 }
 .bubble--me .bubble__text {
   background: var(--cp-primary-container); color: var(--cp-on-primary);

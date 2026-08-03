@@ -4,6 +4,7 @@ import dev.civicpulse.legislative.domain.exception.DocumentVerificationException
 import dev.civicpulse.legislative.domain.exception.DossierNotFoundException;
 import dev.civicpulse.legislative.domain.exception.InvalidStatusTransitionException;
 import dev.civicpulse.legislative.domain.exception.LegislativeItemNotFoundException;
+import dev.civicpulse.legislative.domain.exception.NotDossierOwnerException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DocumentVerificationException.class)
   public ProblemDetail handleDocumentVerificationFailure(DocumentVerificationException ex) {
     return problem(HttpStatus.SERVICE_UNAVAILABLE, "Document verification unavailable", ex.getMessage());
+  }
+
+  @ExceptionHandler(NotDossierOwnerException.class)
+  public ProblemDetail handleNotDossierOwner(NotDossierOwnerException ex) {
+    return problem(HttpStatus.FORBIDDEN, "Not the dossier owner", ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

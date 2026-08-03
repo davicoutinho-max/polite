@@ -15,9 +15,11 @@ import dev.civicpulse.identity.application.port.out.DocumentCipher;
 import dev.civicpulse.identity.application.port.out.EventPublisher;
 import dev.civicpulse.identity.application.port.out.PasswordHasher;
 import dev.civicpulse.identity.domain.event.AccountRegistered;
+import dev.civicpulse.identity.domain.exception.AccountNotFoundException;
 import dev.civicpulse.identity.domain.exception.DuplicateAccountException;
 import dev.civicpulse.identity.domain.exception.InvalidDocumentNumberException;
 import dev.civicpulse.identity.domain.model.Account;
+import dev.civicpulse.identity.domain.model.AccountId;
 import dev.civicpulse.identity.domain.model.AccountType;
 import dev.civicpulse.identity.domain.model.DocumentType;
 import java.time.Clock;
@@ -203,5 +205,105 @@ class RegisterAccountServiceTest {
     assertThat(result.accountType()).isEqualTo(AccountType.ADMIN);
     assertThat(result.documentType()).isEmpty();
     verifyNoInteractions(documentCipher);
+  }
+
+  @Test
+  void claimsSpecificAccountByIdRegardlessOfDocumentHashMismatch() {
+    // The synced profile carries a synthetic document number (a TSE-sourced state/municipal
+    // politician, say) — nothing like the citizen's own real CPF typed here. The explicit
+    // claimAccountId (chosen via directory search) must still win.
+    AccountId targetId = AccountId.generate();
+    Account synced =
+        Account.registerSynced(
+            targetId,
+            AccountType.POLITICIAN,
+            "Maria Souza",
+            "maria-souza-ver-1234",
+            "ver1234@sync.gov.br",
+            DocumentType.CPF,
+            "synthetic-hash",
+            new byte[] {0},
+            "http://photo",
+            "TSE_CANDIDATO",
+            "1234",
+            NOW);
+    RegisterAccountCommand command =
+        new RegisterAccountCommand("Maria Souza", "mariasouza", "maria@example.com", "s3cret!", DocumentType.CPF, "529.982.247-25");
+
+    when(accountRepository.findById(targetId)).thenReturn(java.util.Optional.of(synced));
+    when(documentCipher.hash("52998224725")).thenReturn("real-cpf-hash");
+    when(accountRepository.existsByDocumentNumberHash("real-cpf-hash")).thenReturn(false);
+    when(documentCipher.encrypt("52998224725")).thenReturn(new byte[] {9});
+    when(passwordHasher.hash("s3cret!")).thenReturn("hashed-password");
+    when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    Account result = service.registerCitizen(command, targetId);
+
+    assertThat(result.id()).isEqualTo(targetId);
+    assertThat(result.isSynced()).isFalse();
+    assertThat(result.documentNumberHash()).contains("real-cpf-hash");
+    assertThat(result.passwordHash()).isEqualTo("hashed-password");
+    verify(eventPublisher).publish(any(AccountRegistered.class));
+  }
+
+  @Test
+  void rejectsClaimOfAnAlreadyClaimedAccount() {
+    AccountId targetId = AccountId.generate();
+    Account alreadyClaimed =
+        Account.register(
+            targetId, AccountType.POLITICIAN, "Maria Souza", "mariasouza", "maria@example.com", "hash", DocumentType.CPF, "hash", new byte[] {1}, NOW);
+    RegisterAccountCommand command =
+        new RegisterAccountCommand("Maria Souza", "mariasouza2", "maria2@example.com", "s3cret!", DocumentType.CPF, "529.982.247-25");
+
+    when(accountRepository.findById(targetId)).thenReturn(java.util.Optional.of(alreadyClaimed));
+
+    assertThatThrownBy(() -> service.registerCitizen(command, targetId)).isInstanceOf(DuplicateAccountException.class);
+
+    verifyNoInteractions(passwordHasher, eventPublisher);
+  }
+
+  @Test
+  void rejectsClaimOfAnUnknownAccountId() {
+    AccountId targetId = AccountId.generate();
+    RegisterAccountCommand command =
+        new RegisterAccountCommand("Maria Souza", "mariasouza", "maria@example.com", "s3cret!", DocumentType.CPF, "529.982.247-25");
+
+    when(accountRepository.findById(targetId)).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> service.registerCitizen(command, targetId)).isInstanceOf(AccountNotFoundException.class);
+  }
+
+  @Test
+  void checkDocumentFindsAnUnclaimedSyncedProfile() {
+    Account synced =
+        Account.registerSynced(
+            AccountId.generate(),
+            AccountType.POLITICIAN,
+            "Acácio Favacho",
+            "acacio-favacho-dep-204379",
+            "dep.acaciofavacho@camara.leg.br",
+            DocumentType.CPF,
+            "cpf-hash",
+            new byte[] {1},
+            "http://photo",
+            "CAMARA_DEPUTADO",
+            "204379",
+            NOW);
+    when(documentCipher.hash("52998224725")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.of(synced));
+
+    var result = service.checkDocument("529.982.247-25");
+
+    assertThat(result).isPresent();
+    assertThat(result.get().name()).isEqualTo("Acácio Favacho");
+    assertThat(result.get().accountType()).isEqualTo("politician");
+  }
+
+  @Test
+  void checkDocumentReturnsEmptyWhenNoMatchOrAlreadyClaimed() {
+    when(documentCipher.hash("52998224725")).thenReturn("cpf-hash");
+    when(accountRepository.findByDocumentNumberHash("cpf-hash")).thenReturn(java.util.Optional.empty());
+
+    assertThat(service.checkDocument("529.982.247-25")).isEmpty();
   }
 }

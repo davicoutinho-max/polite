@@ -11,6 +11,8 @@ import { BillCard } from '../../shared/legislative/bill-card/bill-card';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
+import { UiCard } from '../../shared/ui/ui-card/ui-card';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 type SortKey = 'recent' | 'party';
@@ -32,7 +34,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-bills-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, InputText, Select, PageHeader, BillCard, UiButton, UiIcon, TranslatePipe],
+  imports: [FormsModule, InputText, Select, PageHeader, BillCard, UiButton, UiIcon, UiCard, UiSkeleton, TranslatePipe],
   templateUrl: './bills-page.html',
   styleUrl: './bills-page.scss',
 })

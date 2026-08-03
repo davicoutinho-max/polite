@@ -6,14 +6,13 @@ import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
-import { PartyService } from '../../core/services/party.service';
+import { PartyService, PoliticianInvite } from '../../core/services/party.service';
 import { PlatformService } from '../../core/services/platform.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { SessionService } from '../../core/services/session.service';
 import { ParticipationService } from '../../core/services/participation.service';
 import { AlertsService } from '../../core/services/alerts.service';
 import { AlertCategory, PoliticianSummary, TagSeverity } from '../../core/models';
-import { digitsOnly, formatCpf, isValidCpf } from '../../shared/utils/br-documents';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
 import { UiStat } from '../../shared/ui/ui-stat/ui-stat';
@@ -42,7 +41,6 @@ type AdminTab = 'requests' | 'members' | 'politicians';
 const EVENT_SEVERITY_OPTIONS: TagSeverity[] = ['secondary', 'success', 'warning', 'info', 'neutral'];
 const NOTIFICATION_CATEGORY_OPTIONS: AlertCategory[] = ['party', 'campaign', 'project', 'pec', 'cpi', 'vote'];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const HANDLE_PATTERN = /^[a-z0-9._]{3,30}$/;
 
 const REQUEST_SEVERITY: Record<string, TagSeverity> = {
   pending: 'warning',
@@ -97,6 +95,7 @@ export class AdminPage {
     this.partyService.load(partyId).subscribe();
     this.partyService.reloadRequests(partyId).subscribe();
     this.partyService.reloadMembers(partyId).subscribe();
+    this.partyService.listPoliticianInvites(partyId).subscribe((list) => this.politicianInvites.set(list));
   }
 
   protected readonly tabs: UiTab[] = [
@@ -121,44 +120,37 @@ export class AdminPage {
     return this.directory.politicians().filter((p) => p.partyId === this.party().id && !linkedIds.has(p.id));
   });
 
-  // ---- Register a new politician ----
+  // ---- Invite a politician (replaces the old "party sets the new politician's password
+  // directly" flow — the politician's own contact now redeems the token and picks their own
+  // password, see ManagePoliticianInviteUseCase's javadoc on the backend) ----
   protected readonly registerName = signal('');
-  protected readonly registerHandle = signal('');
   protected readonly registerEmail = signal('');
-  protected readonly registerPassword = signal('');
-  protected readonly registerCpf = signal('');
   protected readonly registerPosition = signal('');
   protected readonly registerState = signal('');
   protected readonly registerError = signal('');
   protected readonly registerSubmitting = signal(false);
 
+  protected readonly politicianInvites = signal<PoliticianInvite[]>([]);
+  protected readonly resendingInviteId = signal<string | null>(null);
+
   protected readonly registerNameValid = computed(() => this.registerName().trim().length > 0);
-  protected readonly registerHandleValid = computed(() => {
-    const handle = this.registerHandle().trim().toLowerCase();
-    return !handle || HANDLE_PATTERN.test(handle);
-  });
-  protected readonly registerCpfValid = computed(() => isValidCpf(this.registerCpf()));
   protected readonly registerPositionValid = computed(() => this.registerPosition().trim().length > 0);
   protected readonly registerStateValid = computed(() => this.registerState().trim().length > 0);
   protected readonly registerEmailValid = computed(() => EMAIL_PATTERN.test(this.registerEmail().trim()));
-  protected readonly registerPasswordValid = computed(() => this.registerPassword().length >= 8);
   protected readonly registerFormValid = computed(
-    () =>
-      this.registerNameValid() &&
-      this.registerHandleValid() &&
-      this.registerCpfValid() &&
-      this.registerPositionValid() &&
-      this.registerStateValid() &&
-      this.registerEmailValid() &&
-      this.registerPasswordValid(),
+    () => this.registerNameValid() && this.registerPositionValid() && this.registerStateValid() && this.registerEmailValid(),
   );
 
-  protected onCpfInput(rawValue: string): void {
-    this.registerCpf.set(formatCpf(rawValue));
-  }
-
-  protected onHandleInput(rawValue: string): void {
-    this.registerHandle.set(rawValue.toLowerCase().replace(/[^a-z0-9._]/g, ''));
+  protected resendPoliticianInvite(id: string): void {
+    const partyId = this.session.account().id;
+    this.resendingInviteId.set(id);
+    this.partyService.resendPoliticianInvite(partyId, id).subscribe({
+      next: () => {
+        this.resendingInviteId.set(null);
+        this.partyService.listPoliticianInvites(partyId).subscribe((list) => this.politicianInvites.set(list));
+      },
+      error: () => this.resendingInviteId.set(null),
+    });
   }
 
   protected readonly quickActions: (QuickAction & { labelKey: string; descKey: string })[] = [
@@ -370,56 +362,35 @@ export class AdminPage {
     const position = this.registerPosition().trim();
     const state = this.registerState().trim();
     const email = this.registerEmail().trim();
-    const password = this.registerPassword();
-    const cpf = this.registerCpf();
 
     if (!this.registerNameValid() || !this.registerPositionValid() || !this.registerStateValid()) {
       this.registerError.set(this.translate.t('error.register-politician-required', 'Fill in the name, position and state.'));
-      return;
-    }
-    if (!this.registerHandleValid()) {
-      this.registerError.set(
-        this.translate.t('error.invalid-handle', 'Handle can only contain lowercase letters, numbers, dots and underscores (3–30 characters).'),
-      );
-      return;
-    }
-    if (!this.registerCpfValid()) {
-      this.registerError.set(this.translate.t('error.invalid-cpf', 'Enter a valid CPF.'));
       return;
     }
     if (!this.registerEmailValid()) {
       this.registerError.set(this.translate.t('error.invalid-email', 'Enter a valid email address.'));
       return;
     }
-    if (!this.registerPasswordValid()) {
-      this.registerError.set(this.translate.t('error.invalid-password', 'Password must be at least 8 characters.'));
-      return;
-    }
 
     this.registerError.set('');
     this.registerSubmitting.set(true);
-    const handle = this.registerHandle().trim() || `${name.toLowerCase().replace(/[^a-z0-9]+/g, '')}${Math.floor(Math.random() * 10000)}`;
-    this.partyService
-      .registerPolitician(this.party().id, { name, handle, email, password, documentNumber: digitsOnly(cpf), roleTitle: position, state })
-      .subscribe({
-        next: () => {
-          this.registerSubmitting.set(false);
-          this.directory.reloadPoliticians().subscribe();
-          this.resetRegisterForm();
-        },
-        error: () => {
-          this.registerSubmitting.set(false);
-          this.registerError.set(this.translate.t('error.register-politician-failed', 'Could not register this politician. That email or CPF may already be in use.'));
-        },
-      });
+    const partyId = this.session.account().id;
+    this.partyService.issuePoliticianInvite(partyId, { name, roleTitle: position, state, targetEmail: email }).subscribe({
+      next: (invite) => {
+        this.registerSubmitting.set(false);
+        this.politicianInvites.update((list) => [invite, ...list]);
+        this.resetRegisterForm();
+      },
+      error: () => {
+        this.registerSubmitting.set(false);
+        this.registerError.set(this.translate.t('error.register-politician-failed', 'Could not create the invite. Please try again.'));
+      },
+    });
   }
 
   private resetRegisterForm(): void {
     this.registerName.set('');
-    this.registerHandle.set('');
     this.registerEmail.set('');
-    this.registerPassword.set('');
-    this.registerCpf.set('');
     this.registerPosition.set('');
     this.registerState.set('');
     this.registerError.set('');

@@ -12,6 +12,7 @@ import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-butto
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiTabs, UiTab } from '../../../../shared/ui/ui-tabs/ui-tabs';
 import { UiDialog } from '../../../../shared/ui/ui-dialog/ui-dialog';
+import { UiSkeleton } from '../../../../shared/ui/ui-skeleton/ui-skeleton';
 import { PlatformService } from '../../../../core/services/platform.service';
 import { TranslateService } from '../../../../core/services/translate.service';
 import { AiAssistantService, SocialVariants } from '../../../../core/services/ai-assistant.service';
@@ -54,6 +55,7 @@ const MODES: UiTab[] = [
     UiIcon,
     UiTabs,
     UiDialog,
+    UiSkeleton,
     TranslatePipe,
   ],
   templateUrl: './post-composer.html',

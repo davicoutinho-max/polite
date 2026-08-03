@@ -5,40 +5,229 @@
       <span>CivicPulse</span>
     </div>
 
-    <h1 class="auth__title">{{ 'page.register.title' | translate: 'Create your account' }}</h1>
-    <p class="auth__subtitle">{{ 'page.register.subtitle' | translate: 'Join as a citizen to follow politicians, parties and take part in civic life.' }}</p>
+    @if (step() === 'invite-loading') {
+      <h1 class="auth__title">{{ 'page.register.title' | translate: 'Create your account' }}</h1>
+      <p class="auth__subtitle">{{ 'hint.checking-invite' | translate: 'Checking your invite…' }}</p>
+    }
 
-    <form class="auth__form" (submit)="submit(); $event.preventDefault()">
-      <label class="auth__field">
-        <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
-        <input pInputText type="text" required autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
-      </label>
-      <label class="auth__field">
-        <span>{{ 'field.email' | translate: 'Email' }}</span>
-        <input pInputText type="email" required autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
-      </label>
-      <label class="auth__field">
-        <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
-        <input pInputText type="text" inputmode="numeric" required autocomplete="off" [value]="cpf()" (input)="cpf.set($any($event.target).value)" placeholder="000.000.000-00" />
-      </label>
-      <label class="auth__field">
-        <span>{{ 'field.password' | translate: 'Password' }}</span>
-        <input pInputText type="password" required autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
-      </label>
+    @if (step() === 'invite') {
+      <h1 class="auth__title">
+        {{
+          inviteAccountType() === 'party'
+            ? ('title.register-party' | translate: 'Register your party')
+            : ('title.register-politician' | translate: 'Register as a politician')
+        }}
+      </h1>
+      <p class="auth__subtitle">
+        {{ 'hint.invite-registered-as' | translate: "You've been invited to register" }}: <strong>{{ invitePrefillName() }}</strong>
+      </p>
 
-      @if (error()) {
-        <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+      <form class="auth__form" (submit)="submitInviteRedemption(); $event.preventDefault()">
+        <label class="auth__field">
+          <span>{{ 'field.handle' | translate: 'Handle' }}</span>
+          <input pInputText type="text" required autocomplete="off" [value]="handle()" (input)="onHandleInput($any($event.target).value)" placeholder="e.g. janedoe" />
+        </label>
+        <label class="auth__field">
+          <span>{{ 'field.email' | translate: 'Email' }}</span>
+          <input pInputText type="email" required autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+        </label>
+        @if (showDocumentField()) {
+          <label class="auth__field">
+            <span>{{ 'field.cpf' | translate: 'CPF' }}</span>
+            <input
+              pInputText
+              type="text"
+              inputmode="numeric"
+              required
+              autocomplete="off"
+              [value]="documentNumber()"
+              (input)="onDocumentInput($any($event.target).value)"
+              placeholder="000.000.000-00"
+            />
+          </label>
+        }
+        <label class="auth__field">
+          <span>{{ 'field.password' | translate: 'Password' }}</span>
+          <input pInputText type="password" required autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+        </label>
+
+        @if (error()) {
+          <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+        }
+
+        <ui-button
+          [label]="'button.continue' | translate: 'Continue'"
+          icon="arrow_forward"
+          variant="filled"
+          type="submit"
+          [block]="true"
+          [disabled]="submitting()"
+        />
+      </form>
+    }
+
+    @if (step() === 'form' || step() === 'checking') {
+      <h1 class="auth__title">{{ 'page.register.title' | translate: 'Create your account' }}</h1>
+      <p class="auth__subtitle">{{ 'page.register.subtitle' | translate: 'Join as a citizen to follow politicians, parties and take part in civic life.' }}</p>
+
+      <form class="auth__form" (submit)="continueFromBasics(); $event.preventDefault()">
+        <label class="auth__field">
+          <span>{{ 'field.full-name' | translate: 'Full name' }}</span>
+          <input pInputText type="text" required autocomplete="name" [value]="name()" (input)="name.set($any($event.target).value)" placeholder="e.g. Jane Doe" />
+        </label>
+        <label class="auth__field">
+          <span>{{ 'field.email' | translate: 'Email' }}</span>
+          <input pInputText type="email" required autocomplete="email" [value]="email()" (input)="email.set($any($event.target).value)" placeholder="you@example.com" />
+        </label>
+        <label class="auth__field">
+          <span>{{ 'field.cpf-or-cnpj' | translate: 'CPF or CNPJ' }}</span>
+          <input
+            pInputText
+            type="text"
+            inputmode="numeric"
+            required
+            autocomplete="off"
+            [value]="documentNumber()"
+            (input)="onDocumentInput($any($event.target).value)"
+            placeholder="000.000.000-00"
+          />
+        </label>
+        <label class="auth__field">
+          <span>{{ 'field.password' | translate: 'Password' }}</span>
+          <input pInputText type="password" required autocomplete="new-password" [value]="password()" (input)="password.set($any($event.target).value)" placeholder="••••••••" />
+        </label>
+
+        @if (error()) {
+          <p class="auth__error"><ui-icon name="error" [size]="16" /> {{ error() }}</p>
+        }
+
+        <ui-button
+          [label]="step() === 'checking' ? ('button.checking' | translate: 'Checking…') : ('button.continue' | translate: 'Continue')"
+          icon="arrow_forward"
+          variant="filled"
+          type="submit"
+          [block]="true"
+          [disabled]="step() === 'checking'"
+        />
+      </form>
+
+      <div class="invite-toggle">
+        <button type="button" class="invite-toggle__link" (click)="toggleTokenField()">
+          {{
+            showTokenField()
+              ? ('button.hide-invite-token' | translate: 'Hide invite token field')
+              : ('button.have-invite-token' | translate: 'Are you a party or politician with an invite? Enter your token')
+          }}
+        </button>
+
+        @if (showTokenField()) {
+          <form class="invite-toggle__form" (submit)="submitManualToken(); $event.preventDefault()">
+            <input
+              pInputText
+              type="text"
+              autocomplete="off"
+              [value]="manualToken()"
+              (input)="manualToken.set($any($event.target).value)"
+              [placeholder]="'placeholder.paste-invite-token' | translate: 'Paste your invite token…'"
+            />
+            <ui-button
+              [label]="checkingManualToken() ? ('button.checking' | translate: 'Checking…') : ('button.continue' | translate: 'Continue')"
+              icon="arrow_forward"
+              variant="tonal"
+              type="submit"
+              [disabled]="checkingManualToken() || !manualToken().trim()"
+            />
+          </form>
+        }
+      </div>
+    }
+
+    @if (step() === 'confirm') {
+      <h1 class="auth__title">{{ 'title.is-this-you' | translate: 'Is this you?' }}</h1>
+      <p class="auth__subtitle">
+        {{ 'hint.found-government-profile' | translate: 'We found a profile that matches — you can import its data or start from scratch.' }}
+      </p>
+
+      @if (matchCandidate(); as candidate) {
+        <div class="match-card">
+          <ui-avatar [src]="candidate.avatarUrl" [alt]="candidate.name" [size]="56" [ring]="true" />
+          <div class="match-card__body">
+            <span class="match-card__name">{{ candidate.name }}</span>
+            <span class="match-card__subtitle">{{ candidate.subtitle }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="match-actions">
+        <ui-button
+          [label]="'button.import-my-data' | translate: 'Yes, import my data'"
+          icon="download"
+          variant="filled"
+          [block]="true"
+          [disabled]="submitting()"
+          (click)="confirmImport(true)"
+        />
+        <ui-button
+          [label]="'button.start-blank' | translate: 'Yes, but I\'ll fill it in myself'"
+          icon="edit"
+          variant="tonal"
+          [block]="true"
+          [disabled]="submitting()"
+          (click)="confirmImport(false)"
+        />
+        <ui-button
+          [label]="'button.not-me' | translate: 'That\'s not me'"
+          icon="close"
+          variant="text"
+          [block]="true"
+          [disabled]="submitting()"
+          (click)="rejectMatch()"
+        />
+      </div>
+    }
+
+    @if (step() === 'search') {
+      <h1 class="auth__title">{{ 'title.are-you-a-politician' | translate: 'Are you a politician or party?' }}</h1>
+      <p class="auth__subtitle">
+        {{ 'hint.search-yourself' | translate: 'Search your name in our directory — if you find yourself, you can claim and import that profile.' }}
+      </p>
+
+      <form class="search-form" (submit)="runSearch(); $event.preventDefault()">
+        <input pInputText type="text" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" [placeholder]="'placeholder.search-your-name' | translate: 'Search your name…'" />
+        <ui-button [label]="'button.search' | translate: 'Search'" icon="search" variant="filled" type="submit" [disabled]="searching()" />
+      </form>
+
+      @if (searching()) {
+        <p class="auth__subtitle">{{ 'hint.searching' | translate: 'Searching…' }}</p>
+      } @else if (searchedOnce() && searchResults().length === 0) {
+        <p class="auth__subtitle">{{ 'hint.no-search-results' | translate: 'No matches found — you can still continue as a citizen.' }}</p>
+      } @else if (searchResults().length > 0) {
+        <ul class="search-results">
+          @for (item of searchResults(); track item.id) {
+            <li class="search-result" (click)="pickSearchResult(item)">
+              <ui-avatar [src]="item.avatarUrl" [alt]="item.name" [size]="40" [ring]="true" />
+              <div class="search-result__body">
+                <span class="search-result__name">{{ item.name }}</span>
+                <span class="search-result__subtitle">{{ item.subtitle }}</span>
+              </div>
+              <ui-icon name="chevron_right" [size]="20" />
+            </li>
+          }
+        </ul>
       }
 
       <ui-button
-        [label]="'button.create-account' | translate: 'Create account'"
-        icon="person_add"
-        variant="filled"
-        type="submit"
+        [label]="'button.none-of-these' | translate: 'None of these, I\'m a regular citizen'"
+        variant="text"
         [block]="true"
         [disabled]="submitting()"
+        (click)="skipToCitizen()"
       />
-    </form>
+    }
+
+    @if (step() === 'submitting') {
+      <p class="auth__subtitle">{{ 'hint.creating-account' | translate: 'Creating your account…' }}</p>
+    }
 
     <p class="auth__switch">
       {{ 'hint.already-have-account' | translate: 'Already have an account?' }} <a routerLink="/login">{{ 'button.sign-in' | translate: 'Sign in' }}</a>

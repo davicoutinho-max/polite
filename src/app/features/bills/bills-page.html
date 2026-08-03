@@ -57,52 +57,75 @@
   </div>
 
   @if (loading()) {
-    <p class="bills-page__status">{{ 'label.loading' | translate: 'Loading…' }}</p>
-  } @else if (error() && (isSearching() ? (searchResults() ?? []).length === 0 : true)) {
-    <p class="bills-page__status">{{ error() }}</p>
-  }
-
-  @if (isSearching()) {
-    <!-- Search results: flat list, only shown when the citizen typed something -->
-    <div class="grid">
-      @for (bill of visibleSearchResults(); track bill.id) {
-        <app-bill-card [bill]="bill" />
-      }
-    </div>
-    @if (!searchExhausted() && (searchResults() ?? []).length > 0) {
-      <div class="bills-page__load-more">
-        <ui-button
-          [label]="'button.load-more' | translate: 'Load more'"
-          icon="expand_more"
-          variant="tonal"
-          [disabled]="loadingMoreSearch()"
-          (click)="loadMoreSearch()"
-        />
-      </div>
+    @for (i of [1, 2]; track i) {
+      <section class="bills-page__section">
+        <ui-skeleton width="180px" height="24px" />
+        <div class="grid">
+          @for (j of [1, 2, 3, 4]; track j) {
+            <ui-card padding="lg" class="bill-skeleton">
+              <div class="bill-skeleton__head">
+                <ui-skeleton shape="rect" width="90px" height="22px" />
+                <ui-skeleton width="70px" height="14px" />
+              </div>
+              <ui-skeleton width="100%" height="14px" />
+              <ui-skeleton width="90%" height="14px" />
+              <div class="bill-skeleton__actions">
+                <ui-skeleton width="90px" height="16px" />
+                <ui-skeleton width="90px" height="16px" />
+                <ui-skeleton width="90px" height="16px" />
+              </div>
+            </ui-card>
+          }
+        </div>
+      </section>
     }
   } @else {
-    <!-- Default view: every main bill type, already loaded, no search required -->
-    @for (type of visibleTypes(); track type.code) {
-      @if (billsForType(type.code).length > 0) {
-        <section class="bills-page__section">
-          <h2 class="bills-page__section-title">{{ type.label }}</h2>
-          <div class="grid">
-            @for (bill of billsForType(type.code); track bill.id) {
-              <app-bill-card [bill]="bill" />
-            }
-          </div>
-          @if (!isExhausted(type.code)) {
-            <div class="bills-page__load-more">
-              <ui-button
-                [label]="'button.load-more' | translate: 'Load more'"
-                icon="expand_more"
-                variant="tonal"
-                [disabled]="loadingMoreType() === type.code"
-                (click)="loadMoreForType(type.code)"
-              />
+    @if (error() && (isSearching() ? (searchResults() ?? []).length === 0 : true)) {
+      <p class="bills-page__status">{{ error() }}</p>
+    }
+
+    @if (isSearching()) {
+      <!-- Search results: flat list, only shown when the citizen typed something -->
+      <div class="grid">
+        @for (bill of visibleSearchResults(); track bill.id) {
+          <app-bill-card [bill]="bill" />
+        }
+      </div>
+      @if (!searchExhausted() && (searchResults() ?? []).length > 0) {
+        <div class="bills-page__load-more">
+          <ui-button
+            [label]="'button.load-more' | translate: 'Load more'"
+            icon="expand_more"
+            variant="tonal"
+            [disabled]="loadingMoreSearch()"
+            (click)="loadMoreSearch()"
+          />
+        </div>
+      }
+    } @else {
+      <!-- Default view: every main bill type, already loaded, no search required -->
+      @for (type of visibleTypes(); track type.code) {
+        @if (billsForType(type.code).length > 0) {
+          <section class="bills-page__section">
+            <h2 class="bills-page__section-title">{{ type.label }}</h2>
+            <div class="grid">
+              @for (bill of billsForType(type.code); track bill.id) {
+                <app-bill-card [bill]="bill" />
+              }
             </div>
-          }
-        </section>
+            @if (!isExhausted(type.code)) {
+              <div class="bills-page__load-more">
+                <ui-button
+                  [label]="'button.load-more' | translate: 'Load more'"
+                  icon="expand_more"
+                  variant="tonal"
+                  [disabled]="loadingMoreType() === type.code"
+                  (click)="loadMoreForType(type.code)"
+                />
+              </div>
+            }
+          </section>
+        }
       }
     }
   }

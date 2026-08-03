@@ -251,18 +251,8 @@
 }
 
 // ---- AI social-media variants dialog ----
-.variants__loading {
-  display: flex;
-  align-items: center;
-  gap: var(--cp-space-sm);
-  padding: var(--cp-space-lg) 0;
-  color: var(--cp-on-surface-variant);
-  font-size: 14px;
-}
-.variants__spinner { animation: variants-spin 1s linear infinite; }
-@keyframes variants-spin { to { transform: rotate(360deg); } }
-
 .variants { display: flex; flex-direction: column; gap: var(--cp-space-md); }
+.variants__tabs-skeleton { display: flex; gap: var(--cp-space-sm); }
 .variants__text {
   width: 100%;
   resize: vertical;

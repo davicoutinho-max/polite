@@ -5,6 +5,7 @@ import { BillsService } from '../../core/services/bills.service';
 import { SessionService } from '../../core/services/session.service';
 import { AlertsService } from '../../core/services/alerts.service';
 import { TranslateService } from '../../core/services/translate.service';
+import { PartyService } from '../../core/services/party.service';
 import { SocialConnectionService, SocialPlatform } from '../../core/services/social-connection.service';
 import { FeedSort as FeedSortValue, PostDraft } from '../../core/models';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
@@ -15,13 +16,27 @@ import { TrendingTopics } from './components/trending-topics/trending-topics';
 import { RelevantBills } from './components/relevant-bills/relevant-bills';
 import { LiveNow } from './components/live-now/live-now';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
+import { UiCard } from '../../shared/ui/ui-card/ui-card';
+import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 
 /** Feed page — orchestrates stores and lays out the two-column feed. */
 @Component({
   selector: 'app-feed',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PostComposer, PostCard, FeedSort, TrendingTopics, RelevantBills, LiveNow, InfiniteScrollDirective, UiIcon, TranslatePipe],
+  imports: [
+    PostComposer,
+    PostCard,
+    FeedSort,
+    TrendingTopics,
+    RelevantBills,
+    LiveNow,
+    InfiniteScrollDirective,
+    UiIcon,
+    UiCard,
+    UiSkeleton,
+    TranslatePipe,
+  ],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
@@ -33,6 +48,7 @@ export class Feed {
   private readonly alerts = inject(AlertsService);
   private readonly translate = inject(TranslateService);
   private readonly socialConnections = inject(SocialConnectionService);
+  private readonly partyService = inject(PartyService);
   private readonly composer = viewChild(PostComposer);
 
   protected readonly currentUser = this.session.currentUser;
@@ -41,6 +57,7 @@ export class Feed {
   /** Citizens/politicians/parties may like and comment; visitors cannot. */
   protected readonly canReact = computed(() => this.session.can('react'));
   protected readonly posts = this.feedService.posts;
+  protected readonly loading = this.feedService.loading;
   protected readonly sort = this.feedService.sort;
   protected readonly topics = this.trendingService.topics;
   protected readonly bills = this.billsService.relevantBills;
@@ -59,9 +76,29 @@ export class Feed {
         if (post && draft.socialPlatforms && draft.socialPlatforms.length > 0) {
           this.publishToSocialNetworks(post.id, draft.socialPlatforms as SocialPlatform[]);
         }
+        if (draft.kind === 'agenda' && draft.agenda) {
+          this.mirrorAgendaAsPartyEvent(draft.agenda);
+        }
       },
       error: () => composer?.onPublishFailed('Could not publish your post. Please try again.'),
     });
+  }
+
+  /** A party's "agenda" post is also a real scheduled event — mirroring it into
+   * party-management-service means it shows up in that party's own Agenda tab (while upcoming)
+   * and Events tab (once its date passes), the same split-by-date view admin-created events
+   * already get (see PartyPage's upcomingEvents/pastEvents). Only parties have an events list at
+   * all, so this is a no-op for politician-authored agenda posts. Best-effort: the post itself
+   * already succeeded by the time this runs, so a failure here is silent rather than rolled back. */
+  private mirrorAgendaAsPartyEvent(agenda: { title: string; date: string; location: string }): void {
+    const account = this.session.account();
+    if (account.accountType !== 'party') {
+      return;
+    }
+    const eventDate = agenda.date.split('T')[0];
+    this.partyService
+      .createEvent(agenda.title, eventDate, agenda.location, this.translate.t('tab.agenda', 'Agenda'), 'secondary', account.id)
+      .subscribe({ error: () => undefined });
   }
 
   /** Best-effort — the in-app post already succeeded by the time this runs, so a cross-posting

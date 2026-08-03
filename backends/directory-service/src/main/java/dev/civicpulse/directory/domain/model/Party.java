@@ -87,6 +87,23 @@ public final class Party {
     this.updatedAt = now;
   }
 
+  /** Self-service update of the party's own registry-style fields. These are normally projected
+   * from {@code PartyRegistered}/{@code PartyNumberCorrected} government-sync events, but a party
+   * that declined to import its government data at registration has nothing to project from and
+   * must be able to fill in every field itself — the same "type it all in by hand" carve-out
+   * already given to a politician's dossier. A future government sync run overwrites these with
+   * whatever it finds, same as it always has; this is a deliberate tradeoff, not an oversight. */
+  public void updateDetails(
+      String name, String acronym, int number, String ideology, Integer foundedYear, String president, Instant now) {
+    this.name = requireNonBlank(name, "name");
+    this.acronym = requireNonBlank(acronym, "acronym");
+    this.number = number;
+    this.ideology = ideology;
+    this.foundedYear = foundedYear;
+    this.president = president;
+    this.updatedAt = now;
+  }
+
   public void incrementMembers(Instant now) {
     this.memberCount++;
     this.updatedAt = now;

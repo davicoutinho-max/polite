@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { Observable, map, of, tap } from 'rxjs';
+import { Observable, finalize, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { GovLevel, PartySpectrum, PartySummary, PoliticianSummary } from '../models';
 import { SessionService } from './session.service';
@@ -103,9 +103,13 @@ export class DirectoryService {
 
   private readonly _politicians = signal<PoliticianSummary[]>([]);
   readonly politicians = this._politicians.asReadonly();
+  private readonly _politiciansLoading = signal(true);
+  readonly politiciansLoading = this._politiciansLoading.asReadonly();
 
   private readonly _parties = signal<PartySummary[]>([]);
   readonly parties = this._parties.asReadonly();
+  private readonly _partiesLoading = signal(true);
+  readonly partiesLoading = this._partiesLoading.asReadonly();
 
   private readonly _followingPoliticians = signal<ReadonlySet<string>>(new Set());
   readonly followingPoliticians = this._followingPoliticians.asReadonly();
@@ -149,21 +153,40 @@ export class DirectoryService {
   }
 
   reloadPoliticians(): Observable<PoliticianSummary[]> {
+    this._politiciansLoading.set(true);
     return this.http.get<PoliticianResponse[]>(`${this.apiBase}/politicians`, { params: { pageSize: DIRECTORY_PAGE_SIZE } }).pipe(
       map((list) => list.map(toPoliticianSummary)),
       tap((list) => this._politicians.set(list)),
+      finalize(() => this._politiciansLoading.set(false)),
     );
   }
 
   reloadParties(): Observable<PartySummary[]> {
+    this._partiesLoading.set(true);
     return this.http.get<PartyResponse[]>(`${this.apiBase}/parties`, { params: { pageSize: DIRECTORY_PAGE_SIZE } }).pipe(
       map((list) => list.map(toPartySummary)),
       tap((list) => this._parties.set(list)),
+      finalize(() => this._partiesLoading.set(false)),
     );
   }
 
   getPolitician(accountId: string): Observable<PoliticianSummary> {
     return this.http.get<PoliticianResponse>(`${this.apiBase}/politicians/${accountId}`).pipe(map(toPoliticianSummary));
+  }
+
+  /** Real server-side name search across the whole synced directory (federal + state +
+   * municipal) — unlike `politicians()`, which only ever holds the first `DIRECTORY_PAGE_SIZE`
+   * rows loaded on startup. Used by the registration flow's "search yourself" fallback for
+   * politicians/parties a CPF/CNPJ match can't find (state/municipal politicians and every party
+   * carry a synthetic document number — see identity-service's DocumentNumberFallback). */
+  searchPoliticiansByName(query: string): Observable<PoliticianSummary[]> {
+    return this.http
+      .get<PoliticianResponse[]>(`${this.apiBase}/politicians`, { params: { q: query, pageSize: 20 } })
+      .pipe(map((list) => list.map(toPoliticianSummary)));
+  }
+
+  searchPartiesByName(query: string): Observable<PartySummary[]> {
+    return this.http.get<PartyResponse[]>(`${this.apiBase}/parties`, { params: { q: query, pageSize: 20 } }).pipe(map((list) => list.map(toPartySummary)));
   }
 
   /** Self-service only — the target account is always the caller's own (resolved gateway-side
@@ -193,6 +216,30 @@ export class DirectoryService {
         this._parties.update((list) => list.map((p) => (p.id === partyId ? { ...p, logoUrl } : p)));
       }),
     );
+  }
+
+  /** Self-service update of a party's own registry-style fields — see directory-service's
+   * Party.updateDetails javadoc for why a party can edit fields normally owned by government
+   * sync (a party that declined to import government data at registration has nothing to
+   * project from and must be able to type all of it in by hand). */
+  updatePartyDetails(
+    name: string,
+    acronym: string,
+    number: number,
+    ideology: string,
+    foundedYear: number | null,
+    president: string,
+  ): Observable<void> {
+    return this.http
+      .patch<void>(`${this.apiBase}/parties/details`, { name, acronym, number, ideology, foundedYear, president })
+      .pipe(
+        tap(() => {
+          const partyId = this.session.account().id;
+          this._parties.update((list) =>
+            list.map((p) => (p.id === partyId ? { ...p, name, acronym, number, ideology, founded: foundedYear, president } : p)),
+          );
+        }),
+      );
   }
 
   reloadFollowing(targetType: 'politician' | 'party'): Observable<string[]> {

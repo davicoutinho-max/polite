@@ -15,31 +15,35 @@ public final class PartyProfile {
   private String program;
   private String statuteUrl;
   private String coverUrl;
+  private String videoUrl;
   private Instant updatedAt;
 
-  private PartyProfile(UUID partyId, String history, String program, String statuteUrl, String coverUrl, Instant updatedAt) {
+  private PartyProfile(
+      UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl, Instant updatedAt) {
     this.partyId = Objects.requireNonNull(partyId);
     this.history = history;
     this.program = program;
     this.statuteUrl = statuteUrl;
     this.coverUrl = coverUrl;
+    this.videoUrl = videoUrl;
     this.updatedAt = Objects.requireNonNull(updatedAt);
   }
 
   public static PartyProfile createBlank(UUID partyId, Instant now) {
-    return new PartyProfile(partyId, null, null, null, null, now);
+    return new PartyProfile(partyId, null, null, null, null, null, now);
   }
 
   public static PartyProfile reconstitute(
-      UUID partyId, String history, String program, String statuteUrl, String coverUrl, Instant updatedAt) {
-    return new PartyProfile(partyId, history, program, statuteUrl, coverUrl, updatedAt);
+      UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl, Instant updatedAt) {
+    return new PartyProfile(partyId, history, program, statuteUrl, coverUrl, videoUrl, updatedAt);
   }
 
-  public void update(String history, String program, String statuteUrl, String coverUrl, Instant now) {
+  public void update(String history, String program, String statuteUrl, String coverUrl, String videoUrl, Instant now) {
     this.history = history;
     this.program = program;
     this.statuteUrl = statuteUrl;
     this.coverUrl = coverUrl;
+    this.videoUrl = videoUrl;
     this.updatedAt = now;
   }
 
@@ -61,6 +65,10 @@ public final class PartyProfile {
 
   public Optional<String> coverUrl() {
     return Optional.ofNullable(coverUrl);
+  }
+
+  public Optional<String> videoUrl() {
+    return Optional.ofNullable(videoUrl);
   }
 
   public Instant updatedAt() {

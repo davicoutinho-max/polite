@@ -96,6 +96,7 @@
     font-size: 16px;
     line-height: 24px;
     color: var(--cp-on-surface);
+    overflow-wrap: anywhere;
   }
 
   &__poll-title {
@@ -327,5 +328,5 @@
   }
   &__name > ui-icon { color: var(--cp-secondary); }
   &__time { font-size: 11px; color: var(--cp-on-surface-variant); }
-  &__text { margin: 2px 0 0; font-size: 14px; line-height: 20px; color: var(--cp-on-surface); }
+  &__text { margin: 2px 0 0; font-size: 14px; line-height: 20px; color: var(--cp-on-surface); overflow-wrap: anywhere; }
 }

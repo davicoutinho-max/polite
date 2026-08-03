@@ -4,7 +4,8 @@ import dev.civicpulse.partymanagement.domain.model.PartyProfile;
 import java.time.Instant;
 import java.util.UUID;
 
-public record PartyProfileResponse(UUID partyId, String history, String program, String statuteUrl, String coverUrl, Instant updatedAt) {
+public record PartyProfileResponse(
+    UUID partyId, String history, String program, String statuteUrl, String coverUrl, String videoUrl, Instant updatedAt) {
 
   public static PartyProfileResponse from(PartyProfile profile) {
     return new PartyProfileResponse(
@@ -13,6 +14,7 @@ public record PartyProfileResponse(UUID partyId, String history, String program,
         profile.program().orElse(null),
         profile.statuteUrl().orElse(null),
         profile.coverUrl().orElse(null),
+        profile.videoUrl().orElse(null),
         profile.updatedAt());
   }
 }

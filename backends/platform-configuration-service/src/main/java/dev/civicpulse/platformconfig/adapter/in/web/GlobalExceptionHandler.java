@@ -3,6 +3,7 @@ package dev.civicpulse.platformconfig.adapter.in.web;
 import dev.civicpulse.platformconfig.domain.exception.CannotRemoveDefaultLanguageException;
 import dev.civicpulse.platformconfig.domain.exception.CountryNotFoundException;
 import dev.civicpulse.platformconfig.domain.exception.DuplicatePartyRegistrationException;
+import dev.civicpulse.platformconfig.domain.exception.InvalidRegistrationTokenException;
 import dev.civicpulse.platformconfig.domain.exception.LanguageNotFoundException;
 import dev.civicpulse.platformconfig.domain.exception.PartyRegistryEntryNotFoundException;
 import dev.civicpulse.platformconfig.domain.exception.PoliticianAssignmentNotFoundException;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DuplicatePartyRegistrationException.class)
   public ProblemDetail handleDuplicateParty(DuplicatePartyRegistrationException ex) {
     return problem(HttpStatus.CONFLICT, "Party already registered", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidRegistrationTokenException.class)
+  public ProblemDetail handleInvalidRegistrationToken(InvalidRegistrationTokenException ex) {
+    return problem(HttpStatus.GONE, "Invalid invite token", ex.getMessage());
   }
 
   @ExceptionHandler(PoliticianAssignmentNotFoundException.class)

@@ -33,8 +33,8 @@ public class SearchDirectoryService implements SearchDirectoryUseCase {
 
   @Override
   @Transactional(readOnly = true)
-  public List<Politician> searchPoliticians(String state, GovLevel level, UUID partyId, int page, int pageSize) {
-    return politicianRepository.search(state, level, partyId, page, pageSize);
+  public List<Politician> searchPoliticians(String state, GovLevel level, UUID partyId, String q, int page, int pageSize) {
+    return politicianRepository.search(state, level, partyId, q, page, pageSize);
   }
 
   @Override
@@ -45,7 +45,7 @@ public class SearchDirectoryService implements SearchDirectoryUseCase {
 
   @Override
   @Transactional(readOnly = true)
-  public List<Party> searchParties(PartySpectrum spectrum, int page, int pageSize) {
-    return partyRepository.search(spectrum, page, pageSize);
+  public List<Party> searchParties(PartySpectrum spectrum, String q, int page, int pageSize) {
+    return partyRepository.search(spectrum, q, page, pageSize);
   }
 }

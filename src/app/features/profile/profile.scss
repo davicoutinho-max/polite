@@ -36,6 +36,62 @@
   }
 }
 
+.profile-skeleton {
+  &__cover {
+    position: relative;
+    margin-bottom: 72px;
+  }
+
+  &__avatar {
+    position: absolute;
+    left: var(--cp-margin-mobile);
+    bottom: -64px;
+    border: 4px solid var(--cp-surface);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-sm);
+    padding: 0 var(--cp-margin-mobile);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--cp-space-sm);
+    margin-top: var(--cp-space-sm);
+  }
+
+  &__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cp-space-sm);
+    margin: var(--cp-space-xl) 0 0;
+    padding: 0 var(--cp-margin-mobile);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cp-space-md);
+    margin: var(--cp-space-lg) 0 0;
+    padding: 0 var(--cp-margin-mobile);
+  }
+}
+
+@media (min-width: 768px) {
+  .profile-skeleton {
+    &__info,
+    &__tabs,
+    &__body {
+      padding: 0 var(--cp-margin-desktop);
+    }
+    &__avatar {
+      left: var(--cp-margin-desktop);
+    }
+  }
+}
+
 @media (min-width: 768px) {
   .profile {
     &__tabs,
