@@ -1,6 +1,5 @@
 package dev.civicpulse.legislative.adapter.out.persistence;
 
-import dev.civicpulse.legislative.domain.model.AccountabilityCategory;
 import dev.civicpulse.legislative.domain.model.DisclosureStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,7 +18,13 @@ public class AccountabilityDisclosureJpaEntity {
   private UUID politicianAccountId;
 
   @Column(nullable = false)
-  private AccountabilityCategory category;
+  private String category;
+
+  @Column(name = "period_month", nullable = false)
+  private int periodMonth;
+
+  @Column(name = "period_year", nullable = false)
+  private int periodYear;
 
   @Column(name = "declared_amount_cents", nullable = false)
   private long declaredAmountCents;
@@ -36,6 +41,9 @@ public class AccountabilityDisclosureJpaEntity {
   @Column(name = "ai_feedback", nullable = false)
   private String aiFeedback;
 
+  @Column(name = "notes")
+  private String notes;
+
   @Column(name = "submitted_at", nullable = false)
   private Instant submittedAt;
 
@@ -44,21 +52,27 @@ public class AccountabilityDisclosureJpaEntity {
   public AccountabilityDisclosureJpaEntity(
       UUID id,
       UUID politicianAccountId,
-      AccountabilityCategory category,
+      String category,
+      int periodMonth,
+      int periodYear,
       long declaredAmountCents,
       String documentUrl,
       DisclosureStatus status,
       Long extractedAmountCents,
       String aiFeedback,
+      String notes,
       Instant submittedAt) {
     this.id = id;
     this.politicianAccountId = politicianAccountId;
     this.category = category;
+    this.periodMonth = periodMonth;
+    this.periodYear = periodYear;
     this.declaredAmountCents = declaredAmountCents;
     this.documentUrl = documentUrl;
     this.status = status;
     this.extractedAmountCents = extractedAmountCents;
     this.aiFeedback = aiFeedback;
+    this.notes = notes;
     this.submittedAt = submittedAt;
   }
 
@@ -70,8 +84,16 @@ public class AccountabilityDisclosureJpaEntity {
     return politicianAccountId;
   }
 
-  public AccountabilityCategory getCategory() {
+  public String getCategory() {
     return category;
+  }
+
+  public int getPeriodMonth() {
+    return periodMonth;
+  }
+
+  public int getPeriodYear() {
+    return periodYear;
   }
 
   public long getDeclaredAmountCents() {
@@ -92,6 +114,10 @@ public class AccountabilityDisclosureJpaEntity {
 
   public String getAiFeedback() {
     return aiFeedback;
+  }
+
+  public String getNotes() {
+    return notes;
   }
 
   public Instant getSubmittedAt() {

@@ -17,10 +17,22 @@
 }
 
 .top-bar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
   font-size: 22px;
-  font-weight: 700;
-  color: var(--cp-brand-text);
+  font-weight: 900;
+  letter-spacing: 0.02em;
   text-decoration: none;
+
+  img { border-radius: var(--cp-radius-md); box-shadow: 0 4px 14px rgba(21, 60, 106, 0.4); }
+
+  span {
+    background: linear-gradient(90deg, #4f8ef0, #52dc9a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }
 
 .top-bar__spacer {

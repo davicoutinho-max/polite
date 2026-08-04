@@ -145,7 +145,7 @@ class FeedContentRepositoryIntegrationTest {
     UUID postId = UUID.randomUUID();
     postRepository.save(Post.publish(postId, UUID.randomUUID(), PostKind.TEXT, "commented", null, null, null, PostVisibility.PUBLIC, null, null, null, Instant.now()));
 
-    commentRepository.save(Comment.add(UUID.randomUUID(), postId, UUID.randomUUID(), "first!", Instant.now()));
+    commentRepository.save(Comment.add(UUID.randomUUID(), postId, UUID.randomUUID(), null, "first!", Instant.now()));
 
     try {
       assertThat(commentRepository.findByPostId(postId)).anySatisfy(c -> assertThat(c.body()).isEqualTo("first!"));

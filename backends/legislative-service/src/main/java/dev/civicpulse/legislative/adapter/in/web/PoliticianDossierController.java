@@ -4,6 +4,7 @@ import dev.civicpulse.legislative.adapter.in.web.dto.AddMandateRequest;
 import dev.civicpulse.legislative.adapter.in.web.dto.AddSocialLinkRequest;
 import dev.civicpulse.legislative.adapter.in.web.dto.AddTeamMemberRequest;
 import dev.civicpulse.legislative.adapter.in.web.dto.DossierResponse;
+import dev.civicpulse.legislative.adapter.in.web.dto.UpdateActivityCountsRequest;
 import dev.civicpulse.legislative.adapter.in.web.dto.MandateResponse;
 import dev.civicpulse.legislative.adapter.in.web.dto.SocialLinkResponse;
 import dev.civicpulse.legislative.adapter.in.web.dto.TeamMemberResponse;
@@ -50,6 +51,15 @@ public class PoliticianDossierController {
     return DossierResponse.from(
         dossierUseCase.updateDossier(
             politicianAccountId, request.education(), request.profession(), request.patrimony(), request.email(), request.phone(), request.officeDetail()));
+  }
+
+  /** Self-service only — same ownership check as updateDossier. */
+  @PutMapping("/activity-counts")
+  public DossierResponse updateActivityCounts(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @Valid @RequestBody UpdateActivityCountsRequest request) {
+    requireOwner(politicianAccountId, accountId);
+    return DossierResponse.from(
+        dossierUseCase.updateActivityCounts(politicianAccountId, request.speechesCount(), request.interviewsCount(), request.tripsCount()));
   }
 
   @GetMapping("/mandates")

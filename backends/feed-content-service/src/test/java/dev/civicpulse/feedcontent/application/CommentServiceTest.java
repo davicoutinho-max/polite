@@ -44,7 +44,7 @@ class CommentServiceTest {
     UUID postId = UUID.randomUUID();
     when(postMetricsRepository.findByPostId(postId)).thenReturn(Optional.of(PostMetrics.initial(postId, NOW)));
 
-    var comment = service.addComment(postId, UUID.randomUUID(), "great post");
+    var comment = service.addComment(postId, UUID.randomUUID(), null, "great post");
 
     assertThat(comment.body()).isEqualTo("great post");
     verify(postMetricsRepository).save(any());
@@ -56,7 +56,7 @@ class CommentServiceTest {
     UUID postId = UUID.randomUUID();
     when(postMetricsRepository.findByPostId(postId)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.addComment(postId, UUID.randomUUID(), "body")).isInstanceOf(PostNotFoundException.class);
+    assertThatThrownBy(() -> service.addComment(postId, UUID.randomUUID(), null, "body")).isInstanceOf(PostNotFoundException.class);
   }
 
   @Test

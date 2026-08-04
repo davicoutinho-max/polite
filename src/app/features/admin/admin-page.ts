@@ -148,6 +148,7 @@ export class AdminPage {
       next: () => {
         this.resendingInviteId.set(null);
         this.partyService.listPoliticianInvites(partyId).subscribe((list) => this.politicianInvites.set(list));
+        this.notifySuccess(this.translate.t('title.invite-resent', 'Invite resent'), '');
       },
       error: () => this.resendingInviteId.set(null),
     });
@@ -229,6 +230,7 @@ export class AdminPage {
           this.eventLocation.set('');
           this.eventTagLabel.set('');
           this.showEventForm.set(false);
+          this.notifySuccess(this.translate.t('title.event-created', 'Event created'), this.translate.t('hint.event-created', 'Members will see it on the agenda.'));
         },
         error: () => {
           this.eventSubmitting.set(false);
@@ -273,6 +275,7 @@ export class AdminPage {
         this.surveyContext.set('');
         this.surveyOptions.set(['', '']);
         this.showSurveyForm.set(false);
+        this.notifySuccess(this.translate.t('title.survey-created', 'Survey created'), this.translate.t('hint.survey-created', 'Members can vote now.'));
       },
       error: () => {
         this.surveySubmitting.set(false);
@@ -313,6 +316,10 @@ export class AdminPage {
         this.broadcastSent.set(true);
         setTimeout(() => this.broadcastSent.set(false), 3000);
         this.showBroadcastForm.set(false);
+        this.notifySuccess(
+          this.translate.t('title.broadcast-sent', 'Notification sent'),
+          this.translate.t('hint.broadcast-sent', 'Every affiliated member was notified.'),
+        );
       },
       error: () => {
         this.broadcastSubmitting.set(false);
@@ -330,11 +337,15 @@ export class AdminPage {
   }
 
   protected onApprove(id: string): void {
-    this.partyService.approveRequest(id);
+    this.partyService.approveRequest(id).subscribe({
+      next: () => this.notifySuccess(this.translate.t('title.request-approved', 'Request approved'), this.translate.t('hint.request-approved', 'This citizen is now an affiliated member.')),
+    });
   }
 
   protected onReject(id: string): void {
-    this.partyService.rejectRequest(id);
+    this.partyService.rejectRequest(id).subscribe({
+      next: () => this.notifySuccess(this.translate.t('title.request-rejected', 'Request rejected'), this.translate.t('hint.request-rejected', 'The affiliation request was declined.')),
+    });
   }
 
   protected setActiveTab(id: string): void {
@@ -350,11 +361,15 @@ export class AdminPage {
   }
 
   protected onAddRepresentative(candidate: PoliticianSummary): void {
-    this.partyService.addRepresentative(candidate);
+    this.partyService.addRepresentative(candidate).subscribe({
+      next: () => this.notifySuccess(this.translate.t('title.representative-linked', 'Politician linked'), candidate.name),
+    });
   }
 
   protected onRemoveRepresentative(id: string): void {
-    this.partyService.removeRepresentative(id);
+    this.partyService.removeRepresentative(id).subscribe({
+      next: () => this.notifySuccess(this.translate.t('title.representative-unlinked', 'Politician unlinked'), ''),
+    });
   }
 
   protected submitNewPolitician(): void {
@@ -380,6 +395,7 @@ export class AdminPage {
         this.registerSubmitting.set(false);
         this.politicianInvites.update((list) => [invite, ...list]);
         this.resetRegisterForm();
+        this.notifySuccess(this.translate.t('title.invite-sent', 'Invite sent'), invite.targetEmail ?? '');
       },
       error: () => {
         this.registerSubmitting.set(false);
@@ -394,5 +410,9 @@ export class AdminPage {
     this.registerPosition.set('');
     this.registerState.set('');
     this.registerError.set('');
+  }
+
+  private notifySuccess(title: string, message: string): void {
+    this.alerts.push({ category: 'project', icon: 'check_circle', title, message, timeLabel: this.translate.t('label.just-now', 'Just now') });
   }
 }

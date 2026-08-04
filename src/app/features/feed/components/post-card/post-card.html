@@ -32,7 +32,13 @@
     @if (post().poll) {
       <h4 class="post__poll-title">{{ post().content }}</h4>
     } @else {
-      <p class="post__content">{{ post().content }}</p>
+      <ui-expandable-text
+        class="post__content"
+        [text]="post().content"
+        [maxLines]="6"
+        [moreLabel]="'button.show-more' | translate: 'Show more'"
+        [lessLabel]="'button.show-less' | translate: 'Show less'"
+      />
     }
   }
 
@@ -167,7 +173,7 @@
         <p class="comments__signin">{{ 'hint.sign-in-to-comment' | translate: 'Sign in as a citizen to comment.' }}</p>
       }
 
-      @for (comment of post().comments; track comment.id) {
+      @for (comment of topLevelComments(); track comment.id) {
         <div class="comment">
           <ui-avatar [src]="comment.author.avatarUrl" [alt]="comment.author.name" [size]="32" [ring]="true" />
           <div class="comment__bubble">
@@ -177,7 +183,87 @@
               </span>
               <span class="comment__time">{{ comment.timeLabel }}</span>
             </div>
-            <p class="comment__text">{{ comment.text }}</p>
+            <ui-expandable-text
+              class="comment__text"
+              [text]="comment.text"
+              [maxLines]="3"
+              [moreLabel]="'button.show-more' | translate: 'Show more'"
+              [lessLabel]="'button.show-less' | translate: 'Show less'"
+            />
+            <div class="comment__actions">
+              <button
+                type="button"
+                class="comment__action"
+                [class.comment__action--active]="comment.likedByMe"
+                [disabled]="!canReact()"
+                (click)="onLikeComment(comment.id)"
+              >
+                <ui-icon name="thumb_up" [fill]="comment.likedByMe" [size]="14" />
+                @if (comment.likesCount > 0) {
+                  <span>{{ comment.likesCount }}</span>
+                }
+              </button>
+              @if (canReact()) {
+                <button type="button" class="comment__action" (click)="startReply(comment.id)">
+                  {{ 'button.reply' | translate: 'Reply' }}
+                </button>
+              }
+            </div>
+
+            @if (replyingToId() === comment.id) {
+              <form class="comments__composer comments__composer--reply" (submit)="$event.preventDefault(); submitReply(comment.id)">
+                <input
+                  pInputText
+                  class="comments__input"
+                  type="text"
+                  [placeholder]="'label.write-a-reply' | translate: 'Write a reply…'"
+                  name="reply"
+                  [attr.aria-label]="'aria.write-a-reply' | translate: 'Write a reply'"
+                  autocomplete="off"
+                  [ngModel]="replyDraft()"
+                  (ngModelChange)="replyDraft.set($event)"
+                />
+                <button type="submit" class="comments__send" [disabled]="!replyDraft().trim()" [attr.aria-label]="'aria.send-comment' | translate: 'Send comment'">
+                  <ui-icon name="send" [size]="16" [fill]="true" />
+                </button>
+                <button type="button" class="comments__cancel" (click)="cancelReply()" [attr.aria-label]="'aria.cancel-reply' | translate: 'Cancel reply'">
+                  <ui-icon name="close" [size]="16" />
+                </button>
+              </form>
+            }
+
+            @for (reply of repliesFor(comment.id); track reply.id) {
+              <div class="comment comment--reply">
+                <ui-avatar [src]="reply.author.avatarUrl" [alt]="reply.author.name" [size]="28" [ring]="true" />
+                <div class="comment__bubble">
+                  <div class="comment__head">
+                    <span class="comment__name">{{ reply.author.name }}</span>
+                    <span class="comment__time">{{ reply.timeLabel }}</span>
+                  </div>
+                  <ui-expandable-text
+                    class="comment__text"
+                    [text]="reply.text"
+                    [maxLines]="3"
+                    [moreLabel]="'button.show-more' | translate: 'Show more'"
+                    [lessLabel]="'button.show-less' | translate: 'Show less'"
+                  />
+                  <div class="comment__actions">
+                    <button
+                      type="button"
+                      class="comment__action"
+                      [class.comment__action--active]="reply.likedByMe"
+                      [disabled]="!canReact()"
+                      (click)="onLikeComment(reply.id)"
+                    >
+                      <ui-icon name="thumb_up" [fill]="reply.likedByMe" [size]="14" />
+                      @if (reply.likesCount > 0) {
+                        <span>{{ reply.likesCount }}</span>
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         </div>
       } @empty {

@@ -4,9 +4,17 @@ import dev.civicpulse.feedcontent.domain.model.Comment;
 import java.time.Instant;
 import java.util.UUID;
 
-public record CommentResponse(UUID id, UUID postId, UUID authorAccountId, String body, Instant createdAt) {
+public record CommentResponse(
+    UUID id, UUID postId, UUID authorAccountId, UUID parentCommentId, String body, Instant createdAt, int likesCount) {
 
   public static CommentResponse from(Comment comment) {
-    return new CommentResponse(comment.id(), comment.postId(), comment.authorAccountId(), comment.body(), comment.createdAt());
+    return new CommentResponse(
+        comment.id(),
+        comment.postId(),
+        comment.authorAccountId(),
+        comment.parentCommentId(),
+        comment.body(),
+        comment.createdAt(),
+        comment.likesCount());
   }
 }

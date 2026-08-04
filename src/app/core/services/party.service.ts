@@ -14,6 +14,8 @@ import {
 } from '../models';
 import { relativeTime } from '../utils/relative-time';
 import { DirectoryService } from './directory.service';
+import { SessionService } from './session.service';
+import { FeedService } from './feed.service';
 
 /** Redeeming a politician invite token (see PoliticianInvite's javadoc) — the politician's name/
  * role/state were already vetted by the party at invite time, not typed here. */
@@ -143,6 +145,8 @@ function capitalizeScope(scope: string): PartyDirectory['scope'] {
 export class PartyService {
   private readonly http = inject(HttpClient);
   private readonly directory = inject(DirectoryService);
+  private readonly session = inject(SessionService);
+  private readonly feed = inject(FeedService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/party-management`;
   private readonly identityApiBase = `${environment.apiBaseUrl}/api/identity`;
 
@@ -220,7 +224,14 @@ export class PartyService {
   /** Party logo (avatar-equivalent) — stored on directory-service's own Party row alongside
    * name/acronym/number, unlike the cover photo below. */
   updateLogo(logoUrl: string): Observable<void> {
-    return this.directory.updatePartyLogo(logoUrl).pipe(tap(() => this._party.update((p) => ({ ...p, logoUrl }))));
+    return this.directory.updatePartyLogo(logoUrl).pipe(
+      tap(() => {
+        const partyId = this._party().id;
+        this._party.update((p) => ({ ...p, logoUrl }));
+        this.session.patchOwnAvatar(partyId, logoUrl);
+        this.feed.refreshAuthorAvatar(partyId, logoUrl);
+      }),
+    );
   }
 
   /** Cover photo — a full replace on party-management-service's own editable profile record, so
@@ -327,16 +338,16 @@ export class PartyService {
     );
   }
 
-  approveRequest(requestId: string): void {
-    this.http.post(`${this.apiBase}/affiliation-requests/${requestId}/approve`, {}).subscribe({
-      next: () => this.setRequestStatus(requestId, 'approved'),
-    });
+  approveRequest(requestId: string): Observable<void> {
+    return this.http
+      .post<void>(`${this.apiBase}/affiliation-requests/${requestId}/approve`, {})
+      .pipe(tap(() => this.setRequestStatus(requestId, 'approved')));
   }
 
-  rejectRequest(requestId: string): void {
-    this.http.post(`${this.apiBase}/affiliation-requests/${requestId}/reject`, {}).subscribe({
-      next: () => this.setRequestStatus(requestId, 'rejected'),
-    });
+  rejectRequest(requestId: string): Observable<void> {
+    return this.http
+      .post<void>(`${this.apiBase}/affiliation-requests/${requestId}/reject`, {})
+      .pipe(tap(() => this.setRequestStatus(requestId, 'rejected')));
   }
 
   private setRequestStatus(id: string, status: FiliationRequestSummary['status']): void {
@@ -355,15 +366,16 @@ export class PartyService {
     });
   }
 
-  addRepresentative(candidate: PoliticianSummary): void {
+  addRepresentative(candidate: PoliticianSummary): Observable<void> {
     const partyId = this._party().id;
-    this.http
+    return this.http
       .post<RepresentativeResponseDto>(`${this.apiBase}/parties/${partyId}/representatives`, {
         politicianAccountId: candidate.id,
         roleTitle: candidate.office,
       })
-      .subscribe({
-        next: () => {
+      .pipe(
+        map(() => undefined),
+        tap(() => {
           const rep: PartyRepresentative = {
             id: candidate.id,
             name: candidate.name,
@@ -374,16 +386,17 @@ export class PartyService {
           this._party.update((party) =>
             party.representatives.some((r) => r.id === candidate.id) ? party : { ...party, representatives: [...party.representatives, rep] },
           );
-        },
-      });
+        }),
+      );
   }
 
-  removeRepresentative(politicianAccountId: string): void {
+  removeRepresentative(politicianAccountId: string): Observable<void> {
     const partyId = this._party().id;
-    this.http.delete<void>(`${this.apiBase}/parties/${partyId}/representatives/${politicianAccountId}`).subscribe({
-      next: () =>
+    return this.http.delete<void>(`${this.apiBase}/parties/${partyId}/representatives/${politicianAccountId}`).pipe(
+      tap(() =>
         this._party.update((party) => ({ ...party, representatives: party.representatives.filter((r) => r.id !== politicianAccountId) })),
-    });
+      ),
+    );
   }
 
   /** `partyId` defaults to whatever party profile is currently loaded (the admin panel's own

@@ -8,7 +8,10 @@ import { UiIconButton } from '../../shared/ui/ui-icon-button/ui-icon-button';
   imports: [UiIconButton],
   template: `
     <header class="top-bar">
-      <h1 class="top-bar__brand">CivicPulse</h1>
+      <h1 class="top-bar__brand">
+        <img src="logo.svg" alt="" width="26" height="26" />
+        <span>IQORUM</span>
+      </h1>
       <div class="top-bar__actions">
         <ui-icon-button icon="search" ariaLabel="Search" />
         <ui-icon-button icon="notifications" ariaLabel="Notifications" />
@@ -33,10 +36,22 @@ import { UiIconButton } from '../../shared/ui/ui-icon-button/ui-icon-button';
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
     .top-bar__brand {
+      display: flex;
+      align-items: center;
+      gap: var(--cp-space-xs);
       margin: 0;
       font-size: 24px;
-      font-weight: 700;
-      color: var(--cp-primary);
+      font-weight: 900;
+      letter-spacing: 0.02em;
+
+      img { border-radius: var(--cp-radius-md); box-shadow: 0 4px 14px rgba(21, 60, 106, 0.4); }
+
+      span {
+        background: linear-gradient(90deg, #4f8ef0, #52dc9a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
     }
     .top-bar__actions {
       display: flex;

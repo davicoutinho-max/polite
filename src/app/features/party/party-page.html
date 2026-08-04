@@ -108,6 +108,7 @@
               [canReact]="canReact()"
               (like)="onLike($event)"
               (addComment)="onComment($event)"
+              (likeComment)="onLikeComment($event)"
               (vote)="onVote($event)"
               (unvote)="onUnvote($event)"
             />
@@ -134,11 +135,23 @@
             }
 
             <ui-section [title]="'section.history' | translate: 'History'" icon="history_edu">
-              <p class="prose">{{ party().history }}</p>
+              <ui-expandable-text
+                class="prose"
+                [text]="party().history"
+                [maxLines]="6"
+                [moreLabel]="'button.show-more' | translate: 'Show more'"
+                [lessLabel]="'button.show-less' | translate: 'Show less'"
+              />
             </ui-section>
 
             <ui-section [title]="'section.program' | translate: 'Program'" icon="menu_book">
-              <p class="prose">{{ party().program }}</p>
+              <ui-expandable-text
+                class="prose"
+                [text]="party().program"
+                [maxLines]="6"
+                [moreLabel]="'button.show-more' | translate: 'Show more'"
+                [lessLabel]="'button.show-less' | translate: 'Show less'"
+              />
             </ui-section>
 
             <ui-section [title]="'section.directories' | translate: 'Directories'" icon="account_tree">
@@ -160,7 +173,11 @@
 
           <div class="grid__side">
             <ui-section [title]="'tab.overview' | translate: 'Overview'" icon="info">
-              <ui-data-list [items]="overview()" />
+              <ui-data-list
+                [items]="overview()"
+                [moreLabel]="'button.show-more' | translate: 'Show more'"
+                [lessLabel]="'button.show-less' | translate: 'Show less'"
+              />
               @if (hasStatute()) {
                 <div class="statute">
                   <ui-button
@@ -215,30 +232,6 @@
                 icon="calendar_month"
                 [title]="'empty.party-agenda.title' | translate: 'Nothing scheduled yet'"
                 [description]="'empty.party-agenda.desc' | translate: 'Upcoming events, courses and meetings will appear here.'"
-              />
-            }
-          </ul>
-        </ui-section>
-      }
-      @case ('events') {
-        <ui-section [title]="'tab.events' | translate: 'Events'" icon="event">
-          <ul class="events">
-            @for (event of pastEvents(); track event.id) {
-              <li class="event">
-                <div class="event__date">
-                  <ui-icon name="event" [size]="20" />
-                </div>
-                <div class="event__body">
-                  <div class="event__title">{{ event.title }}</div>
-                  <div class="event__meta">{{ event.date }} · {{ event.location }}</div>
-                </div>
-                <ui-tag [label]="event.tag.label" [severity]="event.tag.severity" />
-              </li>
-            } @empty {
-              <ui-empty
-                icon="event"
-                [title]="'empty.party-events.title' | translate: 'No past events yet'"
-                [description]="'empty.party-events.desc' | translate: 'Past events, courses and meetings will appear here.'"
               />
             }
           </ul>

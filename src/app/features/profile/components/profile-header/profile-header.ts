@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { Politician } from '../../../../core/models';
 import { MediaService } from '../../../../core/services/media.service';
 import { PoliticianService } from '../../../../core/services/politician.service';
+import { AlertsService } from '../../../../core/services/alerts.service';
+import { TranslateService } from '../../../../core/services/translate.service';
 import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
@@ -21,6 +23,8 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 export class ProfileHeader {
   private readonly media = inject(MediaService);
   private readonly politicianService = inject(PoliticianService);
+  private readonly alerts = inject(AlertsService);
+  private readonly translate = inject(TranslateService);
 
   readonly politician = input.required<Politician>();
   readonly following = input(false);
@@ -57,11 +61,24 @@ export class ProfileHeader {
     }
     this.uploadingAvatar.set(true);
     this.media.upload(file).subscribe({
-      next: (url) => this.politicianService.updateProfileImages(url, undefined).subscribe({
-        complete: () => this.uploadingAvatar.set(false),
-        error: () => this.uploadingAvatar.set(false),
-      }),
-      error: () => this.uploadingAvatar.set(false),
+      next: (url) =>
+        this.politicianService.updateProfileImages(url, undefined).subscribe({
+          complete: () => {
+            this.uploadingAvatar.set(false);
+            this.notifySuccess(
+              this.translate.t('title.photo-updated', 'Profile photo updated'),
+              this.translate.t('hint.photo-updated', 'Your new photo is now public.'),
+            );
+          },
+          error: () => {
+            this.uploadingAvatar.set(false);
+            this.notifyError();
+          },
+        }),
+      error: () => {
+        this.uploadingAvatar.set(false);
+        this.notifyError();
+      },
     });
   }
 
@@ -72,11 +89,38 @@ export class ProfileHeader {
     }
     this.uploadingCover.set(true);
     this.media.upload(file).subscribe({
-      next: (url) => this.politicianService.updateProfileImages(undefined, url).subscribe({
-        complete: () => this.uploadingCover.set(false),
-        error: () => this.uploadingCover.set(false),
-      }),
-      error: () => this.uploadingCover.set(false),
+      next: (url) =>
+        this.politicianService.updateProfileImages(undefined, url).subscribe({
+          complete: () => {
+            this.uploadingCover.set(false);
+            this.notifySuccess(
+              this.translate.t('title.cover-updated', 'Cover photo updated'),
+              this.translate.t('hint.cover-updated', 'Your new cover photo is now public.'),
+            );
+          },
+          error: () => {
+            this.uploadingCover.set(false);
+            this.notifyError();
+          },
+        }),
+      error: () => {
+        this.uploadingCover.set(false);
+        this.notifyError();
+      },
+    });
+  }
+
+  private notifySuccess(title: string, message: string): void {
+    this.alerts.push({ category: 'project', icon: 'check_circle', title, message, timeLabel: this.translate.t('label.just-now', 'Just now') });
+  }
+
+  private notifyError(): void {
+    this.alerts.push({
+      category: 'project',
+      icon: 'error',
+      title: this.translate.t('title.upload-failed', 'Upload failed'),
+      message: this.translate.t('hint.upload-failed', 'Please try again shortly.'),
+      timeLabel: this.translate.t('label.just-now', 'Just now'),
     });
   }
 }

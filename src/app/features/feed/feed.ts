@@ -10,7 +10,7 @@ import { SocialConnectionService, SocialPlatform } from '../../core/services/soc
 import { FeedSort as FeedSortValue, PostDraft } from '../../core/models';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
 import { PostComposer } from './components/post-composer/post-composer';
-import { PostCard, CommentEvent, VoteEvent } from './components/post-card/post-card';
+import { PostCard, CommentEvent, CommentLikeEvent, VoteEvent } from './components/post-card/post-card';
 import { FeedSort } from './components/feed-sort/feed-sort';
 import { TrendingTopics } from './components/trending-topics/trending-topics';
 import { RelevantBills } from './components/relevant-bills/relevant-bills';
@@ -141,7 +141,11 @@ export class Feed {
   }
 
   protected onComment(event: CommentEvent): void {
-    this.feedService.addComment(event.postId, event.text);
+    this.feedService.addComment(event.postId, event.text, event.parentCommentId);
+  }
+
+  protected onLikeComment(event: CommentLikeEvent): void {
+    this.feedService.toggleCommentLike(event.postId, event.commentId);
   }
 
   protected onVote(event: VoteEvent): void {

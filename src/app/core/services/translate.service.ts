@@ -12,10 +12,17 @@ export class TranslateService {
   private readonly platform = inject(PlatformService);
   private readonly locale = inject(LocaleService);
 
-  t(key: string, fallback: string): string {
+  t(key: string, fallback: string, params?: Record<string, string | number>): string {
     const currentId = this.locale.current()?.id;
     const entry = this.platform.translations().find((e) => e.key === key);
     const value = currentId ? entry?.values[currentId] : undefined;
-    return value ? value : fallback;
+    return this.interpolate(value ? value : fallback, params);
+  }
+
+  private interpolate(text: string, params?: Record<string, string | number>): string {
+    if (!params) {
+      return text;
+    }
+    return Object.entries(params).reduce((result, [name, value]) => result.replaceAll(`{{${name}}}`, String(value)), text);
   }
 }

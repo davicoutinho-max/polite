@@ -28,89 +28,139 @@
     </ul>
   </ui-section>
 
-  <ui-section
-    [title]="'section.accountability-disclosures' | translate: 'Accountability (prestação de contas)'"
-    icon="fact_check"
-  >
-    <p class="disclosures__intro">
-      {{
-        'hint.accountability-intro'
-          | translate
-            : 'Each category below is one real type of public money this politician is accountable for. An AI reviewer reads the attached proof and checks it against the declared amount.'
-      }}
-    </p>
+  <p class="disclosures__intro">
+    {{
+      'hint.accountability-intro'
+        | translate
+          : 'Each item below is one real type of public money this politician is accountable for. Click the upload icon to file a monthly accountability report — an AI reviewer reads the attached proof and checks it against the declared amount. Anyone can open the attached document.'
+    }}
+  </p>
 
-    <div class="disclosures">
-      @for (category of categories; track category.value) {
-        <div class="disclosure">
-          <div class="disclosure__head">
-            <span class="disclosure__icon"><ui-icon [name]="category.icon" [size]="18" [fill]="true" /></span>
-            <span class="disclosure__label">{{ categoryLabel(category.value) }}</span>
-            @if (latestOf(category.value); as latest) {
-              @if (latest.status === 'approved') {
+  <ui-section [title]="'section.compensation' | translate: 'Compensation and benefits'" icon="payments">
+    <ul class="glossary-grid">
+      @for (item of compensationItems; track item.key) {
+        <ng-container [ngTemplateOutlet]="glossaryItemTpl" [ngTemplateOutletContext]="{ $implicit: item }" />
+      }
+    </ul>
+  </ui-section>
+
+  <ui-section [title]="'section.ceap-coverage' | translate: 'What CEAP can pay for'" icon="receipt_long">
+    <ul class="glossary-grid">
+      @for (item of ceapItems; track item.key) {
+        <ng-container [ngTemplateOutlet]="glossaryItemTpl" [ngTemplateOutletContext]="{ $implicit: item }" />
+      }
+    </ul>
+  </ui-section>
+
+  <ui-section [title]="'section.office-budget' | translate: 'Office budget (Verba de Gabinete)'" icon="groups">
+    <ul class="glossary-grid">
+      @for (item of officeBudgetItems; track item.key) {
+        <ng-container [ngTemplateOutlet]="glossaryItemTpl" [ngTemplateOutletContext]="{ $implicit: item }" />
+      }
+    </ul>
+  </ui-section>
+</div>
+
+<ng-template #glossaryItemTpl let-item>
+  <li class="glossary-item">
+    <div class="glossary-item__row">
+      <ui-icon name="check" [size]="16" />
+      <span class="glossary-item__label">{{ glossaryLabel(item) }}</span>
+      @if (isOwnProfile()) {
+        <ui-icon-button
+          icon="upload_file"
+          [iconSize]="18"
+          [ariaLabel]="'aria.submit-disclosure' | translate: 'Submit accountability report'"
+          (click)="isActive(item.categoryCode) ? cancelSubmission() : startSubmission(item.categoryCode)"
+        />
+      }
+    </div>
+
+    @if (disclosuresFor(item.categoryCode).length > 0) {
+      <ul class="disclosure-list">
+        @for (d of disclosuresFor(item.categoryCode); track d.id) {
+          <li class="disclosure-row">
+            <div class="disclosure-row__head">
+              <span class="disclosure-row__period">{{ periodLabel(d) }}</span>
+              <span class="disclosure-row__amount">{{ money(d.declaredAmountCents) }}</span>
+              @if (d.status === 'approved') {
                 <ui-tag [label]="'label.approved' | translate: 'Approved'" severity="success" icon="check_circle" />
               } @else {
                 <ui-tag [label]="'label.rejected' | translate: 'Rejected'" severity="danger" icon="cancel" />
               }
-            } @else {
-              <ui-tag [label]="'label.not-submitted' | translate: 'Not submitted'" severity="neutral" />
-            }
-          </div>
-
-          @if (latestOf(category.value); as latest) {
-            <div class="disclosure__latest">
-              <span class="disclosure__amount">{{ money(latest.declaredAmountCents) }}</span>
-              <span class="disclosure__feedback">{{ latest.aiFeedback }}</span>
+              <a class="disclosure-row__doc" [href]="d.documentUrl" target="_blank" rel="noopener">
+                <ui-icon name="description" [size]="14" />
+                {{ 'button.view-document' | translate: 'View document' }}
+              </a>
             </div>
-          }
-
-          @if (isOwnProfile()) {
-            @if (isActive(category.value)) {
-              <div class="disclosure__form">
-                <label class="disclosure__field">
-                  <span>{{ 'label.declared-amount' | translate: 'Declared amount' }}</span>
-                  <p-inputnumber
-                    [ngModel]="declaredAmount()"
-                    (ngModelChange)="declaredAmount.set($event)"
-                    mode="currency"
-                    currency="BRL"
-                    locale="pt-BR"
-                    [min]="0"
-                  />
-                </label>
-                <label class="disclosure__field">
-                  <span>{{ 'label.supporting-document' | translate: 'Supporting document (receipt/invoice)' }}</span>
-                  <p-fileupload
-                    mode="basic"
-                    accept="image/*,.pdf"
-                    chooseIcon="pi pi-file"
-                    [chooseLabel]="documentFile()?.name ?? ('label.choose-file' | translate: 'Choose file')"
-                    [auto]="true"
-                    (onSelect)="onDocumentSelected($event)"
-                  />
-                </label>
-                <div class="disclosure__actions">
-                  <ui-button [label]="'button.cancel' | translate: 'Cancel'" variant="text" [disabled]="submitting()" (click)="cancelSubmission()" />
-                  <ui-button
-                    [label]="submitting() ? ('label.reviewing' | translate: 'AI is reviewing…') : ('button.submit-for-ai-review' | translate: 'Submit for AI review')"
-                    icon="smart_toy"
-                    variant="filled"
-                    [disabled]="!canSubmit() || submitting()"
-                    (click)="submit()"
-                  />
-                </div>
-              </div>
-            } @else {
-              <ui-button
-                [label]="latestOf(category.value) ? ('button.try-again' | translate: 'Try again') : ('button.submit-disclosure' | translate: 'Submit disclosure')"
-                icon="upload_file"
-                variant="outlined"
-                (click)="startSubmission(category.value)"
-              />
+            <span class="disclosure-row__feedback">{{ d.aiFeedback }}</span>
+            @if (d.notes) {
+              <span class="disclosure-row__notes">
+                <ui-icon name="notes" [size]="14" />
+                {{ d.notes }}
+              </span>
             }
-          }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (isActive(item.categoryCode)) {
+      <div class="disclosure__form">
+        <label class="disclosure__field">
+          <span>{{ 'label.period' | translate: 'Month / Year' }}</span>
+          <p-datepicker
+            view="month"
+            dateFormat="mm/yy"
+            [ngModel]="periodDate()"
+            (ngModelChange)="periodDate.set($event)"
+            appendTo="body"
+            [placeholder]="'label.period' | translate: 'Month / Year'"
+          />
+        </label>
+        <label class="disclosure__field">
+          <span>{{ 'label.declared-amount' | translate: 'Declared amount' }}</span>
+          <p-inputnumber
+            [ngModel]="declaredAmount()"
+            (ngModelChange)="declaredAmount.set($event)"
+            mode="currency"
+            currency="BRL"
+            locale="pt-BR"
+            [min]="0"
+          />
+        </label>
+        <label class="disclosure__field">
+          <span>{{ 'label.supporting-document' | translate: 'Supporting document (receipt/invoice)' }}</span>
+          <p-fileupload
+            mode="basic"
+            accept="image/*,.pdf"
+            chooseIcon="pi pi-file"
+            [chooseLabel]="documentFile()?.name ?? ('label.choose-file' | translate: 'Choose file')"
+            [auto]="true"
+            (onSelect)="onDocumentSelected($event)"
+          />
+        </label>
+        <label class="disclosure__field">
+          <span>{{ 'label.disclosure-notes' | translate: 'Additional notes (optional)' }}</span>
+          <textarea
+            pTextarea
+            rows="2"
+            [ngModel]="notes()"
+            (ngModelChange)="notes.set($event)"
+            [placeholder]="'placeholder.disclosure-notes' | translate: 'Explain what this expense covers, why it was necessary, etc.'"
+          ></textarea>
+        </label>
+        <div class="disclosure__actions">
+          <ui-button [label]="'button.cancel' | translate: 'Cancel'" variant="text" [disabled]="submitting()" (click)="cancelSubmission()" />
+          <ui-button
+            [label]="submitting() ? ('label.reviewing' | translate: 'AI is reviewing…') : ('button.submit-for-ai-review' | translate: 'Submit for AI review')"
+            icon="smart_toy"
+            variant="filled"
+            [disabled]="!canSubmit() || submitting()"
+            (click)="submit()"
+          />
         </div>
-      }
-    </div>
-  </ui-section>
-</div>
+      </div>
+    }
+  </li>
+</ng-template>

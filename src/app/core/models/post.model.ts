@@ -12,6 +12,11 @@ export interface PostComment {
   readonly author: UserSummary;
   readonly text: string;
   readonly timeLabel: string;
+  /** Null for a top-level comment, or the id of the comment this one replies to — one level of
+   * threading only, replies-to-replies attach to the original top-level comment. */
+  readonly parentCommentId: string | null;
+  readonly likesCount: number;
+  readonly likedByMe: boolean;
 }
 
 export type PostVisibility = 'public' | 'private';

@@ -17,10 +17,17 @@ interface NotificationResponseDto {
   readonly createdAt: string;
 }
 
+const TOAST_DURATION_MS = 5000;
+
 /**
  * Server-driven alerts come from notification-service (real, persisted, read/unread tracked).
  * `push()` stays a purely local, ephemeral toast for the current user's own just-taken action
  * (e.g. "affiliation request sent") — it was never meant to be a persisted notification row.
+ *
+ * `push()` also surfaces a real floating toast (see `toasts`/ToastContainer, mounted once in
+ * Shell) — previously it only ever landed silently in the bell-icon dropdown, which is easy to
+ * miss as "did my action actually work?" feedback, especially for a save button at the bottom of
+ * a long form while the bell sits up in the top bar out of view.
  */
 @Injectable({ providedIn: 'root' })
 export class AlertsService {
@@ -31,6 +38,9 @@ export class AlertsService {
   private readonly _alerts = signal<Alert[]>([]);
   readonly alerts = this._alerts.asReadonly();
   readonly unreadCount = computed(() => this._alerts().filter((a) => !a.read).length);
+
+  private readonly _toasts = signal<Alert[]>([]);
+  readonly toasts = this._toasts.asReadonly();
 
   constructor() {
     // See DirectoryService's reloadFollowing for why this waits on session.ready() instead of
@@ -77,10 +87,17 @@ export class AlertsService {
     });
   }
 
-  /** Emit a brand-new, unread LOCAL toast at the top of the feed — not persisted server-side. */
+  /** Emit a brand-new, unread LOCAL toast — lands at the top of the bell-icon dropdown feed
+   * (not persisted server-side) and also floats on screen for a few seconds via ToastContainer. */
   push(alert: Omit<Alert, 'id' | 'read'>): void {
-    const entry: Alert = { ...alert, id: `local-${Date.now()}`, read: false };
+    const entry: Alert = { ...alert, id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`, read: false };
     this._alerts.update((list) => [entry, ...list]);
+    this._toasts.update((list) => [...list, entry]);
+    setTimeout(() => this.dismissToast(entry.id), TOAST_DURATION_MS);
+  }
+
+  dismissToast(id: string): void {
+    this._toasts.update((list) => list.filter((t) => t.id !== id));
   }
 
   /** Broadcasts a real, persisted notification to every given recipient (e.g. "send

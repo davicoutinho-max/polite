@@ -3,7 +3,6 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Observable, forkJoin, map, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  AccountabilityCategory,
   AccountabilityDisclosure,
   CareerMilestone,
   Mandate,
@@ -17,6 +16,8 @@ import {
 } from '../models';
 import { TranslateService } from './translate.service';
 import { DirectoryService } from './directory.service';
+import { SessionService } from './session.service';
+import { FeedService } from './feed.service';
 
 const FALLBACK_AVATAR =
   'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 40 40\'%3E%3Crect width=\'40\' height=\'40\' fill=\'%23c7ccd1\'/%3E%3Ccircle cx=\'20\' cy=\'15\' r=\'7\' fill=\'%23fff\'/%3E%3Cpath d=\'M6 38c0-8 6-13 14-13s14 5 14 13z\' fill=\'%23fff\'/%3E%3C/svg%3E';
@@ -63,12 +64,15 @@ export function formatCents(cents: number): string {
 function toAccountabilityDisclosure(dto: AccountabilityDisclosureResponseDto): AccountabilityDisclosure {
   return {
     id: dto.id,
-    category: dto.category as AccountabilityCategory,
+    category: dto.category,
+    periodMonth: dto.periodMonth,
+    periodYear: dto.periodYear,
     declaredAmountCents: dto.declaredAmountCents,
     documentUrl: dto.documentUrl,
     status: dto.status,
     extractedAmountCents: dto.extractedAmountCents,
     aiFeedback: dto.aiFeedback,
+    notes: dto.notes,
     submittedAt: dto.submittedAt,
   };
 }
@@ -212,11 +216,14 @@ interface CareerMilestoneResponseDto {
 interface AccountabilityDisclosureResponseDto {
   readonly id: string;
   readonly category: string;
+  readonly periodMonth: number;
+  readonly periodYear: number;
   readonly declaredAmountCents: number;
   readonly documentUrl: string;
   readonly status: 'approved' | 'rejected';
   readonly extractedAmountCents: number | null;
   readonly aiFeedback: string;
+  readonly notes: string | null;
   readonly submittedAt: string;
 }
 
@@ -231,6 +238,8 @@ export class PoliticianService {
   private readonly http = inject(HttpClient);
   private readonly directory = inject(DirectoryService);
   private readonly translate = inject(TranslateService);
+  private readonly session = inject(SessionService);
+  private readonly feed = inject(FeedService);
   private readonly apiBase = `${environment.apiBaseUrl}/api/legislative`;
 
   private readonly _politician = signal<Politician>(EMPTY_POLITICIAN);
@@ -308,13 +317,18 @@ export class PoliticianService {
    * renders the upload controls in that case. */
   updateProfileImages(avatarUrl?: string, coverUrl?: string): Observable<void> {
     return this.directory.updatePoliticianProfileImages(avatarUrl, coverUrl).pipe(
-      tap(() =>
+      tap(() => {
+        const politicianId = this._politician().id;
         this._politician.update((p) => ({
           ...p,
           avatarUrl: avatarUrl ?? p.avatarUrl,
           coverUrl: coverUrl ?? p.coverUrl,
-        })),
-      ),
+        }));
+        if (avatarUrl) {
+          this.session.patchOwnAvatar(politicianId, avatarUrl);
+          this.feed.refreshAuthorAvatar(politicianId, avatarUrl);
+        }
+      }),
     );
   }
 
@@ -352,6 +366,45 @@ export class PoliticianService {
       ),
       map(() => undefined),
     );
+  }
+
+  addMandate(accountId: string, role: string, period: string, current: boolean): Observable<void> {
+    return this.http.post<MandateResponseDto>(`${this.apiBase}/politicians/${accountId}/mandates`, { role, period, current }).pipe(
+      tap((m) => this._politician.update((p) => ({ ...p, mandates: [...p.mandates, { role: m.role, period: m.period, current: m.current }] }))),
+      map(() => undefined),
+    );
+  }
+
+  addTeamMember(accountId: string, name: string, role: string, avatarUrl: string): Observable<void> {
+    return this.http.post<TeamMemberResponseDto>(`${this.apiBase}/politicians/${accountId}/team`, { name, role, avatarUrl: avatarUrl || null }).pipe(
+      tap((t) =>
+        this._politician.update((p) => ({
+          ...p,
+          team: [...p.team, { name: t.name, role: t.role, avatarUrl: t.avatarUrl || FALLBACK_AVATAR }],
+        })),
+      ),
+      map(() => undefined),
+    );
+  }
+
+  addMilestone(accountId: string, year: number, title: string, detail: string): Observable<void> {
+    return this.http
+      .post<CareerMilestoneResponseDto>(`${this.apiBase}/politicians/${accountId}/career`, { year, title, detail: detail || null })
+      .pipe(
+        tap((m) => this._career.update((list) => [...list, { year: m.year, title: m.title, detail: m.detail ?? '' }])),
+        map(() => undefined),
+      );
+  }
+
+  updateActivityCounts(accountId: string, speechesCount: number, interviewsCount: number, tripsCount: number): Observable<void> {
+    return this.http
+      .put<DossierResponseDto>(`${this.apiBase}/politicians/${accountId}/activity-counts`, { speechesCount, interviewsCount, tripsCount })
+      .pipe(
+        tap(() =>
+          this._activity.update((activity) => ({ ...activity, speeches: speechesCount, interviews: interviewsCount, trips: tripsCount })),
+        ),
+        map(() => undefined),
+      );
   }
 
   loadActivity(accountId: string): Observable<ParliamentaryActivity> {
@@ -422,12 +475,22 @@ export class PoliticianService {
    * header on the backend, never a parameter here. Always resolves to a scored (approved or
    * rejected) result; see ManageAccountabilityDisclosureUseCase's javadoc for why this is never
    * "pending". */
-  submitAccountabilityDisclosure(category: AccountabilityCategory, declaredAmountCents: number, documentUrl: string): Observable<AccountabilityDisclosure> {
+  submitAccountabilityDisclosure(
+    category: string,
+    periodMonth: number,
+    periodYear: number,
+    declaredAmountCents: number,
+    documentUrl: string,
+    notes?: string,
+  ): Observable<AccountabilityDisclosure> {
     return this.http
       .post<AccountabilityDisclosureResponseDto>(`${this.apiBase}/politicians/accountability-disclosures`, {
         category,
+        periodMonth,
+        periodYear,
         declaredAmountCents,
         documentUrl,
+        notes: notes?.trim() || null,
       })
       .pipe(
         map(toAccountabilityDisclosure),

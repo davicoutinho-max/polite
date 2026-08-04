@@ -15,6 +15,11 @@ public interface PoliticianDossierUseCase {
   PoliticianDossierExtension updateDossier(
       UUID politicianAccountId, String education, String profession, String patrimony, String email, String phone, String officeDetail);
 
+  /** Self-reported counts (speeches/interviews/official trips) — a bare tally the politician
+   * maintains themselves, not backed by individual records; see PoliticianDossierExtension's
+   * column comments for why this stays a simple counter rather than a full log. */
+  PoliticianDossierExtension updateActivityCounts(UUID politicianAccountId, int speechesCount, int interviewsCount, int tripsCount);
+
   Mandate addMandate(UUID politicianAccountId, String role, String period, boolean current);
 
   List<Mandate> getMandates(UUID politicianAccountId);

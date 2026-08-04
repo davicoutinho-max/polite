@@ -20,48 +20,103 @@
 .expense__row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: var(--cp-space-xs); color: var(--cp-on-surface); }
 .expense__amount { font-weight: 600; color: var(--cp-on-surface-variant); }
 
-// ---- Accountability disclosures ----
+// ---- Compensation/CEAP/office-budget glossary sections ----
+.glossary-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cp-space-sm) var(--cp-space-lg);
+}
+@media (min-width: 640px) {
+  .glossary-grid { grid-template-columns: 1fr 1fr; }
+}
+.glossary-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-xs);
+  padding: var(--cp-space-sm);
+  border-radius: var(--cp-radius);
+  font-size: 14px;
+  color: var(--cp-on-surface);
+
+  &:hover { background: var(--cp-surface-container-low); }
+}
+.glossary-item__row {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+
+  ui-icon:first-child { flex-shrink: 0; color: var(--cp-tertiary-fixed-dim); }
+}
+.glossary-item__label { flex: 1; min-width: 0; }
+
 .disclosures__intro {
-  margin: 0 0 var(--cp-space-md);
+  margin: 0;
   font-size: 13px;
   line-height: 19px;
   color: var(--cp-on-surface-variant);
 }
-.disclosures { display: flex; flex-direction: column; gap: var(--cp-space-md); }
-.disclosure {
+
+// ---- Per-line-item disclosure history + inline submission form ----
+.disclosure-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--cp-space-sm);
+  gap: var(--cp-space-xs);
+}
+.disclosure-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--cp-space-xs) var(--cp-space-sm);
+  background: var(--cp-surface-container-low);
+  border-radius: var(--cp-radius);
+  font-size: 12px;
+}
+.disclosure-row__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--cp-space-xs);
+}
+.disclosure-row__period { font-weight: 700; color: var(--cp-on-surface); }
+.disclosure-row__amount { font-weight: 600; color: var(--cp-on-surface-variant); }
+.disclosure-row__doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  color: var(--cp-secondary);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover { text-decoration: underline; }
+}
+.disclosure-row__feedback { color: var(--cp-on-surface-variant); }
+.disclosure-row__notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-style: italic;
+  color: var(--cp-on-surface-variant);
+
+  ui-icon { flex-shrink: 0; margin-top: 1px; }
+}
+
+.disclosure__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-md);
+  margin-top: var(--cp-space-xs);
   padding: var(--cp-space-md);
   border: 1px solid var(--cp-outline-variant);
   border-radius: var(--cp-radius-lg);
   background: var(--cp-surface-container-lowest);
 }
-.disclosure__head { display: flex; align-items: center; gap: var(--cp-space-sm); }
-.disclosure__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--cp-radius-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--cp-secondary-container);
-  color: var(--cp-on-secondary-container);
-  flex-shrink: 0;
-}
-.disclosure__label { flex: 1; font-weight: 600; font-size: 14px; color: var(--cp-on-surface); }
-.disclosure__latest {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--cp-space-sm) var(--cp-space-md);
-  background: var(--cp-surface-container-low);
-  border-radius: var(--cp-radius);
-}
-.disclosure__amount { font-weight: 700; font-size: 15px; color: var(--cp-on-surface); }
-.disclosure__feedback { font-size: 13px; color: var(--cp-on-surface-variant); }
-
-.disclosure__form { display: flex; flex-direction: column; gap: var(--cp-space-md); }
 .disclosure__field {
   display: flex;
   flex-direction: column;
@@ -69,6 +124,6 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--cp-on-surface-variant);
-  p-inputnumber, input { width: 100%; }
+  p-inputnumber, p-datepicker, input, textarea { width: 100%; }
 }
 .disclosure__actions { display: flex; justify-content: flex-end; gap: var(--cp-space-sm); }

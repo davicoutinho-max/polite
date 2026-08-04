@@ -3,6 +3,7 @@ package dev.civicpulse.legislative.adapter.in.web;
 import dev.civicpulse.legislative.adapter.in.web.dto.AddMilestoneRequest;
 import dev.civicpulse.legislative.adapter.in.web.dto.CareerMilestoneResponse;
 import dev.civicpulse.legislative.application.port.in.CareerUseCase;
+import dev.civicpulse.legislative.domain.exception.NotDossierOwnerException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,9 +32,14 @@ public class CareerController {
     return careerUseCase.getMilestones(politicianAccountId).stream().map(CareerMilestoneResponse::from).toList();
   }
 
+  /** Self-service only — same ownership convention as PoliticianDossierController's writes. */
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public CareerMilestoneResponse add(@PathVariable UUID politicianAccountId, @Valid @RequestBody AddMilestoneRequest request) {
+  public CareerMilestoneResponse add(
+      @PathVariable UUID politicianAccountId, @RequestHeader("X-Account-Id") UUID accountId, @Valid @RequestBody AddMilestoneRequest request) {
+    if (!politicianAccountId.equals(accountId)) {
+      throw new NotDossierOwnerException(politicianAccountId);
+    }
     return CareerMilestoneResponse.from(careerUseCase.addMilestone(politicianAccountId, request.year(), request.title(), request.detail()));
   }
 }

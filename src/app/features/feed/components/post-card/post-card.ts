@@ -13,12 +13,20 @@ import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-button';
 import { UiTag } from '../../../../shared/ui/ui-tag/ui-tag';
 import { UiYoutube } from '../../../../shared/ui/ui-youtube/ui-youtube';
+import { UiExpandableText } from '../../../../shared/ui/ui-expandable-text/ui-expandable-text';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 import { TranslateService } from '../../../../core/services/translate.service';
 
 export interface CommentEvent {
   readonly postId: string;
   readonly text: string;
+  /** Present when this comment is a reply — the top-level comment it attaches under. */
+  readonly parentCommentId?: string;
+}
+
+export interface CommentLikeEvent {
+  readonly postId: string;
+  readonly commentId: string;
 }
 
 export interface VoteEvent {
@@ -30,7 +38,7 @@ export interface VoteEvent {
 @Component({
   selector: 'app-post-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiCard, UiAvatar, UiIcon, UiTag, UiIconButton, CompactNumberPipe, RouterLink, FormsModule, InputText, UiYoutube, TranslatePipe],
+  imports: [UiCard, UiAvatar, UiIcon, UiTag, UiIconButton, CompactNumberPipe, RouterLink, FormsModule, InputText, UiYoutube, UiExpandableText, TranslatePipe],
   templateUrl: './post-card.html',
   styleUrl: './post-card.scss',
 })
@@ -46,6 +54,7 @@ export class PostCard {
   readonly canReact = input(true);
   readonly like = output<string>();
   readonly addComment = output<CommentEvent>();
+  readonly likeComment = output<CommentLikeEvent>();
   readonly vote = output<VoteEvent>();
   readonly unvote = output<string>();
   readonly delete = output<string>();
@@ -53,6 +62,17 @@ export class PostCard {
   protected readonly showComments = signal(false);
   protected readonly showMenu = signal(false);
   protected readonly draft = signal('');
+  protected readonly replyingToId = signal<string | null>(null);
+  protected readonly replyDraft = signal('');
+
+  /** Comments render as a flat list plus one level of threading — a reply's own replies (if the
+   * backend ever accepted them) would already be flattened onto the original top-level comment
+   * server-side, so grouping by parentCommentId here is always exactly one level deep. */
+  protected readonly topLevelComments = computed(() => this.post().comments.filter((c) => !c.parentCommentId));
+
+  protected repliesFor(commentId: string) {
+    return this.post().comments.filter((c) => c.parentCommentId === commentId);
+  }
 
   protected readonly canDelete = computed(() => this.session.account().id === this.post().author.id);
 
@@ -107,6 +127,30 @@ export class PostCard {
     }
     this.addComment.emit({ postId: this.post().id, text });
     this.draft.set('');
+  }
+
+  protected startReply(commentId: string): void {
+    this.replyingToId.set(commentId);
+    this.replyDraft.set('');
+  }
+
+  protected cancelReply(): void {
+    this.replyingToId.set(null);
+    this.replyDraft.set('');
+  }
+
+  protected submitReply(parentCommentId: string): void {
+    const text = this.replyDraft().trim();
+    if (!text) {
+      return;
+    }
+    this.addComment.emit({ postId: this.post().id, text, parentCommentId });
+    this.replyingToId.set(null);
+    this.replyDraft.set('');
+  }
+
+  protected onLikeComment(commentId: string): void {
+    this.likeComment.emit({ postId: this.post().id, commentId });
   }
 
   protected pollTotalVotes(poll: PostPoll): number {

@@ -3,7 +3,6 @@ package dev.civicpulse.legislative.adapter.in.web;
 import dev.civicpulse.legislative.adapter.in.web.dto.AccountabilityDisclosureResponse;
 import dev.civicpulse.legislative.adapter.in.web.dto.SubmitAccountabilityDisclosureRequest;
 import dev.civicpulse.legislative.application.port.in.ManageAccountabilityDisclosureUseCase;
-import dev.civicpulse.legislative.domain.model.AccountabilityCategory;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +35,13 @@ public class AccountabilityDisclosureController {
       @RequestHeader("X-Account-Id") UUID politicianAccountId, @Valid @RequestBody SubmitAccountabilityDisclosureRequest request) {
     var disclosure =
         manageAccountabilityDisclosureUseCase.submit(
-            politicianAccountId, AccountabilityCategory.fromCode(request.category()), request.declaredAmountCents(), request.documentUrl());
+            politicianAccountId,
+            request.category(),
+            request.periodMonth(),
+            request.periodYear(),
+            request.declaredAmountCents(),
+            request.documentUrl(),
+            request.notes());
     return AccountabilityDisclosureResponse.from(disclosure);
   }
 

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { UiIcon } from '../ui-icon/ui-icon';
+import { UiExpandableText } from '../ui-expandable-text/ui-expandable-text';
 
 export interface DataListItem {
   readonly icon?: string;
@@ -8,14 +9,16 @@ export interface DataListItem {
 }
 
 /**
- * Generic definition list (label → value rows). Ideal for profile dossiers.
+ * Generic definition list (label → value rows). Ideal for profile dossiers — some values (a
+ * politician's education/profession free-text, say) can run to whole paragraphs, so each value
+ * clamps behind a "show more" toggle rather than pushing the rest of the page down.
  *
  * @example <ui-data-list [items]="[{ label: 'Profession', value: 'Lawyer' }]" />
  */
 @Component({
   selector: 'ui-data-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiIcon],
+  imports: [UiIcon, UiExpandableText],
   template: `
     <dl class="data-list" [class.data-list--cols]="columns()">
       @for (item of items(); track item.label) {
@@ -26,7 +29,9 @@ export interface DataListItem {
             }
             {{ item.label }}
           </dt>
-          <dd class="data-list__value">{{ item.value }}</dd>
+          <dd class="data-list__value">
+            <ui-expandable-text [text]="item.value" [maxLines]="3" [moreLabel]="moreLabel()" [lessLabel]="lessLabel()" />
+          </dd>
         </div>
       }
     </dl>
@@ -59,4 +64,6 @@ export interface DataListItem {
 export class UiDataList {
   readonly items = input.required<readonly DataListItem[]>();
   readonly columns = input(false);
+  readonly moreLabel = input('Show more');
+  readonly lessLabel = input('Show less');
 }

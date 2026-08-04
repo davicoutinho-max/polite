@@ -51,6 +51,14 @@ public class PoliticianDossierService implements PoliticianDossierUseCase {
 
   @Override
   @Transactional
+  public PoliticianDossierExtension updateActivityCounts(UUID politicianAccountId, int speechesCount, int interviewsCount, int tripsCount) {
+    PoliticianDossierExtension dossier = getDossier(politicianAccountId);
+    dossier.updateActivityCounts(speechesCount, interviewsCount, tripsCount);
+    return dossierRepository.save(dossier);
+  }
+
+  @Override
+  @Transactional
   public Mandate addMandate(UUID politicianAccountId, String role, String period, boolean current) {
     requireDossierExists(politicianAccountId);
     return mandateRepository.save(Mandate.add(politicianAccountId, role, period, current));

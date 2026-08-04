@@ -9,22 +9,6 @@
   gap: var(--cp-space-lg);
 }
 
-.save-banner {
-  display: flex;
-  align-items: center;
-  gap: var(--cp-space-sm);
-  padding: var(--cp-space-sm) var(--cp-space-md);
-  border-radius: var(--cp-radius);
-  background: var(--cp-success-container);
-  color: var(--cp-on-success-container);
-  font-size: 14px;
-  font-weight: 600;
-}
-.save-banner--error {
-  background: var(--cp-danger-container);
-  color: var(--cp-on-danger-container);
-}
-
 .edit-profile__skeleton {
   display: flex;
   flex-direction: column;
@@ -48,6 +32,17 @@
   input, textarea, p-select {
     width: 100%;
   }
+
+  input.ng-invalid-visible {
+    border-color: var(--cp-error);
+    outline-color: var(--cp-error);
+  }
+}
+
+.edit-form__error {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cp-error);
 }
 
 .edit-form__row {
@@ -85,4 +80,32 @@
 
   a { color: var(--cp-secondary); text-decoration: none; }
   a:hover { text-decoration: underline; }
+}
+
+.edit-form__badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: var(--cp-radius-full);
+  background: var(--cp-success-container);
+  color: var(--cp-on-success-container);
+}
+
+.edit-form__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-xs);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cp-on-surface-variant);
+
+  input { width: auto; }
+}
+
+.edit-form__hint {
+  margin: 0 0 var(--cp-space-sm);
+  font-size: 13px;
+  color: var(--cp-on-surface-variant);
 }

@@ -6,6 +6,7 @@ import { DirectoryService } from '../../core/services/directory.service';
 import { FeedService } from '../../core/services/feed.service';
 import { MediaService } from '../../core/services/media.service';
 import { SessionService } from '../../core/services/session.service';
+import { AlertsService } from '../../core/services/alerts.service';
 import { ProfileTab } from '../../core/models';
 import { UiSection } from '../../shared/ui/ui-section/ui-section';
 import { StatStripItem, UiStatStrip } from '../../shared/ui/ui-stat-strip/ui-stat-strip';
@@ -16,8 +17,9 @@ import { UiButton } from '../../shared/ui/ui-button/ui-button';
 import { UiIcon } from '../../shared/ui/ui-icon/ui-icon';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
+import { UiExpandableText } from '../../shared/ui/ui-expandable-text/ui-expandable-text';
 import { ProfileTabs } from '../profile/components/profile-tabs/profile-tabs';
-import { PostCard, CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
+import { PostCard, CommentEvent, CommentLikeEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { TranslateService } from '../../core/services/translate.service';
 import { TranslatePipe } from '../../shared/pipes/translate.pipe';
 import { UiYoutube } from '../../shared/ui/ui-youtube/ui-youtube';
@@ -27,7 +29,6 @@ const TABS: ProfileTab[] = [
   { id: 'activity', label: 'Activity', key: 'tab.activity', icon: 'forum' },
   { id: 'overview', label: 'Overview', key: 'tab.overview', icon: 'info' },
   { id: 'agenda', label: 'Agenda', key: 'tab.agenda', icon: 'calendar_month' },
-  { id: 'events', label: 'Events', key: 'tab.events', icon: 'event' },
 ];
 
 /** Party profile page. */
@@ -44,6 +45,7 @@ const TABS: ProfileTab[] = [
     UiIcon,
     UiEmpty,
     UiSkeleton,
+    UiExpandableText,
     RouterLink,
     ProfileTabs,
     PostCard,
@@ -59,6 +61,7 @@ export class PartyPage {
   private readonly feedService = inject(FeedService);
   private readonly media = inject(MediaService);
   private readonly session = inject(SessionService);
+  private readonly alerts = inject(AlertsService);
   private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
 
@@ -113,7 +116,10 @@ export class PartyPage {
     this.uploadingLogo.set(true);
     this.media.upload(file).subscribe({
       next: (url) => this.partyService.updateLogo(url).subscribe({
-        complete: () => this.uploadingLogo.set(false),
+        complete: () => {
+          this.uploadingLogo.set(false);
+          this.notifySuccess(this.translate.t('title.logo-updated', 'Logo updated'), this.translate.t('hint.logo-updated', 'Your new logo is now public.'));
+        },
         error: () => this.uploadingLogo.set(false),
       }),
       error: () => this.uploadingLogo.set(false),
@@ -128,7 +134,10 @@ export class PartyPage {
     this.uploadingCover.set(true);
     this.media.upload(file).subscribe({
       next: (url) => this.partyService.updateCoverPhoto(url).subscribe({
-        complete: () => this.uploadingCover.set(false),
+        complete: () => {
+          this.uploadingCover.set(false);
+          this.notifySuccess(this.translate.t('title.cover-updated', 'Cover photo updated'), this.translate.t('hint.cover-updated', 'Your new cover photo is now public.'));
+        },
         error: () => this.uploadingCover.set(false),
       }),
       error: () => this.uploadingCover.set(false),
@@ -149,7 +158,11 @@ export class PartyPage {
   }
 
   protected onComment(event: CommentEvent): void {
-    this.feedService.addComment(event.postId, event.text);
+    this.feedService.addComment(event.postId, event.text, event.parentCommentId);
+  }
+
+  protected onLikeComment(event: CommentLikeEvent): void {
+    this.feedService.toggleCommentLike(event.postId, event.commentId);
   }
 
   protected onVote(event: VoteEvent): void {
@@ -174,20 +187,13 @@ export class PartyPage {
     }
   }
 
-  /** Agenda = scheduled/upcoming; Events = past history. Same underlying list, split by date —
-   * there's no separate "agenda" data source, just a different time-window view of party events. */
+  /** Agenda shows only what's still ahead — there's no separate "Events" tab for past history
+   * anymore, just this time-windowed view of the party's events. */
   protected readonly upcomingEvents = computed(() => {
     const now = Date.now();
     return this.party()
       .events.filter((e) => new Date(e.date).getTime() >= now)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  });
-
-  protected readonly pastEvents = computed(() => {
-    const now = Date.now();
-    return this.party()
-      .events.filter((e) => new Date(e.date).getTime() < now)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   });
 
   protected readonly foundedYearDisplay = computed(() => {
@@ -236,4 +242,8 @@ export class PartyPage {
       { icon: 'person', label: t('label.president', 'President'), value: p.president },
     ];
   });
+
+  private notifySuccess(title: string, message: string): void {
+    this.alerts.push({ category: 'party', icon: 'check_circle', title, message, timeLabel: this.translate.t('label.just-now', 'Just now') });
+  }
 }

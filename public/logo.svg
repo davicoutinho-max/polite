@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#153c6a" />
+      <stop offset="100%" stop-color="#2462a0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo Azul -->
+  <rect width="240" height="240" rx="55" fill="url(#bgGrad)" />
+
+  <!-- Letra 'i' -->
+  <g fill="#FFFFFF">
+    <circle cx="72" cy="78" r="12" />
+    <rect x="60" y="100" width="24" height="74" rx="12" />
+  </g>
+
+  <!-- Letra 'Q' e a cauda verde -->
+  <g transform="translate(143, 137)">
+    <!-- Círculo do Q -->
+    <circle cx="0" cy="0" r="25" stroke="#FFFFFF" stroke-width="24" fill="none" />
+    <!-- Cauda Verde -->
+    <rect x="-12" y="12" width="24" height="42" rx="12" fill="#52dc9a" transform="rotate(-45)" />
+  </g>
+</svg>

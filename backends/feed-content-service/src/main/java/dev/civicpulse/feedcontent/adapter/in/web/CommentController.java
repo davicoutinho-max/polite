@@ -27,7 +27,7 @@ public class CommentController {
 
   @PostMapping
   public ResponseEntity<CommentResponse> add(@PathVariable UUID postId, @Valid @RequestBody AddCommentRequest request) {
-    var comment = manageCommentUseCase.addComment(postId, request.authorAccountId(), request.body());
+    var comment = manageCommentUseCase.addComment(postId, request.authorAccountId(), request.parentCommentId(), request.body());
     CommentResponse body = CommentResponse.from(comment);
     return ResponseEntity.created(URI.create("/posts/" + postId + "/comments/" + body.id())).body(body);
   }

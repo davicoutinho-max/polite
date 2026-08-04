@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ACCOUNT_TYPE_OPTIONS, Account, AccountType, Permission, TYPE_PERMISSIONS, UserSummary } from '../models';
+import { DirectoryService } from './directory.service';
 
 const ACCESS_TOKEN_KEY = 'cp_access_token';
 const REFRESH_TOKEN_KEY = 'cp_refresh_token';
@@ -93,6 +94,11 @@ function accountTypeLabel(type: AccountType): string {
 @Injectable({ providedIn: 'root' })
 export class SessionService {
   private readonly http = inject(HttpClient);
+  /** DirectoryService itself injects SessionService (for self-service calls' own account id), so
+   * injecting it back here directly would be a constructor-time circular dependency (NG0200) —
+   * fetched lazily through the injector instead, by which point SessionService's own construction
+   * has already completed and DirectoryService can safely resolve it from the cache. */
+  private readonly injector = inject(Injector);
   private readonly apiBase = `${environment.apiBaseUrl}/api/identity`;
 
   private readonly _account = signal<Account>(VISITOR_ACCOUNT);
@@ -106,6 +112,15 @@ export class SessionService {
   readonly type = computed<AccountType>(() => this._account().accountType);
   readonly isVisitor = computed(() => this.type() === 'visitor');
   readonly isAuthenticated = computed(() => this.type() !== 'visitor');
+
+  /** Keeps the top-bar avatar in sync right after a self-service logo/avatar upload — PartyService
+   * and PoliticianService each hold their own copy of the profile being edited, which is a
+   * different object than this signal, so saving there never touched this one on its own. */
+  patchOwnAvatar(accountId: string, avatarUrl: string): void {
+    if (this._account().id === accountId) {
+      this._account.update((a) => ({ ...a, avatarUrl }));
+    }
+  }
 
   readonly permissions = computed<ReadonlySet<Permission>>(() => new Set<Permission>(TYPE_PERMISSIONS[this.type()]));
 
@@ -261,7 +276,8 @@ export class SessionService {
 
   private loadAccount(accountId: string): Observable<Account> {
     return this.http.get<AccountResponse>(`${this.apiBase}/accounts/${accountId}`).pipe(
-      map((response) => {
+      switchMap((response) => this.resolveAvatarUrl(response).pipe(map((avatarUrl) => ({ response, avatarUrl })))),
+      map(({ response, avatarUrl }) => {
         const account: Account = {
           id: response.id,
           name: response.name,
@@ -269,13 +285,37 @@ export class SessionService {
           role: accountTypeLabel(response.accountType),
           verified: response.verified,
           accountType: response.accountType,
-          avatarUrl: response.avatarUrl ?? GUEST_AVATAR,
+          avatarUrl,
           email: response.email,
         };
         this._account.set(account);
         return account;
       }),
     );
+  }
+
+  /** identity-service's own accounts.avatar_url is only ever populated for accounts created by
+   * government sync (see Account.registerSynced) — a party/politician that later uploads its own
+   * logo/photo through the app writes it to directory-service instead (PartyService.updateLogo /
+   * PoliticianService.updateProfileImages), which never flows back to identity-service. So for
+   * those two account types, directory-service's copy is the one that's actually kept current and
+   * takes priority; identity-service's value is only a fallback for whatever falls through. */
+  private resolveAvatarUrl(response: AccountResponse): Observable<string> {
+    const fallback = response.avatarUrl ?? GUEST_AVATAR;
+    const directory = this.injector.get(DirectoryService);
+    if (response.accountType === 'party') {
+      return directory.getParty(response.id).pipe(
+        map((party) => party.logoUrl || fallback),
+        catchError(() => of(fallback)),
+      );
+    }
+    if (response.accountType === 'politician') {
+      return directory.getPolitician(response.id).pipe(
+        map((politician) => politician.avatarUrl || fallback),
+        catchError(() => of(fallback)),
+      );
+    }
+    return of(fallback);
   }
 
   private storeTokens(auth: AuthResponse): void {

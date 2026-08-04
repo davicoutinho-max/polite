@@ -307,12 +307,24 @@
   }
   &__send:disabled { opacity: 0.5; cursor: not-allowed; }
   &__empty { margin: 0; font-size: 13px; color: var(--cp-on-surface-variant); text-align: center; }
+  &__cancel {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; flex-shrink: 0;
+    border: none; background: transparent; color: var(--cp-on-surface-variant); cursor: pointer;
+  }
+  &__cancel:hover { color: var(--cp-on-surface); }
+  &--reply { margin-top: var(--cp-space-xs); }
 }
 
 .comment {
   display: flex;
   gap: var(--cp-space-sm);
   align-items: flex-start;
+
+  &--reply {
+    margin-top: var(--cp-space-sm);
+    margin-left: 40px;
+  }
 
   &__bubble {
     flex: 1;
@@ -329,4 +341,26 @@
   &__name > ui-icon { color: var(--cp-secondary); }
   &__time { font-size: 11px; color: var(--cp-on-surface-variant); }
   &__text { margin: 2px 0 0; font-size: 14px; line-height: 20px; color: var(--cp-on-surface); overflow-wrap: anywhere; }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--cp-space-sm);
+    margin-top: 4px;
+  }
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--cp-on-surface-variant);
+    cursor: pointer;
+  }
+  &__action:hover { color: var(--cp-secondary); }
+  &__action:disabled { cursor: not-allowed; opacity: 0.6; }
+  &__action--active { color: var(--cp-secondary); }
 }

@@ -21,33 +21,24 @@ export interface TransparencyReport {
   readonly lastUpdate: string;
 }
 
-/** Real public-money categories a Brazilian federal politician is accountable for — mirrors
- * legislative-service's AccountabilityCategory enum. */
-export type AccountabilityCategory =
-  | 'office_budget'
-  | 'parliamentary_quota'
-  | 'parliamentary_amendments'
-  | 'travel_allowance'
-  | 'advertising';
-
-export const ACCOUNTABILITY_CATEGORIES: readonly { readonly value: AccountabilityCategory; readonly label: string; readonly icon: string }[] = [
-  { value: 'office_budget', label: 'Office budget', icon: 'business_center' },
-  { value: 'parliamentary_quota', label: 'Parliamentary activity quota (CEAP)', icon: 'receipt_long' },
-  { value: 'parliamentary_amendments', label: 'Parliamentary amendments', icon: 'account_balance' },
-  { value: 'travel_allowance', label: 'Travel allowance', icon: 'flight' },
-  { value: 'advertising', label: 'Institutional advertising', icon: 'campaign' },
-];
-
-/** One AI-reviewed accountability submission — see legislative-service's
- * AccountabilityDisclosure javadoc for the full workflow. Every submission is kept (not just the
- * latest), so a category's "current" status is simply its most recent submission. */
+/** One AI-reviewed accountability submission for a single month/year, attached to one of the
+ * compensation/CEAP/office-budget line items shown on the transparency tab (`category` matches
+ * one of those items' own key — see legislative-service's accountability_category_options).
+ * Every submission is kept (not just the latest), so a rejected attempt's AI feedback stays
+ * visible and the full history for a given item+period is browsable. */
 export interface AccountabilityDisclosure {
   readonly id: string;
-  readonly category: AccountabilityCategory;
+  readonly category: string;
+  /** 1–12. */
+  readonly periodMonth: number;
+  readonly periodYear: number;
   readonly declaredAmountCents: number;
   readonly documentUrl: string;
   readonly status: 'approved' | 'rejected';
   readonly extractedAmountCents: number | null;
   readonly aiFeedback: string;
+  /** Optional free-text context the politician added — not seen by the AI reviewer, purely for
+   * their own public record. */
+  readonly notes: string | null;
   readonly submittedAt: string;
 }

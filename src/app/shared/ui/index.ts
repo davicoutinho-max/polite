@@ -18,3 +18,4 @@ export * from './ui-bar-chart/ui-bar-chart';
 export * from './ui-area-chart/ui-area-chart';
 export * from './ui-youtube/ui-youtube';
 export * from './ui-skeleton/ui-skeleton';
+export * from './ui-expandable-text/ui-expandable-text';

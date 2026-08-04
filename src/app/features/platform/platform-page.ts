@@ -7,6 +7,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { Select } from 'primeng/select';
 import { PartyInvite, PlatformService } from '../../core/services/platform.service';
 import { DirectoryService } from '../../core/services/directory.service';
+import { AlertsService } from '../../core/services/alerts.service';
 import { TranslateService } from '../../core/services/translate.service';
 import { InfiniteScrollDirective } from '../../core/directives/infinite-scroll.directive';
 import { PartyRegistryEntry } from '../../core/models';
@@ -58,6 +59,7 @@ export class PlatformPage {
   private readonly platform = inject(PlatformService);
   private readonly directory = inject(DirectoryService);
   private readonly translate = inject(TranslateService);
+  private readonly alerts = inject(AlertsService);
 
   protected readonly tabs: UiTab[] = [
     { id: 'directory', label: 'Parties & Politicians', key: 'tab.parties-politicians', icon: 'how_to_reg' },
@@ -190,6 +192,7 @@ export class PlatformPage {
           this.createSubmitting.set(false);
           this.invites.update((list) => [invite, ...list]);
           this.resetForm();
+          this.notifySuccess(this.translate.t('title.invite-sent', 'Invite sent'), invite.targetEmail ?? '');
         },
         error: () => {
           this.createSubmitting.set(false);
@@ -204,13 +207,20 @@ export class PlatformPage {
       next: () => {
         this.resendingInviteId.set(null);
         this.reloadInvites();
+        this.notifySuccess(this.translate.t('title.invite-resent', 'Invite resent'), '');
       },
       error: () => this.resendingInviteId.set(null),
     });
   }
 
   protected assign(politicianId: string, value: string): void {
-    this.platform.assignPolitician(politicianId, value === '' || value == null ? null : value).subscribe();
+    this.platform.assignPolitician(politicianId, value === '' || value == null ? null : value).subscribe({
+      next: () => this.notifySuccess(this.translate.t('title.assignment-updated', 'Assignment updated'), ''),
+    });
+  }
+
+  private notifySuccess(title: string, message: string): void {
+    this.alerts.push({ category: 'project', icon: 'check_circle', title, message, timeLabel: this.translate.t('label.just-now', 'Just now') });
   }
 
   private resetForm(): void {

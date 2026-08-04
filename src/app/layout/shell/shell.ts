@@ -3,12 +3,13 @@ import { RouterOutlet } from '@angular/router';
 import { SideNav } from '../side-nav/side-nav';
 import { AppTopBar } from '../app-top-bar/app-top-bar';
 import { MobileBottomNav } from '../mobile-bottom-nav/mobile-bottom-nav';
+import { ToastContainer } from '../toast-container/toast-container';
 
 /** Application shell: fixed side navigation + an independently scrolling content area. */
 @Component({
   selector: 'app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SideNav, AppTopBar, MobileBottomNav],
+  imports: [RouterOutlet, SideNav, AppTopBar, MobileBottomNav, ToastContainer],
   template: `
     <div class="shell">
       <app-side-nav />
@@ -22,6 +23,7 @@ import { MobileBottomNav } from '../mobile-bottom-nav/mobile-bottom-nav';
         <app-mobile-bottom-nav />
       </div>
     </div>
+    <app-toast-container />
   `,
   styles: `
     :host { display: block; }

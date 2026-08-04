@@ -6,6 +6,7 @@ import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
+import { PrimeTemplate } from 'primeng/api';
 import { UiAvatar } from '../../../../shared/ui/ui-avatar/ui-avatar';
 import { UiButton } from '../../../../shared/ui/ui-button/ui-button';
 import { UiIconButton } from '../../../../shared/ui/ui-icon-button/ui-icon-button';
@@ -49,6 +50,7 @@ const MODES: UiTab[] = [
     InputText,
     Select,
     DatePicker,
+    PrimeTemplate,
     UiAvatar,
     UiButton,
     UiIconButton,
@@ -84,6 +86,16 @@ export class PostComposer {
   protected readonly agendaDate = signal<Date | null>(null);
   protected readonly agendaTime = signal<Date | null>(null);
   protected readonly agendaLocation = signal('');
+
+  /** The time picker visually defaults its steppers to the current time even while the bound
+   * model is still null — closing it without touching a stepper never fired ngModelChange, so
+   * nothing was ever actually set despite a time being shown. Defaulting the model the moment the
+   * panel opens means there's always a real value to confirm, whether or not the user changes it. */
+  protected onTimePickerShow(): void {
+    if (!this.agendaTime()) {
+      this.agendaTime.set(new Date());
+    }
+  }
   /** States registered in the platform admin's geography parameters — the agenda's location is
    * picked from this list rather than typed freely, so agenda locations stay consistent. */
   protected readonly states = this.platform.states;

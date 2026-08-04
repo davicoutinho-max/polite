@@ -62,8 +62,10 @@ interface PostMetricsResponseDto {
 interface CommentResponseDto {
   readonly id: string;
   readonly authorAccountId: string;
+  readonly parentCommentId: string | null;
   readonly body: string;
   readonly createdAt: string;
+  readonly likesCount: number;
 }
 
 interface LiveSessionResponseDto {
@@ -366,21 +368,15 @@ export class FeedService {
     return this.http.post<MediaUploadResponseDto>(`${this.feedApiBase}/media`, formData);
   }
 
-  addComment(postId: string, text: string): void {
+  addComment(postId: string, text: string, parentCommentId?: string): void {
     const body = text.trim();
     if (!body) {
       return;
     }
     const authorAccountId = this.session.account().id;
     this.http
-      .post<CommentResponseDto>(`${this.feedApiBase}/posts/${postId}/comments`, { authorAccountId, body })
-      .pipe(
-        switchMap((c) =>
-          this.resolveAuthor(c.authorAccountId).pipe(
-            map((author): PostComment => ({ id: c.id, author, text: c.body, timeLabel: relativeTime(c.createdAt) })),
-          ),
-        ),
-      )
+      .post<CommentResponseDto>(`${this.feedApiBase}/posts/${postId}/comments`, { authorAccountId, parentCommentId: parentCommentId ?? null, body })
+      .pipe(switchMap((c) => this.toPostComment(c)))
       .subscribe({
         next: (comment) =>
           this._posts.update((posts) =>
@@ -391,6 +387,60 @@ export class FeedService {
             ),
           ),
       });
+  }
+
+  /** Mirrors {@link toggleLike} but scoped to a single comment — the like state/count live on
+   * the comment itself (see CommentResponseDto), so the update walks into every post's comment
+   * list looking for a matching id rather than the top-level posts array. */
+  toggleCommentLike(postId: string, commentId: string): void {
+    const post = this._posts().find((p) => p.id === postId);
+    const comment = post?.comments.find((c) => c.id === commentId);
+    if (!comment) {
+      return;
+    }
+    const accountId = this.session.account().id;
+    const request$ = comment.likedByMe
+      ? this.http.delete<void>(`${this.feedApiBase}/comments/${commentId}/likes`, { params: { accountId } })
+      : this.http.post<void>(`${this.feedApiBase}/comments/${commentId}/likes`, { accountId });
+    this._posts.update((posts) =>
+      posts.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === commentId ? { ...c, likedByMe: !c.likedByMe, likesCount: c.likesCount + (c.likedByMe ? -1 : 1) } : c,
+              ),
+            }
+          : p,
+      ),
+    );
+    request$.subscribe({ error: () => this.refreshComments(postId) });
+  }
+
+  private refreshComments(postId: string): void {
+    this.http
+      .get<CommentResponseDto[]>(`${this.feedApiBase}/posts/${postId}/comments`)
+      .pipe(switchMap((comments) => (comments.length ? forkJoin(comments.map((c) => this.toPostComment(c))) : of([] as PostComment[]))))
+      .subscribe((comments) => this._posts.update((posts) => posts.map((p) => (p.id === postId ? { ...p, comments } : p))));
+  }
+
+  private toPostComment(c: CommentResponseDto): Observable<PostComment> {
+    const likedByMe$ = this.session.isAuthenticated()
+      ? this.http.get<boolean>(`${this.feedApiBase}/comments/${c.id}/likes/${this.session.account().id}`).pipe(catchError(() => of(false)))
+      : of(false);
+    return forkJoin({ author: this.resolveAuthor(c.authorAccountId), likedByMe: likedByMe$ }).pipe(
+      map(
+        ({ author, likedByMe }): PostComment => ({
+          id: c.id,
+          author,
+          text: c.body,
+          timeLabel: relativeTime(c.createdAt),
+          parentCommentId: c.parentCommentId,
+          likesCount: c.likesCount,
+          likedByMe,
+        }),
+      ),
+    );
   }
 
   private scheduleLiveSession(live: {
@@ -446,17 +496,7 @@ export class FeedService {
     return forkJoin({
       author: this.resolveAuthor(dto.authorAccountId),
       comments: this.http.get<CommentResponseDto[]>(`${this.feedApiBase}/posts/${dto.id}/comments`).pipe(
-        switchMap((comments) =>
-          comments.length
-            ? forkJoin(
-                comments.map((c) =>
-                  this.resolveAuthor(c.authorAccountId).pipe(
-                    map((author): PostComment => ({ id: c.id, author, text: c.body, timeLabel: relativeTime(c.createdAt) })),
-                  ),
-                ),
-              )
-            : of([] as PostComment[]),
-        ),
+        switchMap((comments) => (comments.length ? forkJoin(comments.map((c) => this.toPostComment(c))) : of([] as PostComment[]))),
       ),
       metrics: this.http
         .get<PostMetricsResponseDto>(`${this.feedApiBase}/posts/${dto.id}/metrics`)
@@ -514,6 +554,24 @@ export class FeedService {
           comments,
         };
       }),
+    );
+  }
+
+  /** Called right after a party/politician updates its own logo/avatar so already-resolved posts
+   * and comments (and the resolveAuthor cache backing future ones) stop showing the old image —
+   * resolveAuthor caches by accountId forever, so without this a stale entry would outlive
+   * DirectoryService's own already-updated list. */
+  refreshAuthorAvatar(accountId: string, avatarUrl: string): void {
+    const cached = this.authorCache.get(accountId);
+    if (cached) {
+      this.authorCache.set(accountId, { ...cached, avatarUrl });
+    }
+    this._posts.update((posts) =>
+      posts.map((post) => ({
+        ...post,
+        author: post.author.id === accountId ? { ...post.author, avatarUrl } : post.author,
+        comments: post.comments.map((c) => (c.author.id === accountId ? { ...c, author: { ...c.author, avatarUrl } } : c)),
+      })),
     );
   }
 

@@ -7,7 +7,7 @@ import { FeedService } from '../../core/services/feed.service';
 import { SessionService } from '../../core/services/session.service';
 import { DirectoryService } from '../../core/services/directory.service';
 import { MessagesService } from '../../core/services/messages.service';
-import { CommentEvent, VoteEvent } from '../feed/components/post-card/post-card';
+import { CommentEvent, CommentLikeEvent, VoteEvent } from '../feed/components/post-card/post-card';
 import { PostCard } from '../feed/components/post-card/post-card';
 import { UiEmpty } from '../../shared/ui/ui-empty/ui-empty';
 import { UiSkeleton } from '../../shared/ui/ui-skeleton/ui-skeleton';
@@ -106,7 +106,11 @@ export class Profile {
   }
 
   protected onComment(event: CommentEvent): void {
-    this.feedService.addComment(event.postId, event.text);
+    this.feedService.addComment(event.postId, event.text, event.parentCommentId);
+  }
+
+  protected onLikeComment(event: CommentLikeEvent): void {
+    this.feedService.toggleCommentLike(event.postId, event.commentId);
   }
 
   protected onVote(event: VoteEvent): void {

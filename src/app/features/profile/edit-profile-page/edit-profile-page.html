@@ -9,19 +9,6 @@
     </div>
   </app-page-header>
 
-  @if (saveResult(); as result) {
-    <div class="save-banner" [class.save-banner--error]="result === 'error'">
-      <ui-icon [name]="result === 'success' ? 'check_circle' : 'error'" [size]="20" />
-      <span>
-        {{
-          result === 'success'
-            ? ('hint.profile-saved' | translate: 'Your changes were saved.')
-            : ('hint.profile-save-failed' | translate: 'Please try again shortly.')
-        }}
-      </span>
-    </div>
-  }
-
   @if (loading()) {
     <div class="edit-profile__skeleton">
       <ui-skeleton shape="rect" width="100%" height="48px" />
@@ -30,7 +17,7 @@
     </div>
   } @else if (isPolitician()) {
     <ui-section [title]="'section.dossier' | translate: 'Personal & civic dossier'" icon="badge">
-      <form class="edit-form" (submit)="saveDossier(); $event.preventDefault()">
+      <form class="edit-form" #dossierForm="ngForm" (submit)="saveDossier(); $event.preventDefault()">
         <label class="edit-form__field">
           <span>{{ 'field.office-detail' | translate: 'Office detail' }}</span>
           <input pInputText type="text" [ngModel]="officeDetail()" (ngModelChange)="officeDetail.set($event)" name="officeDetail" />
@@ -49,11 +36,37 @@
         </label>
         <label class="edit-form__field">
           <span>{{ 'field.contact-email' | translate: 'Public contact email' }}</span>
-          <input pInputText type="email" [ngModel]="dossierEmail()" (ngModelChange)="dossierEmail.set($event)" name="dossierEmail" />
+          <input
+            pInputText
+            type="email"
+            email
+            [ngModel]="dossierEmail()"
+            (ngModelChange)="dossierEmail.set($event)"
+            name="dossierEmail"
+            #dossierEmailModel="ngModel"
+            [class.ng-invalid-visible]="dossierEmailModel.invalid && dossierEmailModel.touched"
+          />
+          @if (dossierEmailModel.invalid && dossierEmailModel.touched) {
+            <span class="edit-form__error">{{ 'error.invalid-email' | translate: 'Enter a valid email address.' }}</span>
+          }
         </label>
         <label class="edit-form__field">
           <span>{{ 'field.contact-phone' | translate: 'Public contact phone' }}</span>
-          <input pInputText type="text" [ngModel]="phone()" (ngModelChange)="phone.set($event)" name="phone" />
+          <input
+            pInputText
+            type="tel"
+            [pattern]="phonePattern"
+            maxlength="16"
+            [ngModel]="phone()"
+            (ngModelChange)="onPhoneInput($event)"
+            name="phone"
+            #phoneModel="ngModel"
+            [class.ng-invalid-visible]="phoneModel.invalid && phoneModel.touched"
+            [placeholder]="'placeholder.phone-example' | translate: 'e.g. (11) 91234-5678'"
+          />
+          @if (phoneModel.invalid && phoneModel.touched) {
+            <span class="edit-form__error">{{ 'error.invalid-phone' | translate: 'Enter a valid phone number.' }}</span>
+          }
         </label>
 
         <ui-button
@@ -61,7 +74,7 @@
           icon="save"
           variant="filled"
           type="submit"
-          [disabled]="saving()"
+          [disabled]="saving() || !!dossierForm.invalid"
         />
       </form>
     </ui-section>
@@ -85,6 +98,102 @@
         <input pInputText type="text" [ngModel]="newLinkHandle()" (ngModelChange)="newLinkHandle.set($event)" name="newLinkHandle" [placeholder]="'label.handle-optional' | translate: 'Handle (optional)'" />
         <input pInputText type="text" [ngModel]="newLinkUrl()" (ngModelChange)="newLinkUrl.set($event)" name="newLinkUrl" placeholder="https://…" />
         <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="addingLink()" />
+      </form>
+    </ui-section>
+
+    <ui-section [title]="'section.mandates' | translate: 'Mandates'" icon="how_to_reg">
+      @if (mandates().length > 0) {
+        <ul class="link-list">
+          @for (mandate of mandates(); track mandate.role + mandate.period) {
+            <li class="link-list__item">
+              <ui-icon name="how_to_reg" [size]="18" />
+              <span>{{ mandate.role }}</span>
+              <span>{{ mandate.period }}</span>
+              @if (mandate.current) {
+                <span class="edit-form__badge">{{ 'label.current' | translate: 'Current' }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="edit-form edit-form--inline" (submit)="addMandate(); $event.preventDefault()">
+        <input pInputText type="text" [ngModel]="newMandateRole()" (ngModelChange)="newMandateRole.set($event)" name="newMandateRole" [placeholder]="'placeholder.mandate-role' | translate: 'e.g. Federal Deputy'" />
+        <input pInputText type="text" [ngModel]="newMandatePeriod()" (ngModelChange)="newMandatePeriod.set($event)" name="newMandatePeriod" [placeholder]="'placeholder.mandate-period' | translate: 'e.g. 2023–2027'" />
+        <label class="edit-form__checkbox">
+          <input type="checkbox" [ngModel]="newMandateCurrent()" (ngModelChange)="newMandateCurrent.set($event)" name="newMandateCurrent" />
+          {{ 'label.current' | translate: 'Current' }}
+        </label>
+        <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="addingMandate()" />
+      </form>
+    </ui-section>
+
+    <ui-section [title]="'section.team-advisors' | translate: 'Team & advisors'" icon="groups">
+      @if (team().length > 0) {
+        <ul class="link-list">
+          @for (member of team(); track member.name) {
+            <li class="link-list__item">
+              <ui-icon name="person" [size]="18" />
+              <span>{{ member.name }}</span>
+              <span>{{ member.role }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="edit-form edit-form--inline" (submit)="addTeamMember(); $event.preventDefault()">
+        <input pInputText type="text" [ngModel]="newMemberName()" (ngModelChange)="newMemberName.set($event)" name="newMemberName" [placeholder]="'label.name' | translate: 'Name'" />
+        <input pInputText type="text" [ngModel]="newMemberRole()" (ngModelChange)="newMemberRole.set($event)" name="newMemberRole" [placeholder]="'placeholder.team-role' | translate: 'e.g. Chief of Staff'" />
+        <input pInputText type="text" [ngModel]="newMemberAvatarUrl()" (ngModelChange)="newMemberAvatarUrl.set($event)" name="newMemberAvatarUrl" [placeholder]="'placeholder.avatar-url-optional' | translate: 'Photo URL (optional)'" />
+        <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="addingMember()" />
+      </form>
+    </ui-section>
+
+    <ui-section [title]="'section.career-timeline' | translate: 'Career timeline'" icon="timeline">
+      @if (careerMilestones().length > 0) {
+        <ul class="link-list">
+          @for (milestone of careerMilestones(); track milestone.year + milestone.title) {
+            <li class="link-list__item">
+              <ui-icon name="flag" [size]="18" />
+              <span>{{ milestone.year }}</span>
+              <span>{{ milestone.title }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="edit-form edit-form--inline" (submit)="addMilestone(); $event.preventDefault()">
+        <input pInputText type="text" inputmode="numeric" [ngModel]="newMilestoneYear()" (ngModelChange)="newMilestoneYear.set($event)" name="newMilestoneYear" [placeholder]="'label.year' | translate: 'Year'" />
+        <input pInputText type="text" [ngModel]="newMilestoneTitle()" (ngModelChange)="newMilestoneTitle.set($event)" name="newMilestoneTitle" [placeholder]="'placeholder.milestone-title' | translate: 'e.g. Elected City Councilor'" />
+        <input pInputText type="text" [ngModel]="newMilestoneDetail()" (ngModelChange)="newMilestoneDetail.set($event)" name="newMilestoneDetail" [placeholder]="'label.details-optional' | translate: 'Details (optional)'" />
+        <ui-button [label]="'button.add' | translate: 'Add'" icon="add" variant="tonal" type="submit" [disabled]="addingMilestone()" />
+      </form>
+    </ui-section>
+
+    <ui-section [title]="'section.parliamentary-activity-counts' | translate: 'Parliamentary activity'" icon="gavel">
+      <p class="edit-form__hint">
+        {{ 'hint.activity-counts' | translate: 'Self-reported counts shown on your Parliamentary Activity tab.' }}
+      </p>
+      <form class="edit-form edit-form--inline" (submit)="saveActivityCounts(); $event.preventDefault()">
+        <label class="edit-form__field">
+          <span>{{ 'label.speeches' | translate: 'Speeches' }}</span>
+          <input pInputText type="text" inputmode="numeric" [ngModel]="speechesCount()" (ngModelChange)="speechesCount.set($event)" name="speechesCount" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'label.interviews' | translate: 'Interviews' }}</span>
+          <input pInputText type="text" inputmode="numeric" [ngModel]="interviewsCount()" (ngModelChange)="interviewsCount.set($event)" name="interviewsCount" />
+        </label>
+        <label class="edit-form__field">
+          <span>{{ 'label.official-trips' | translate: 'Official trips' }}</span>
+          <input pInputText type="text" inputmode="numeric" [ngModel]="tripsCount()" (ngModelChange)="tripsCount.set($event)" name="tripsCount" />
+        </label>
+        <ui-button
+          [label]="savingActivityCounts() ? ('button.saving' | translate: 'Saving…') : ('button.save' | translate: 'Save')"
+          icon="save"
+          variant="filled"
+          type="submit"
+          [disabled]="savingActivityCounts()"
+        />
       </form>
     </ui-section>
   } @else if (isParty()) {

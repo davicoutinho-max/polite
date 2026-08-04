@@ -1,6 +1,7 @@
 package dev.civicpulse.feedcontent.adapter.in.web;
 
 import dev.civicpulse.feedcontent.domain.exception.AlreadyLikedException;
+import dev.civicpulse.feedcontent.domain.exception.CommentNotFoundException;
 import dev.civicpulse.feedcontent.domain.exception.MediaUploadFailedException;
 import dev.civicpulse.feedcontent.domain.exception.NotPostOwnerException;
 import dev.civicpulse.feedcontent.domain.exception.PollClosedException;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AlreadyLikedException.class)
   public ProblemDetail handleAlreadyLiked(AlreadyLikedException ex) {
     return problem(HttpStatus.CONFLICT, "Already liked", ex.getMessage());
+  }
+
+  @ExceptionHandler(CommentNotFoundException.class)
+  public ProblemDetail handleCommentNotFound(CommentNotFoundException ex) {
+    return problem(HttpStatus.NOT_FOUND, "Comment not found", ex.getMessage());
   }
 
   @ExceptionHandler(NotPostOwnerException.class)

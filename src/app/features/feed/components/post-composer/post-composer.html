@@ -27,7 +27,23 @@
         </label>
         <label class="composer__field composer__field--time">
           <span>{{ 'label.time' | translate: 'Time' }}</span>
-          <p-datepicker [timeOnly]="true" hourFormat="24" [ngModel]="agendaTime()" (ngModelChange)="agendaTime.set($event)" appendTo="body" />
+          <p-datepicker
+            #timePicker
+            [timeOnly]="true"
+            hourFormat="24"
+            [ngModel]="agendaTime()"
+            (ngModelChange)="agendaTime.set($event)"
+            (onShow)="onTimePickerShow()"
+            appendTo="body"
+          >
+            <ng-template pTemplate="footer">
+              <div class="composer__time-footer">
+                <button type="button" class="composer__time-ok" (click)="timePicker.hideOverlay()">
+                  {{ 'action.ok' | translate: 'OK' }}
+                </button>
+              </div>
+            </ng-template>
+          </p-datepicker>
         </label>
         <label class="composer__field composer__field--location">
           <span>{{ 'label.location' | translate: 'Location' }}</span>

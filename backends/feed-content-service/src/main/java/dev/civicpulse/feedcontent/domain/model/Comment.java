@@ -9,23 +9,44 @@ public final class Comment {
   private final UUID id;
   private final UUID postId;
   private final UUID authorAccountId;
+  private final UUID parentCommentId;
   private final String body;
   private final Instant createdAt;
+  private int likesCount;
 
-  private Comment(UUID id, UUID postId, UUID authorAccountId, String body, Instant createdAt) {
+  private Comment(
+      UUID id,
+      UUID postId,
+      UUID authorAccountId,
+      UUID parentCommentId,
+      String body,
+      Instant createdAt,
+      int likesCount) {
     this.id = Objects.requireNonNull(id);
     this.postId = Objects.requireNonNull(postId);
     this.authorAccountId = Objects.requireNonNull(authorAccountId);
+    this.parentCommentId = parentCommentId;
     this.body = requireNonBlank(body);
     this.createdAt = Objects.requireNonNull(createdAt);
+    this.likesCount = likesCount;
   }
 
-  public static Comment add(UUID id, UUID postId, UUID authorAccountId, String body, Instant now) {
-    return new Comment(id, postId, authorAccountId, body, now);
+  /** {@code parentCommentId} is null for a top-level comment, or the id of the comment being
+   * replied to — one level of threading only, replies-to-replies still attach to the original
+   * top-level comment (see ManageCommentUseCase javadoc). */
+  public static Comment add(UUID id, UUID postId, UUID authorAccountId, UUID parentCommentId, String body, Instant now) {
+    return new Comment(id, postId, authorAccountId, parentCommentId, body, now, 0);
   }
 
-  public static Comment reconstitute(UUID id, UUID postId, UUID authorAccountId, String body, Instant createdAt) {
-    return new Comment(id, postId, authorAccountId, body, createdAt);
+  public static Comment reconstitute(
+      UUID id,
+      UUID postId,
+      UUID authorAccountId,
+      UUID parentCommentId,
+      String body,
+      Instant createdAt,
+      int likesCount) {
+    return new Comment(id, postId, authorAccountId, parentCommentId, body, createdAt, likesCount);
   }
 
   private static String requireNonBlank(String value) {
@@ -33,6 +54,14 @@ public final class Comment {
       throw new IllegalArgumentException("body must not be blank");
     }
     return value;
+  }
+
+  public void incrementLikes() {
+    likesCount++;
+  }
+
+  public void decrementLikes() {
+    likesCount = Math.max(0, likesCount - 1);
   }
 
   public UUID id() {
@@ -47,12 +76,20 @@ public final class Comment {
     return authorAccountId;
   }
 
+  public UUID parentCommentId() {
+    return parentCommentId;
+  }
+
   public String body() {
     return body;
   }
 
   public Instant createdAt() {
     return createdAt;
+  }
+
+  public int likesCount() {
+    return likesCount;
   }
 
   @Override

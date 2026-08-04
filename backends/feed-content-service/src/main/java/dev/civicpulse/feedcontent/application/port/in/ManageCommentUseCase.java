@@ -6,7 +6,9 @@ import java.util.UUID;
 
 public interface ManageCommentUseCase {
 
-  Comment addComment(UUID postId, UUID authorAccountId, String body);
+  /** {@code parentCommentId} is null for a top-level comment, or the id of the comment being
+   * replied to — one level of threading only. */
+  Comment addComment(UUID postId, UUID authorAccountId, UUID parentCommentId, String body);
 
   List<Comment> listByPost(UUID postId);
 }

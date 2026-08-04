@@ -51,6 +51,9 @@
     </div>
 
     <div class="profile-header__actions">
+      @if (isOwnProfile()) {
+        <ui-button [label]="'button.edit-profile' | translate: 'Edit profile'" icon="edit" variant="outlined" routerLink="/profile/edit" />
+      }
       @if (canContact()) {
         <ui-button [label]="'button.contact' | translate: 'Contact'" icon="mail" variant="filled" (click)="contact.emit()" />
       }

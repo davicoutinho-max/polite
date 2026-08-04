@@ -55,18 +55,15 @@ export class EditProfilePage {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
 
-  /** Visible, inline confirmation shown right next to the Save button — separate from
-   * AlertsService's bell-icon notifications, which land silently in the inbox and were easy to
-   * miss as "did my save actually work?" feedback. Clears itself after a few seconds. */
-  protected readonly saveResult = signal<'success' | 'error' | null>(null);
-  private saveResultTimeout?: ReturnType<typeof setTimeout>;
-
   protected readonly education = signal('');
   protected readonly profession = signal('');
   protected readonly patrimony = signal('');
   protected readonly dossierEmail = signal('');
   protected readonly phone = signal('');
   protected readonly officeDetail = signal('');
+  /** Matches exactly what formatPhone produces — "(DD) XXXX-XXXX" (landline, 8 digits) or
+   * "(DD) XXXXX-XXXX" (mobile, 9 digits). */
+  protected readonly phonePattern = '^\\(\\d{2}\\) \\d{4,5}-\\d{4}$';
 
   protected readonly partyName = signal('');
   protected readonly partyAcronym = signal('');
@@ -87,18 +84,44 @@ export class EditProfilePage {
   protected readonly addingLink = signal(false);
 
   protected readonly socialLinks = computed(() => this.politicianService.politician().socialLinks);
+  protected readonly mandates = computed(() => this.politicianService.politician().mandates);
+  protected readonly team = computed(() => this.politicianService.politician().team);
+  protected readonly careerMilestones = this.politicianService.career;
+
+  protected readonly newMandateRole = signal('');
+  protected readonly newMandatePeriod = signal('');
+  protected readonly newMandateCurrent = signal(false);
+  protected readonly addingMandate = signal(false);
+
+  protected readonly newMemberName = signal('');
+  protected readonly newMemberRole = signal('');
+  protected readonly newMemberAvatarUrl = signal('');
+  protected readonly addingMember = signal(false);
+
+  protected readonly newMilestoneYear = signal('');
+  protected readonly newMilestoneTitle = signal('');
+  protected readonly newMilestoneDetail = signal('');
+  protected readonly addingMilestone = signal(false);
+
+  protected readonly speechesCount = signal('0');
+  protected readonly interviewsCount = signal('0');
+  protected readonly tripsCount = signal('0');
+  protected readonly savingActivityCounts = signal(false);
 
   constructor() {
     const accountId = this.session.account().id;
     if (this.isPolitician()) {
-      this.politicianService.load(accountId).subscribe({
-        next: (p) => {
+      forkJoin([this.politicianService.load(accountId), this.politicianService.loadActivity(accountId), this.politicianService.loadCareer(accountId)]).subscribe({
+        next: ([p, activity]) => {
           this.education.set(p.education);
           this.profession.set(p.profession);
           this.patrimony.set(p.patrimony);
           this.dossierEmail.set(p.email);
           this.phone.set(p.phone);
           this.officeDetail.set(p.office);
+          this.speechesCount.set(String(activity.speeches));
+          this.interviewsCount.set(String(activity.interviews));
+          this.tripsCount.set(String(activity.trips));
           this.loading.set(false);
         },
         error: () => this.loading.set(false),
@@ -187,14 +210,114 @@ export class EditProfilePage {
           this.newLinkLabel.set('');
           this.newLinkHandle.set('');
           this.newLinkUrl.set('');
+          this.alerts.push({
+            category: 'project',
+            icon: 'check_circle',
+            title: this.translate.t('title.link-added', 'Link added'),
+            message: this.translate.t('hint.link-added', 'Your new social link is now public.'),
+            timeLabel: this.translate.t('label.just-now', 'Just now'),
+          });
         },
         error: () => this.addingLink.set(false),
       });
   }
 
+  protected addMandate(): void {
+    if (!this.newMandateRole().trim() || !this.newMandatePeriod().trim()) {
+      return;
+    }
+    const accountId = this.session.account().id;
+    this.addingMandate.set(true);
+    this.politicianService.addMandate(accountId, this.newMandateRole().trim(), this.newMandatePeriod().trim(), this.newMandateCurrent()).subscribe({
+      next: () => {
+        this.addingMandate.set(false);
+        this.newMandateRole.set('');
+        this.newMandatePeriod.set('');
+        this.newMandateCurrent.set(false);
+        this.notifySuccess(this.translate.t('title.mandate-added', 'Mandate added'), this.translate.t('hint.mandate-added', 'It now shows on your public profile.'));
+      },
+      error: () => this.addingMandate.set(false),
+    });
+  }
+
+  protected addTeamMember(): void {
+    if (!this.newMemberName().trim() || !this.newMemberRole().trim()) {
+      return;
+    }
+    const accountId = this.session.account().id;
+    this.addingMember.set(true);
+    this.politicianService.addTeamMember(accountId, this.newMemberName().trim(), this.newMemberRole().trim(), this.newMemberAvatarUrl().trim()).subscribe({
+      next: () => {
+        this.addingMember.set(false);
+        this.newMemberName.set('');
+        this.newMemberRole.set('');
+        this.newMemberAvatarUrl.set('');
+        this.notifySuccess(this.translate.t('title.team-member-added', 'Team member added'), this.translate.t('hint.team-member-added', 'They now show on your public profile.'));
+      },
+      error: () => this.addingMember.set(false),
+    });
+  }
+
+  protected addMilestone(): void {
+    const year = Number(this.newMilestoneYear());
+    if (!year || !this.newMilestoneTitle().trim()) {
+      return;
+    }
+    const accountId = this.session.account().id;
+    this.addingMilestone.set(true);
+    this.politicianService.addMilestone(accountId, year, this.newMilestoneTitle().trim(), this.newMilestoneDetail().trim()).subscribe({
+      next: () => {
+        this.addingMilestone.set(false);
+        this.newMilestoneYear.set('');
+        this.newMilestoneTitle.set('');
+        this.newMilestoneDetail.set('');
+        this.notifySuccess(this.translate.t('title.milestone-added', 'Milestone added'), this.translate.t('hint.milestone-added', 'It now shows on your career timeline.'));
+      },
+      error: () => this.addingMilestone.set(false),
+    });
+  }
+
+  protected saveActivityCounts(): void {
+    const accountId = this.session.account().id;
+    this.savingActivityCounts.set(true);
+    this.politicianService
+      .updateActivityCounts(accountId, Number(this.speechesCount()) || 0, Number(this.interviewsCount()) || 0, Number(this.tripsCount()) || 0)
+      .subscribe({
+        next: () => {
+          this.savingActivityCounts.set(false);
+          this.notifySaved();
+        },
+        error: () => {
+          this.savingActivityCounts.set(false);
+          this.notifyError();
+        },
+      });
+  }
+
+  private notifySuccess(title: string, message: string): void {
+    this.alerts.push({ category: 'project', icon: 'check_circle', title, message, timeLabel: this.translate.t('label.just-now', 'Just now') });
+  }
+
   protected goToProfile(): void {
     const id = this.session.account().id;
     this.router.navigate(this.isParty() ? ['/party', id] : ['/profile', id]);
+  }
+
+  /** Live-formats as the user types — always puts the dash 4 digits from the end, which is what
+   * naturally produces the right grouping for both an 8-digit landline ("XXXX-XXXX") and a
+   * 9-digit mobile number ("XXXXX-XXXX") without needing to know in advance which one it is. */
+  protected onPhoneInput(value: string): void {
+    this.phone.set(this.formatPhone(value));
+  }
+
+  private formatPhone(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (!digits) {
+      return '';
+    }
+    return digits
+      .replace(/^(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d)(\d{4})$/, '$1-$2');
   }
 
   private notifySaved(): void {
@@ -205,7 +328,6 @@ export class EditProfilePage {
       message: this.translate.t('hint.profile-saved', 'Your changes were saved.'),
       timeLabel: this.translate.t('label.just-now', 'Just now'),
     });
-    this.flashSaveResult('success');
   }
 
   private notifyError(): void {
@@ -216,12 +338,5 @@ export class EditProfilePage {
       message: this.translate.t('hint.profile-save-failed', 'Please try again shortly.'),
       timeLabel: this.translate.t('label.just-now', 'Just now'),
     });
-    this.flashSaveResult('error');
-  }
-
-  private flashSaveResult(result: 'success' | 'error'): void {
-    clearTimeout(this.saveResultTimeout);
-    this.saveResult.set(result);
-    this.saveResultTimeout = setTimeout(() => this.saveResult.set(null), 4000);
   }
 }

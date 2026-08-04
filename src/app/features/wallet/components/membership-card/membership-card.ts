@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DigitalCard } from '../../../../core/models';
-import { UiIcon } from '../../../../shared/ui/ui-icon/ui-icon';
 import { UiQrcode } from '../../../../shared/ui/ui-qrcode/ui-qrcode';
 import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 
@@ -8,13 +7,13 @@ import { TranslatePipe } from '../../../../shared/pipes/translate.pipe';
 @Component({
   selector: 'app-membership-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiIcon, UiQrcode, TranslatePipe],
+  imports: [UiQrcode, TranslatePipe],
   template: `
     <div class="card" [class.card--inactive]="!active()">
       <div class="card__head">
         <div class="card__brand">
-          <ui-icon name="account_balance" [size]="22" [fill]="true" />
-          <span>CivicPulse</span>
+          <img src="logo.svg" alt="" width="22" height="22" class="card__brand-icon" />
+          <span>IQORUM</span>
         </div>
         <span class="card__status">{{ (active() ? 'label.active-member' : 'label.pending') | translate: (active() ? 'Active member' : 'Pending') }}</span>
       </div>

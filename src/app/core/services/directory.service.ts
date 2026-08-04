@@ -174,6 +174,10 @@ export class DirectoryService {
     return this.http.get<PoliticianResponse>(`${this.apiBase}/politicians/${accountId}`).pipe(map(toPoliticianSummary));
   }
 
+  getParty(partyId: string): Observable<PartySummary> {
+    return this.http.get<PartyResponse>(`${this.apiBase}/parties/${partyId}`).pipe(map(toPartySummary));
+  }
+
   /** Real server-side name search across the whole synced directory (federal + state +
    * municipal) — unlike `politicians()`, which only ever holds the first `DIRECTORY_PAGE_SIZE`
    * rows loaded on startup. Used by the registration flow's "search yourself" fallback for

@@ -281,6 +281,27 @@
   color: var(--cp-on-surface-variant);
 }
 
+.composer__time-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--cp-space-xs) var(--cp-space-sm) var(--cp-space-sm);
+}
+
+.composer__time-ok {
+  border: none;
+  background: var(--cp-primary);
+  color: var(--cp-on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: var(--cp-radius-md);
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
 .social-chip {
   display: inline-flex;
   align-items: center;
